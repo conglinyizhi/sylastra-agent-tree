@@ -1,7 +1,7 @@
 {
-  "name": "oh-my-opencode-slim",
+  "name": "sylastra-agent-tree",
   "version": "1.1.1",
-  "description": "Lightweight agent orchestration plugin for OpenCode - a slimmed-down fork of oh-my-opencode",
+  "description": "Agent orchestration plugin for OpenCode - forked from oh-my-opencode-slim",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -15,7 +15,7 @@
     }
   },
   "bin": {
-    "oh-my-opencode-slim": "./dist/cli/index.js"
+    "sylastra-agent-tree": "./dist/cli/index.js"
   },
   "type": "module",
   "license": "MIT",
@@ -32,20 +32,18 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/alvinunreal/oh-my-opencode-slim"
+    "url": "https://github.com/conglinyizhi/sylastra-agent-tree"
   },
   "bugs": {
-    "url": "https://github.com/alvinunreal/oh-my-opencode-slim/issues"
+    "url": "https://github.com/conglinyizhi/sylastra-agent-tree/issues"
   },
-  "homepage": "https://github.com/alvinunreal/oh-my-opencode-slim#readme",
+  "homepage": "https://github.com/conglinyizhi/sylastra-agent-tree#readme",
   "files": [
     "dist",
     "src/skills",
-    "oh-my-opencode-slim.schema.json",
+    "sylastra-agent-tree.schema.json",
     "README.md",
     "README.zh-CN.md",
-    "README.ja-JP.md",
-    "README.ko-KR.md",
     "LICENSE"
   ],
   "scripts": {

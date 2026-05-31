@@ -186,7 +186,7 @@ export function createInterviewService(
 
   async function ensureServer(): Promise<string> {
     if (!resolveBaseUrl) {
-      throw new Error('Interview server is not attached');
+      throw new Error('面试服务器未连接');
     }
     return resolveBaseUrl();
   }
@@ -435,9 +435,8 @@ export function createInterviewService(
         opencodeConfig.command = {};
       }
       (opencodeConfig.command as Record<string, unknown>)[COMMAND_NAME] = {
-        template: 'Start an interview and write a live markdown spec',
-        description:
-          'Open a localhost interview UI linked to the current OpenCode session',
+        template: '启动面试并编写实时的 Markdown 规范',
+        description: '打开与当前 OpenCode 会话关联的本地面试界面',
       };
     }
   }
@@ -447,7 +446,7 @@ export function createInterviewService(
   ): Promise<InterviewState> {
     const interview = getInterviewById(interviewId);
     if (!interview) {
-      throw new Error('Interview not found');
+      throw new Error('未找到面试');
     }
     return syncInterview(interview);
   }
@@ -475,15 +474,13 @@ export function createInterviewService(
   ): Promise<void> {
     const interview = getInterviewById(interviewId);
     if (!interview) {
-      throw new Error('Interview not found');
+      throw new Error('未找到面试');
     }
     if (interview.status === 'abandoned') {
-      throw new Error('Interview session is no longer active.');
+      throw new Error('面试会话已不再处于活动状态。');
     }
     if (sessionBusy.get(interview.sessionID) === true) {
-      throw new Error(
-        'Interview session is busy. Wait for the current response.',
-      );
+      throw new Error('面试会话正忙，请等待当前响应完成。');
     }
 
     // Acquire busy lock immediately before any async operations to prevent race
@@ -493,28 +490,24 @@ export function createInterviewService(
     try {
       const state = await getInterviewState(interviewId);
       if (state.mode === 'error') {
-        throw new Error('Interview is waiting for a valid agent update.');
+        throw new Error('面试正在等待有效的代理更新。');
       }
 
       const activeQuestionIds = new Set(
         state.questions.map((question) => question.id),
       );
       if (activeQuestionIds.size === 0) {
-        throw new Error('There are no active interview questions to answer.');
+        throw new Error('当前没有需要回答的面试问题。');
       }
       if (answers.length !== activeQuestionIds.size) {
-        throw new Error(
-          'Answer every active interview question before submitting.',
-        );
+        throw new Error('请在提交前回答所有活跃的面试问题。');
       }
       const invalidAnswer = answers.find(
         (answer) =>
           !activeQuestionIds.has(answer.questionId) || !answer.answer.trim(),
       );
       if (invalidAnswer) {
-        throw new Error(
-          'Answers do not match the current interview questions.',
-        );
+        throw new Error('回答与当前的面试问题不匹配。');
       }
 
       await appendInterviewAnswers(interview, state.questions, answers);
@@ -716,15 +709,13 @@ export function createInterviewService(
   ): Promise<void> {
     const interview = getInterviewById(interviewId);
     if (!interview) {
-      throw new Error('Interview not found');
+      throw new Error('未找到面试');
     }
     if (interview.status === 'abandoned') {
-      throw new Error('Interview session is no longer active.');
+      throw new Error('面试会话已不再处于活动状态。');
     }
     if (sessionBusy.get(interview.sessionID) === true) {
-      throw new Error(
-        'Interview session is busy. Wait for the current response.',
-      );
+      throw new Error('面试会话正忙，请等待当前响应完成。');
     }
 
     sessionBusy.set(interview.sessionID, true);

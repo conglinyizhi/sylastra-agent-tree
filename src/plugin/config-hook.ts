@@ -299,9 +299,8 @@ export function createConfigHook(ctx: PluginContext) {
         opencodeConfig.command = {};
       }
       (opencodeConfig.command as Record<string, unknown>)['auto-continue'] = {
-        template: 'Call the auto_continue tool with enabled=true',
-        description:
-          'Enable auto-continuation — orchestrator keeps working through incomplete todos',
+        template: '调用 auto_continue 工具并设置 enabled=true',
+        description: '启用自动继续 — 编排器会在未完成的待办事项上持续工作',
       };
     }
 

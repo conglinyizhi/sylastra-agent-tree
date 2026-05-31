@@ -90,9 +90,9 @@ export function createPresetManager(ctx: PluginInput, config: PluginConfig) {
         opencodeConfig.command = {};
       }
       (opencodeConfig.command as Record<string, unknown>)[COMMAND_NAME] = {
-        template: 'List available presets and switch between them',
+        template: '列出可用预设并在它们之间切换',
         description:
-          'Switch agent presets at runtime (e.g., /preset cheap, /preset powerful)',
+          '在运行时切换代理预设（例如 /preset cheap、/preset powerful）',
       };
     }
   }

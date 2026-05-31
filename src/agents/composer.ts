@@ -4,7 +4,7 @@ import { type AgentDefinition, resolvePrompt } from './orchestrator';
 // 注意：评审员（Councillor）的系统提示位于 councillor agent 工厂中。
 // 下面的格式化函数仅组织 USER 消息内容——agent 工厂提供系统提示。
 
-const COUNCIL_AGENT_PROMPT = `你是 Council agent——一个多 LLM 编排系统，用于在多个模型之间运行共识。
+const COUNCIL_AGENT_PROMPT = `你是 Composer agent——一个多 LLM 编排系统，用于在多个模型之间运行共识。
 
 **工具**：你可以使用 \`council_session\` 工具。
 
@@ -41,7 +41,7 @@ const COUNCIL_AGENT_PROMPT = `你是 Council agent——一个多 LLM 编排系�
 **所需输出格式**：
 始终在最终回复中包含以下部分：
 
-## Council 响应
+## Composer 响应
 提供最佳综合答案。整合评审员的最强观点，解决分歧，为用户提供清晰的最终建议或答案。包含相关代码示例和具体细节。
 
 ## 评审员详情
@@ -56,10 +56,10 @@ const COUNCIL_AGENT_PROMPT = `你是 Council agent——一个多 LLM 编排系�
 
 如果某位评审员失败或超时，简要说明状态。
 
-## Council 总结
+## Composer 总结
 总结评审员的一致之处、分歧之处、为何选择最终答案，以及任何剩余的不确定性。包含共识置信度评级：一致、多数或分裂。`;
 
-export function createCouncilAgent(
+export function createComposerAgent(
   model: string,
   customPrompt?: string,
   customAppendPrompt?: string,
@@ -71,15 +71,16 @@ export function createCouncilAgent(
   );
 
   const definition: AgentDefinition = {
-    name: 'council',
-    description: '多 LLM Council agent，综合多个模型的响应以获得更高质量的输出',
+    name: 'composer',
+    description:
+      'Multi-LLM composer agent that synthesizes responses from multiple models for higher-quality outputs',
     config: {
       temperature: 0.1,
       prompt,
     },
   };
 
-  // Council 的模型来自配置覆盖或运行时解析；
+  // Composer 的模型来自配置覆盖或运行时解析；
   // 仅在提供非空字符串时设置。
   if (model) {
     definition.config.model = model;
@@ -106,11 +107,11 @@ export function formatCouncillorPrompt(
 }
 
 /**
- * 格式化评审员结果供 council agent 进行综合。
+ * 格式化评审员结果供 composer agent 进行综合。
  *
- * 将评审员结果格式化为结构化数据，council agent
+ * 将评审员结果格式化为结构化数据，composer agent
  *（调用该工具的 agent）将作为工具响应接收。
- * council agent 的系统提示包含综合指令。
+ * composer agent 的系统提示包含综合指令。
  * 当所有评审员均未产生输出时返回特殊消息。
  */
 export function formatCouncillorResults(
@@ -161,7 +162,7 @@ export function formatCouncillorResults(
   }
 
   prompt +=
-    '\n\n---\n\n在生成输出之前，你必须遵循综合流程的步骤：逐一审查每位评审员的响应，然后生成所需的输出，包括综合后的 Council 响应、使用确切名称的每位评审员详情，以及带有共识置信度评级（一致、多数或分裂）的 Council 总结。';
+    '\n\n---\n\n在生成输出之前，你必须遵循综合流程的步骤：逐一审查每位评审员的响应，然后生成所需的输出，包括综合后的 Composer 响应、使用确切名称的每位评审员详情，以及带有共识置信度评级（一致、多数或分裂）的 Composer 总结。';
 
   return prompt;
 }

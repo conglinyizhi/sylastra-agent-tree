@@ -14,11 +14,8 @@ import {
 } from '../config';
 import { getAgentMcpList } from '../config/agent-mcps';
 
-import { createCouncilAgent } from './council';
+import { createComposerAgent } from './composer';
 import { createCouncillorAgent } from './councillor';
-import { createDesignerAgent } from './designer';
-import { createExplorerAgent } from './explorer';
-import { createFixerAgent } from './fixer';
 import { createLibrarianAgent } from './librarian';
 import { createObserverAgent } from './observer';
 import { createOracleAgent } from './oracle';
@@ -27,6 +24,7 @@ import {
   createOrchestratorAgent,
   resolvePrompt,
 } from './orchestrator';
+import { createSylastraAgent } from './sylastra';
 
 export type { AgentDefinition } from './orchestrator';
 
@@ -36,7 +34,7 @@ type AgentFactory = (
   customAppendPrompt?: string,
 ) => AgentDefinition;
 
-const COUNCIL_TOOL_ALLOWED_AGENTS = new Set(['council']);
+const COUNCIL_TOOL_ALLOWED_AGENTS = new Set(['composer']);
 const SAFE_AGENT_ALIAS_RE = /^[a-z][a-z0-9_-]*$/i;
 
 function normalizeDisplayName(displayName: string): string {
@@ -203,13 +201,11 @@ export function isSubagent(name: string): name is SubagentName {
 // Agent Factories
 
 const SUBAGENT_FACTORIES: Record<SubagentName, AgentFactory> = {
-  explorer: createExplorerAgent,
   librarian: createLibrarianAgent,
   oracle: createOracleAgent,
-  designer: createDesignerAgent,
-  fixer: createFixerAgent,
   observer: createObserverAgent,
-  council: createCouncilAgent,
+  sylastra: createSylastraAgent,
+  composer: createComposerAgent,
   councillor: createCouncillorAgent,
 };
 
@@ -224,14 +220,14 @@ const SUBAGENT_FACTORIES: Record<SubagentName, AgentFactory> = {
  */
 export function createAgents(config?: PluginConfig): AgentDefinition[] {
   const disabled = getDisabledAgents(config);
-  if (!config?.council) {
-    disabled.add('council');
+  if (!config?.composer) {
+    disabled.add('composer');
   }
 
-  // TEMP: If fixer has no config, inherit from librarian's model to avoid breaking
-  // existing users who don't have fixer in their config yet
+  // TEMP: If sylastra has no config, inherit from librarian's model to avoid breaking
+  // existing users who don't have sylastra in their config yet
   const getModelForAgent = (name: SubagentName): string => {
-    if (name === 'fixer' && !getAgentOverride(config, 'fixer')?.model) {
+    if (name === 'sylastra' && !getAgentOverride(config, 'sylastra')?.model) {
       const librarianOverride = getAgentOverride(config, 'librarian')?.model;
       let librarianModel: string | undefined;
       if (Array.isArray(librarianOverride)) {
@@ -305,18 +301,18 @@ export function createAgents(config?: PluginConfig): AgentDefinition[] {
     return agent;
   });
 
-  // 2b. Backward compat: if council has no preset override and still uses the
-  // hardcoded default model, fall back to the deprecated council.master.model.
+  // 2b. Backward compat: if composer has no preset override and still uses the
+  // hardcoded default model, fall back to the deprecated composer.master.model.
   // See https://github.com/conglinyizhi/sylastra-agent-tree/issues/369
-  const legacyMasterModel = config?.council?._legacyMasterModel;
+  const legacyMasterModel = config?.composer?._legacyMasterModel;
   if (legacyMasterModel) {
-    const councilAgent = builtInSubAgents.find((a) => a.name === 'council');
+    const composerAgent = builtInSubAgents.find((a) => a.name === 'composer');
     if (
-      councilAgent &&
-      !getAgentOverride(config, 'council')?.model &&
-      councilAgent.config.model === DEFAULT_MODELS.council
+      composerAgent &&
+      !getAgentOverride(config, 'composer')?.model &&
+      composerAgent.config.model === DEFAULT_MODELS.composer
     ) {
-      councilAgent.config.model = legacyMasterModel;
+      composerAgent.config.model = legacyMasterModel;
     }
   }
 
@@ -438,7 +434,7 @@ export function getAgentConfigs(
       hidden?: boolean;
     },
   ): void => {
-    if (name === 'council') {
+    if (name === 'composer') {
       // Council is callable both as a primary agent (user-facing)
       // and as a subagent (orchestrator can delegate to it)
       sdkConfig.mode = 'all';
@@ -513,8 +509,8 @@ export function getDisabledAgents(config?: PluginConfig): Set<string> {
  */
 export function getEnabledAgentNames(config?: PluginConfig): string[] {
   const disabled = getDisabledAgents(config);
-  if (!config?.council) {
-    disabled.add('council');
+  if (!config?.composer) {
+    disabled.add('composer');
   }
   const customAgentNames = getCustomAgentNames(config).filter(
     (name) => !disabled.has(name),

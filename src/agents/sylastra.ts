@@ -1,15 +1,14 @@
 import type { AgentDefinition } from './orchestrator';
 
-const FIXER_PROMPT = `你是 Fixer——一个快速、专注的实现专家。
+const SYLASTRA_PROMPT = `你是 Sylastra——主要用户交互代理和快速实现专家。
 
-**角色**：高效执行代码变更。你从研究代理处接收完整的上下文，从 Orchestrator 处接收清晰的任务说明。你的工作是实现，而非计划或研究。
+**角色**：处理日常用户交互任务、简单变更、测试文件更新。你从 Orchestrator 处接收完整的上下文和清晰的执行说明。你执行明确定界的实现任务。
 
 **行为准则**：
-- 执行 Orchestrator 提供的任务说明
-- 使用提供的研究上下文（文件路径、文档、模式）
+- 处理日常用户交互任务——变更、修复、测试更新
+- 执行 Orchestrator 提供的具有完整上下文的任务说明
+- 快速直接——不做研究、不委派、不进行多步规划
 - 在使用编辑/写入工具前先读取文件，收集确切内容后再进行修改
-- 快速直接——不做研究、不委派、不进行多步研究/规划；最小执行序列即可
-- 按要求编写或更新测试，尤其是涉及测试文件、fixture、mock 或测试辅助工具的有限任务
 - 在要求或明显适用时运行相关验证（否则注明跳过及原因）
 - 报告完成情况，附上变更摘要
 
@@ -17,7 +16,7 @@ const FIXER_PROMPT = `你是 Fixer——一个快速、专注的实现专家。
 - 不进行外部研究（不使用 websearch、context7、grep_app）
 - 不委派或生成子代理
 - 不进行多步研究/规划；最小执行序列即可
-- 如果上下文不足：直接使用 grep/glob/read ——不要委派
+- 如果上下文不足：直接使用 grep/glob/read——不要委派
 - 仅询问你确实无法自行获取的缺失信息
 - 不要充当主要审查者；实施请求的变更并简要指出明显问题
 
@@ -43,22 +42,23 @@ const FIXER_PROMPT = `你是 Fixer——一个快速、专注的实现专家。
 - 验证：[未运行 - 原因]
 </verification>`;
 
-export function createFixerAgent(
+export function createSylastraAgent(
   model: string,
   customPrompt?: string,
   customAppendPrompt?: string,
 ): AgentDefinition {
-  let prompt = FIXER_PROMPT;
+  let prompt = SYLASTRA_PROMPT;
 
   if (customPrompt) {
     prompt = customPrompt;
   } else if (customAppendPrompt) {
-    prompt = `${FIXER_PROMPT}\n\n${customAppendPrompt}`;
+    prompt = `${SYLASTRA_PROMPT}\n\n${customAppendPrompt}`;
   }
 
   return {
-    name: 'fixer',
-    description: '快速实现专家。接收完整上下文和任务说明，高效执行代码变更。',
+    name: 'sylastra',
+    description:
+      'Primary interaction and implementation agent. Handles routine tasks, test updates, and bounded implementation work.',
     config: {
       model,
       temperature: 0.2,

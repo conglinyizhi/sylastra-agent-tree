@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { formatCouncillorPrompt, formatCouncillorResults } from './council';
+import { formatCouncillorPrompt, formatCouncillorResults } from './composer';
 
 describe('formatCouncillorResults', () => {
   const originalPrompt =
@@ -27,7 +27,7 @@ describe('formatCouncillorResults', () => {
       councillorResults,
     );
 
-    expect(formatted).toContain('**Original Prompt**:');
+    expect(formatted).toContain('**原始提示**:');
     expect(formatted).toContain(originalPrompt);
     expect(formatted).toContain('**alpha** (claude-opus-4-6):');
     expect(formatted).toContain('**beta** (gpt-5.5):');
@@ -37,13 +37,10 @@ describe('formatCouncillorResults', () => {
     expect(formatted).toContain(
       'Consider Fastify for better performance and built-in type validation.',
     );
-    expect(formatted).toContain('**Councillor Responses**:');
-    expect(formatted).toContain(
-      'You MUST follow the Synthesis Process steps before producing output',
-    );
-    expect(formatted).toContain(
-      'consensus confidence rating (unanimous, majority, or split)',
-    );
+    expect(formatted).toContain('**评审员响应**:');
+    expect(formatted).toContain('你必须遵循综合流程的步骤');
+    expect(formatted).toContain('共识置信度评级（一致、多数或分裂）');
+    expect(formatted).not.toContain('**失败/超时的评审员**');
     expect(formatted).not.toContain('**Failed/Timed-out Councillors**:');
   });
 
@@ -74,12 +71,12 @@ describe('formatCouncillorResults', () => {
       councillorResults,
     );
 
-    expect(formatted).toContain('**Councillor Responses**:');
+    expect(formatted).toContain('**评审员响应**:');
     expect(formatted).toContain('**alpha** (claude-opus-4-6):');
     expect(formatted).toContain(
       'Use Express.js with TypeScript interfaces for type safety.',
     );
-    expect(formatted).toContain('**Failed/Timed-out Councillors**:');
+    expect(formatted).toContain('**失败/超时的评审员**');
     expect(formatted).toContain(
       '**beta**: timed_out — Request timed out after 180000ms',
     );
@@ -111,10 +108,10 @@ describe('formatCouncillorResults', () => {
       councillorResults,
     );
 
-    expect(formatted).toContain('**Original Prompt**:');
+    expect(formatted).toContain('**原始提示**:');
     expect(formatted).toContain(originalPrompt);
-    expect(formatted).toContain('**Councillor Responses**:');
-    expect(formatted).toContain('All councillors failed to produce output:');
+    expect(formatted).toContain('**评审员响应**:');
+    expect(formatted).toContain('所有评审员均未产生输出：');
     expect(formatted).toContain('**alpha** (claude-opus-4-6):');
     expect(formatted).toContain('**beta** (gpt-5.5):');
     expect(formatted).toContain('Request timed out');
@@ -146,7 +143,7 @@ describe('formatCouncillorResults', () => {
     expect(formatted).toContain('Valid response');
     expect(formatted).toContain('**beta** (gpt-5.5):');
     expect(formatted).toContain('Another valid response');
-    expect(formatted).toContain('review each councillor response individually');
+    expect(formatted).toContain('逐一审查每位评审员的响应');
   });
 });
 

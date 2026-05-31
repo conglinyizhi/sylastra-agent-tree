@@ -99,29 +99,29 @@ describe('agent alias backward compatibility', () => {
   });
 });
 
-describe('fixer agent fallback', () => {
-  test('fixer inherits librarian model when no fixer config provided', () => {
+describe('sylastra agent fallback', () => {
+  test('sylastra inherits librarian model when no sylastra config provided', () => {
     const config: PluginConfig = {
       agents: {
         librarian: { model: 'librarian-custom-model' },
       },
     };
     const agents = createAgents(config);
-    const fixer = agents.find((a) => a.name === 'fixer');
+    const sylastra = agents.find((a) => a.name === 'sylastra');
     const librarian = agents.find((a) => a.name === 'librarian');
-    expect(fixer?.config.model).toBe(librarian?.config.model);
+    expect(sylastra?.config.model).toBe(librarian?.config.model);
   });
 
-  test('fixer uses its own model when explicitly configured', () => {
+  test('sylastra uses its own model when explicitly configured', () => {
     const config: PluginConfig = {
       agents: {
         librarian: { model: 'librarian-model' },
-        fixer: { model: 'fixer-specific-model' },
+        sylastra: { model: 'sylastra-specific-model' },
       },
     };
     const agents = createAgents(config);
-    const fixer = agents.find((a) => a.name === 'fixer');
-    expect(fixer?.config.model).toBe('fixer-specific-model');
+    const sylastra = agents.find((a) => a.name === 'sylastra');
+    expect(sylastra?.config.model).toBe('sylastra-specific-model');
   });
 });
 
@@ -250,11 +250,11 @@ describe('skill permissions', () => {
     expect(skillPerm?.clonedeps).toBe('allow');
   });
 
-  test('fixer does not get codemap skill allowed by default', () => {
+  test('sylastra does not get codemap skill allowed by default', () => {
     const agents = createAgents();
-    const fixer = agents.find((a) => a.name === 'fixer');
-    expect(fixer).toBeDefined();
-    const skillPerm = (fixer?.config.permission as Record<string, unknown>)
+    const sylastra = agents.find((a) => a.name === 'sylastra');
+    expect(sylastra).toBeDefined();
+    const skillPerm = (sylastra?.config.permission as Record<string, unknown>)
       ?.skill as Record<string, string>;
     expect(skillPerm?.codemap).not.toBe('allow');
     expect(skillPerm?.clonedeps).not.toBe('allow');
@@ -280,12 +280,12 @@ describe('skill permissions', () => {
 });
 
 describe('tool permissions', () => {
-  test('council agent is allowed to invoke council_session', () => {
+  test('composer agent is allowed to invoke council_session', () => {
     const agents = createAgents({
       council: councilConfig(),
     });
-    const council = agents.find((a) => a.name === 'council');
-    expect((council?.config.permission as any).council_session).toBe('allow');
+    const composer = agents.find((a) => a.name === 'composer');
+    expect((composer?.config.permission as any).council_session).toBe('allow');
   });
 
   test('oracle is denied access to council_session', () => {
@@ -313,7 +313,7 @@ describe('isSubagent type guard', () => {
     expect(isSubagent('librarian')).toBe(true);
     expect(isSubagent('oracle')).toBe(true);
     expect(isSubagent('designer')).toBe(true);
-    expect(isSubagent('fixer')).toBe(true);
+    expect(isSubagent('sylastra')).toBe(true);
   });
 
   test('returns false for orchestrator', () => {
@@ -331,7 +331,7 @@ describe('agent classification', () => {
   test('SUBAGENT_NAMES excludes orchestrator', () => {
     expect(SUBAGENT_NAMES).not.toContain('orchestrator');
     expect(SUBAGENT_NAMES).toContain('explorer');
-    expect(SUBAGENT_NAMES).toContain('fixer');
+    expect(SUBAGENT_NAMES).toContain('sylastra');
   });
 
   test('getAgentConfigs applies correct classification visibility and mode', () => {
@@ -344,7 +344,7 @@ describe('agent classification', () => {
     // Subagents
     for (const name of SUBAGENT_NAMES) {
       // Council is a dual-mode agent ("all"), rest are subagents
-      if (name === 'council') {
+      if (name === 'composer') {
         expect(configs[name]).toBeUndefined();
       } else {
         expect(configs[name].mode).toBe('subagent');
@@ -362,32 +362,32 @@ describe('createAgents', () => {
     expect(names).toContain('designer');
     expect(names).toContain('oracle');
     expect(names).toContain('librarian');
-    expect(names).toContain('fixer');
+    expect(names).toContain('sylastra');
   });
 
-  test('creates exactly 7 agents by default (observer disabled, council unconfigured)', () => {
+  test('creates exactly 5 agents by default (observer disabled, composer unconfigured)', () => {
     const agents = createAgents();
-    expect(agents.length).toBe(7);
+    expect(agents.length).toBe(5);
   });
 
-  test('does not create council when council is not configured', () => {
+  test('does not create composer when composer is not configured', () => {
     const agents = createAgents();
     const names = agents.map((a) => a.name);
     const orchestrator = agents.find((a) => a.name === 'orchestrator');
 
-    expect(names).not.toContain('council');
+    expect(names).not.toContain('composer');
     expect(orchestrator?.config.prompt).not.toContain('@council');
   });
 
-  test('creates council when council is configured', () => {
+  test('creates composer when composer is configured', () => {
     const agents = createAgents({
       council: councilConfig(),
     });
     const names = agents.map((a) => a.name);
     const orchestrator = agents.find((a) => a.name === 'orchestrator');
 
-    expect(names).toContain('council');
-    expect(orchestrator?.config.prompt).toContain('@council');
+    expect(names).toContain('composer');
+    expect(orchestrator?.config.prompt).toContain('@composer');
   });
 });
 
@@ -408,13 +408,13 @@ describe('getAgentConfigs', () => {
   });
 });
 
-describe('council agent model resolution', () => {
-  test('council agent uses default model', () => {
+describe('composer agent model resolution', () => {
+  test('composer agent uses default model', () => {
     const agents = createAgents({
       council: councilConfig(),
     });
-    const council = agents.find((a) => a.name === 'council');
-    expect(council?.config.model).toBe(DEFAULT_MODELS.council);
+    const composer = agents.find((a) => a.name === 'composer');
+    expect(composer?.config.model).toBe(DEFAULT_MODELS.composer);
   });
 
   test('councillor agent uses default model', () => {
@@ -423,8 +423,8 @@ describe('council agent model resolution', () => {
     expect(councillor?.config.model).toBe(DEFAULT_MODELS.councillor);
   });
 
-  test('council falls back to legacy master.model when no preset override', () => {
-    // Simulates a pre-1.0.0 config with council.master.model but no council
+  test('composer falls back to legacy master.model when no preset override', () => {
+    // Simulates a pre-1.0.0 config with composer.master.model but no composer
     // entry in the agent preset — the exact scenario from issue #369.
     const config: PluginConfig = {
       agents: {
@@ -436,15 +436,15 @@ describe('council agent model resolution', () => {
       },
     };
     const agents = createAgents(config);
-    const council = agents.find((a) => a.name === 'council');
-    expect(council?.config.model).toBe('anthropic/claude-opus-4-6');
+    const composer = agents.find((a) => a.name === 'composer');
+    expect(composer?.config.model).toBe('anthropic/claude-opus-4-6');
   });
 
-  test('council preset override takes precedence over legacy master.model', () => {
-    // If user has explicit council in preset, that wins — legacy is ignored.
+  test('composer preset override takes precedence over legacy master.model', () => {
+    // If user has explicit composer in preset, that wins — legacy is ignored.
     const config: PluginConfig = {
       agents: {
-        council: { model: 'google/gemini-3-pro' },
+        composer: { model: 'google/gemini-3-pro' },
       },
       council: {
         ...councilConfig(),
@@ -452,21 +452,21 @@ describe('council agent model resolution', () => {
       },
     };
     const agents = createAgents(config);
-    const council = agents.find((a) => a.name === 'council');
-    expect(council?.config.model).toBe('google/gemini-3-pro');
+    const composer = agents.find((a) => a.name === 'composer');
+    expect(composer?.config.model).toBe('google/gemini-3-pro');
   });
 
-  test('council uses default when no legacy master and no preset override', () => {
+  test('composer uses default when no legacy master and no preset override', () => {
     // No legacy master, no preset override → standard default
     const config: PluginConfig = {
       council: councilConfig(),
     };
     const agents = createAgents(config);
-    const council = agents.find((a) => a.name === 'council');
-    expect(council?.config.model).toBe(DEFAULT_MODELS.council);
+    const composer = agents.find((a) => a.name === 'composer');
+    expect(composer?.config.model).toBe(DEFAULT_MODELS.composer);
   });
 
-  test('end-to-end: raw master.model config flows through schema to council agent', () => {
+  test('end-to-end: raw master.model config flows through schema to composer agent', () => {
     // Integration test: start from raw user config with deprecated master.model,
     // parse through CouncilConfigSchema, then pass to createAgents.
     // This validates the full seam between schema transform and agent resolution.
@@ -487,9 +487,9 @@ describe('council agent model resolution', () => {
         council: parsed.data,
       };
       const agents = createAgents(config);
-      const council = agents.find((a) => a.name === 'council');
+      const composer = agents.find((a) => a.name === 'composer');
       // Legacy master.model should flow through schema → agent
-      expect(council?.config.model).toBe('anthropic/claude-opus-4-6');
+      expect(composer?.config.model).toBe('anthropic/claude-opus-4-6');
     }
   });
 });
@@ -761,12 +761,12 @@ describe('PluginConfigSchema custom-agent-only prompt fields', () => {
 describe('disabled_agents', () => {
   test('disabled agents are not created', () => {
     const config: PluginConfig = {
-      disabled_agents: ['designer', 'fixer'],
+      disabled_agents: ['designer', 'sylastra'],
     };
     const agents = createAgents(config);
     const names = agents.map((a) => a.name);
     expect(names).not.toContain('designer');
-    expect(names).not.toContain('fixer');
+    expect(names).not.toContain('sylastra');
     expect(names).toContain('orchestrator');
     expect(names).toContain('explorer');
     expect(names).toContain('oracle');
@@ -783,26 +783,26 @@ describe('disabled_agents', () => {
     expect(names).toContain('councillor');
   });
 
-  test('disabling council disables council agent', () => {
+  test('disabling composer disables composer agent', () => {
     const config: PluginConfig = {
-      disabled_agents: ['council'],
+      disabled_agents: ['composer'],
     };
     const agents = createAgents(config);
     const names = agents.map((a) => a.name);
-    expect(names).not.toContain('council');
+    expect(names).not.toContain('composer');
     // councillor is protected, it stays
     expect(names).toContain('councillor');
   });
 
   test('agent count decreases when agents are disabled', () => {
     const agents = createAgents();
-    expect(agents.length).toBe(7); // observer disabled, council unconfigured
+    expect(agents.length).toBe(5); // observer disabled, composer unconfigured
 
     const disabledConfig: PluginConfig = {
       disabled_agents: ['observer', 'designer'],
     };
     const disabledAgents = createAgents(disabledConfig);
-    expect(disabledAgents.length).toBe(6);
+    expect(disabledAgents.length).toBe(4);
   });
 
   test('getDisabledAgents respects protection rules', () => {
@@ -817,11 +817,11 @@ describe('disabled_agents', () => {
 
   test('getEnabledAgentNames filters correctly', () => {
     const config: PluginConfig = {
-      disabled_agents: ['designer', 'fixer'],
+      disabled_agents: ['designer', 'sylastra'],
     };
     const enabled = getEnabledAgentNames(config);
     expect(enabled).not.toContain('designer');
-    expect(enabled).not.toContain('fixer');
+    expect(enabled).not.toContain('sylastra');
     expect(enabled).toContain('orchestrator');
     expect(enabled).toContain('explorer');
   });
@@ -846,9 +846,9 @@ describe('disabled_agents', () => {
     };
     const agents = createAgents(config);
     const names = agents.map((a) => a.name);
-    expect(agents.length).toBe(8);
+    expect(agents.length).toBe(6);
     expect(names).toContain('observer');
-    expect(names).not.toContain('council');
+    expect(names).not.toContain('composer');
   });
 });
 

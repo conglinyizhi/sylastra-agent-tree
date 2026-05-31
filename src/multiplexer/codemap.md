@@ -1,88 +1,81 @@
 # src/multiplexer/
 
-## Responsibility
+## 职责
 
-- Provide multiplexer-backed visualization for spawned subagent sessions.
-- Select and instantiate terminal backend based on config/env:
-  `auto`, `tmux`, `zellij`, or `none`.
-- Manage lifecycle of child session panes with lifecycle hooks from OpenCode
-  events plus health/polling fallback.
-- Keep pane cleanup safe and graceful (best-effort interrupt + kill).
+- 为生成的子代理会话提供基于 multiplexer 的面板可视化。
+- 根据配置/环境选择并实例化终端后端：
+  `auto`、`tmux`、`zellij` 或 `none`。
+- 通过 OpenCode 事件的生命周期钩子以及健康/轮询回退机制，管理子会话面板的生命周期。
+- 确保面板清理安全且优雅（尽力中断 + 关闭）。
 
-## Design
+## 设计
 
 - `types.ts`
-  - Defines shared abstractions:
-    - `Multiplexer` (`spawnPane`, `closePane`, `applyLayout`, `isAvailable`,
-      `isInsideSession`),
-    - `PaneResult`,
-    - `isServerRunning(serverUrl, timeoutMs?, maxAttempts?)` for readiness checks.
+  - 定义共享抽象：
+    - `Multiplexer`（`spawnPane`、`closePane`、`applyLayout`、`isAvailable`、
+      `isInsideSession`），
+    - `PaneResult`，
+    - `isServerRunning(serverUrl, timeoutMs?, maxAttempts?)` 用于就绪检查。
 
 - `factory.ts`
-  - Creates fresh multiplexer instance per call (no cache) so env-specific
-    state (`TMUX`, `ZELLIJ`) is captured accurately.
-  - `auto` mode resolves strictly by env vars and can become no-op `none`.
-  - Exposes `getAutoMultiplexerType` and `startAvailabilityCheck` for diagnostics.
+  - 每次调用创建全新的 multiplexer 实例（无缓存），从而准确捕获环境特定状态（`TMUX`、`ZELLIJ`）。
+  - `auto` 模式严格按照环境变量解析，可回退为无操作的 `none`。
+  - 暴露 `getAutoMultiplexerType` 和 `startAvailabilityCheck` 用于诊断。
 
-- `tmux/index.ts` (`TmuxMultiplexer`)
-  - Detects binary lazily via `which/where` + `tmux -V`.
-  - `spawnPane` executes `opencode attach` in a split pane,
-    sets pane title, and applies layout.
-  - `closePane` sends `C-c`, waits briefly, then `kill-pane`.
-  - `applyLayout` handles main layout sizing and rebalance.
+- `tmux/index.ts`（`TmuxMultiplexer`）
+  - 通过 `which/where` + `tmux -V` 惰性检测二进制文件。
+  - `spawnPane` 在分割面板中执行 `opencode attach`，
+    设置面板标题并应用布局。
+  - `closePane` 发送 `C-c`，短暂等待后执行 `kill-pane`。
+  - `applyLayout` 处理主布局大小调整和重新平衡。
 
-- `zellij/index.ts` (`ZellijMultiplexer`)
-  - Detects and reuses/creates `opencode-agents` tab.
-  - First child uses default pane in that tab; additional children create panes.
-  - Falls back to first available pane ID heuristics and restores original tab
-    context around cross-tab operations.
-  - Layout configuration is accepted but effectively no-op (tool semantics differ
-    from tmux).
+- `zellij/index.ts`（`ZellijMultiplexer`）
+  - 检测并复用/创建 `opencode-agents` 标签页。
+  - 第一个子会话使用该标签页中的默认面板；后续子会话创建新面板。
+  - 回退到首个可用面板 ID 启发式策略，并在跨标签页操作时恢复原始标签页上下文。
+  - 接收布局配置但实际为无操作（工具语义与 tmux 不同）。
 
-- `session-manager.ts` (`MultiplexerSessionManager`)
-  - Initialized once from plugin context and config.
-  - Subscribes to lifecycle events:
-    - `session.created`: spawn pane if enabled and not already tracked,
-    - `session.status`: close on `idle`, respawn on `busy` when known,
-    - `session.deleted`: close pane and clear tracking.
-  - Tracks:
-    - active panes (`sessions` map),
-    - known sessions (`knownSessions`),
-    - in-flight spawns (`spawningSessions`).
-  - `respawnIfKnown` handles busy sessions that reappear after being closed.
-  - Polling fallback (`pollSessions`) is enabled when event coverage is incomplete.
-    It handles:
-    - idle detection,
-    - missing status grace period,
-    - max session lifetime timeout.
+- `session-manager.ts`（`MultiplexerSessionManager`）
+  - 从插件上下文和配置初始化一次。
+  - 订阅生命周期事件：
+    - `session.created`：如果启用且尚未跟踪，则生成面板，
+    - `session.status`：`idle` 时关闭，`busy` 时若已知则重新生成，
+    - `session.deleted`：关闭面板并清除跟踪。
+  - 跟踪：
+    - 活跃面板（`sessions` 映射表），
+    - 已知会话（`knownSessions`），
+    - 正在生成中的会话（`spawningSessions`）。
+  - `respawnIfKnown` 处理关闭后重新出现的忙碌会话。
+  - 当事件覆盖不完整时启用轮询回退（`pollSessions`），处理：
+    - idle 检测，
+    - 缺失状态的宽限期，
+    - 最大会话生命周期超时。
 
 - `index.ts`
-  - Re-exports factory, manager, and implementations for external import.
+  - 重新导出工厂、管理器及实现，供外部导入。
 
-## Flow
+## 流程
 
-- `src/index.ts` reads multiplexer config and creates
-  `MultiplexerSessionManager(ctx, config)`.
-- On startup `getMultiplexer(config)` determines backend and whether manager is
-  enabled (`type != none`, multiplexer present, running inside session).
-- On `session.created`:
-  - checks backend health via `isServerRunning(serverUrl)`,
-  - spawns a new pane,
-  - starts background polling.
-- On `session.status`:
-  - `idle` → `closeSession` (close pane + remove mapping),
-  - `busy` → `respawnIfKnown` if session was previously known.
-- On `session.deleted`:
-  - close and remove pane, clear known-session mapping.
-- `cleanup()` closes all panes and clears tracking maps.
+- `src/index.ts` 读取 multiplexer 配置并创建
+  `MultiplexerSessionManager(ctx, config)`。
+- 启动时 `getMultiplexer(config)` 确定后端以及管理器是否启用（`type != none`、multiplexer 存在、在会话内运行）。
+- `session.created` 时：
+  - 通过 `isServerRunning(serverUrl)` 检查后端健康状态，
+  - 生成新面板，
+  - 启动后台轮询。
+- `session.status` 时：
+  - `idle` → `closeSession`（关闭面板 + 移除映射），
+  - `busy` → 如果会话先前已知则调用 `respawnIfKnown`。
+- `session.deleted` 时：
+  - 关闭并移除面板，清除已知会话映射。
+- `cleanup()` 关闭所有面板并清除跟踪映射表。
 
-## Integration
+## 集成
 
-- Integrates with OpenCode session events and server URL from plugin input.
-- Uses helper endpoints defined by `src/config` multiplexer settings:
-  `type`, `layout`, `main_pane_size`.
-- Implementations in `src/multiplexer/tmux` and `src/multiplexer/zellij` are used
-  through the shared abstraction.
-- Validation coverage:
+- 与 OpenCode 会话事件及插件输入的服务器 URL 集成。
+- 使用 `src/config` multiplexer 设置定义的辅助端点：
+  `type`、`layout`、`main_pane_size`。
+- 通过共享抽象使用 `src/multiplexer/tmux` 和 `src/multiplexer/zellij` 中的实现。
+- 验证覆盖：
   - `src/multiplexer/factory.test.ts`
   - `src/multiplexer/session-manager.test.ts`

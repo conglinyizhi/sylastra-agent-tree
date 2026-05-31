@@ -70,14 +70,14 @@ async function appLog(
 ): Promise<void> {
   try {
     await ctx.client.app.log({
-      body: { service: 'oh-my-opencode-slim', level, message },
+      body: { service: 'sylastra-agent-tree', level, message },
     });
   } catch {
     // client.app.log may deadlock or be unavailable; stderr is the
     // fallback
     const prefix =
       level === 'error' ? 'ERROR' : level === 'warn' ? 'WARN' : 'INFO';
-    console.error(`[oh-my-opencode-slim] ${prefix}: ${message}`);
+    console.error(`[sylastra-agent-tree] ${prefix}: ${message}`);
   }
 }
 
@@ -108,7 +108,7 @@ async function probeJSDOM(): Promise<string | null> {
 // re-runs, it checks this variable and applies the runtime preset instead
 // of the config file's preset. State lives in config/runtime-preset.ts.
 
-const OhMyOpenCodeLite: Plugin = async (ctx) => {
+const SylastraAgentTree: Plugin = async (ctx) => {
   const sessionId = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15);
   initLogger(sessionId);
 
@@ -339,7 +339,7 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
     await appLog(
       ctx,
       'error',
-      `INIT FAILED: ${String(err)}. Report at github.com/alvinunreal/oh-my-opencode-slim/issues/310`,
+      `INIT FAILED: ${String(err)}. Report at github.com/conglinyizhi/sylastra-agent-tree/issues/310`,
     );
     throw err;
   }
@@ -365,7 +365,7 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
       `  mcps:   ${mcpCount} (expected >=${mcpThreshold})`,
       'This usually means a dependency failed to resolve (jsdom, etc).',
       'If you recently updated opencode, see:',
-      '  github.com/alvinunreal/oh-my-opencode-slim/issues/310',
+      '  github.com/conglinyizhi/sylastra-agent-tree/issues/310',
     ].join('\n');
     log(`[plugin] WARN: ${msg}`);
     await appLog(ctx, 'warn', msg);
@@ -391,7 +391,7 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
   divoomManager.onPluginLoad();
 
   return {
-    name: 'oh-my-opencode-slim',
+    name: 'sylastra-agent-tree',
 
     agent: agents,
 
@@ -1211,7 +1211,7 @@ const OhMyOpenCodeLite: Plugin = async (ctx) => {
   };
 };
 
-export default OhMyOpenCodeLite;
+export default SylastraAgentTree;
 
 export type {
   AgentName,

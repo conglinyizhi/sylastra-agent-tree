@@ -1,70 +1,63 @@
 import { shortModelLabel } from '../utils/session';
 import { type AgentDefinition, resolvePrompt } from './orchestrator';
 
-// NOTE: Councillor system prompts live in the councillor agent factory.
-// The format functions below only structure the USER message content — the
-// agent factory provides the system prompt.
+// 注意：评审员（Councillor）的系统提示位于 councillor agent 工厂中。
+// 下面的格式化函数仅组织 USER 消息内容——agent 工厂提供系统提示。
 
-const COUNCIL_AGENT_PROMPT = `You are the Council agent — a multi-LLM \
-orchestration system that runs consensus across multiple models.
+const COUNCIL_AGENT_PROMPT = `你是 Council agent——一个多 LLM 编排系统，用于在多个模型之间运行共识。
 
-**Tool**: You have access to the \`council_session\` tool.
+**工具**：你可以使用 \`council_session\` 工具。
 
-**When to use**:
-- When invoked by a user with a request
-- When you want multiple expert opinions on a complex problem
-- When higher confidence is needed through model consensus
+**何时使用**：
+- 当用户通过请求调用时
+- 当你希望就复杂问题获得多个专家意见时
+- 当需要通过模型共识获得更高可信度时
 
-**Usage**:
-1. Call the \`council_session\` tool with the user's prompt
-2. Optionally specify a preset (default: "default")
-3. Receive the councillor responses formatted for synthesis
-4. Follow the Synthesis Process below
-5. Present the result to the user
+**用法**：
+1. 使用用户提示调用 \`council_session\` 工具
+2. 可选地指定预设（默认："default"）
+3. 接收格式化后的评审员响应以进行综合
+4. 遵循下面的综合流程
+5. 向用户呈现结果
 
-**Synthesis Process** (MANDATORY — follow in order):
-1. Read the original user prompt
-2. Review each councillor's response individually — note each councillor's \
-key insight and unique contribution by name
-3. Identify agreements and contradictions between councillors
-4. Resolve contradictions with explicit reasoning
-5. Synthesize the optimal final answer
-6. Format output per the Required Output Format below
+**综合流程**（强制——按顺序执行）：
+1. 阅读原始用户提示
+2. 逐一审查每位评审员的响应——按名称记录每位评审员的关键见解和独特贡献
+3. 识别评审员之间的一致意见和分歧
+4. 通过明确推理解决分歧
+5. 综合出最佳最终答案
+6. 按照下面的所需输出格式格式化输出
 
-**Behavior**:
-- Delegate requests directly to council_session
-- Don't pre-analyze or filter the prompt before calling council_session
-- Credit specific insights from individual councillors using their names
-- If councillors disagree, explain why you chose one approach over another
-- Do not omit per-councillor details from the final response
-- Do not collapse the output into only a final summary
-- Be transparent about trade-offs when different approaches have valid pros/cons
-- Don't just average responses — choose the best approach and improve upon it
+**行为**：
+- 直接将请求委托给 council_session
+- 在调用 council_session 之前不要预先分析或过滤提示
+- 使用评审员的姓名标明其具体见解
+- 如果评审员存在分歧，解释为何选择一种方案而非另一种
+- 不要在最终回复中省略每位评审员的详细信息
+- 不要将输出仅压缩为一个最终摘要
+- 当不同方案各有合理利弊时，应透明地说明权衡
+- 不要仅仅取平均——选择最佳方案并加以改进
 
-**Required Output Format**:
-Always include these sections in your final response:
+**所需输出格式**：
+始终在最终回复中包含以下部分：
 
-## Council Response
-Provide the best synthesized answer. Integrate the strongest points from the \
-councillors, resolve disagreements, and give the user a clear final \
-recommendation or answer. Include relevant code examples and concrete details.
+## Council 响应
+提供最佳综合答案。整合评审员的最强观点，解决分歧，为用户提供清晰的最终建议或答案。包含相关代码示例和具体细节。
 
-## Councillor Details
-Include each councillor's response separately.
+## 评审员详情
+单独包含每位评审员的响应。
 
-Use each councillor name exactly as provided in the tool result.
+使用工具结果中提供的每位评审员的确切名称。
 
-Format each councillor like:
+每位评审员的格式如下：
 
-### <councillor name>
-<that councillor's response>
+### <评审员名称>
+<该评审员的响应>
 
-If a councillor failed or timed out, include that status briefly.
+如果某位评审员失败或超时，简要说明状态。
 
-## Council Summary
-Summarize where councillors agreed, where they disagreed, why you chose the \
-final answer, and any remaining uncertainty. Include a consensus confidence \
-rating: unanimous, majority, or split.`;
+## Council 总结
+总结评审员的一致之处、分歧之处、为何选择最终答案，以及任何剩余的不确定性。包含共识置信度评级：一致、多数或分裂。`;
 
 export function createCouncilAgent(
   model: string,
@@ -79,16 +72,15 @@ export function createCouncilAgent(
 
   const definition: AgentDefinition = {
     name: 'council',
-    description:
-      'Multi-LLM council agent that synthesizes responses from multiple models for higher-quality outputs',
+    description: '多 LLM Council agent，综合多个模型的响应以获得更高质量的输出',
     config: {
       temperature: 0.1,
       prompt,
     },
   };
 
-  // Council's model comes from config override or is resolved at
-  // runtime; only set if a non-empty string is provided.
+  // Council 的模型来自配置覆盖或运行时解析；
+  // 仅在提供非空字符串时设置。
   if (model) {
     definition.config.model = model;
   }
@@ -97,13 +89,13 @@ export function createCouncilAgent(
 }
 
 /**
- * Build the prompt for a specific councillor session.
+ * 构建特定评审员会话的提示。
  *
- * Returns the raw user prompt — the agent factory (councillor.ts) provides
- * the system prompt with tool-aware instructions. No duplication.
+ * 返回原始用户提示——agent 工厂（councillor.ts）提供
+ * 包含工具感知指令的系统提示。无重复内容。
  *
- * If a per-councillor prompt override is provided, it is prepended as
- * role/guidance context before the user's question.
+ * 如果提供了按评审员设置的提示覆盖，它会作为
+ * 角色/指导上下文预先附加到用户问题之前。
  */
 export function formatCouncillorPrompt(
   userPrompt: string,
@@ -114,12 +106,12 @@ export function formatCouncillorPrompt(
 }
 
 /**
- * Format councillor results for the council agent to synthesize.
+ * 格式化评审员结果供 council agent 进行综合。
  *
- * Formats councillor results as structured data that the council agent
- * (which called the tool) will receive as the tool response. The council
- * agent's system prompt contains synthesis instructions.
- * Returns a special message when all councillors failed to produce output.
+ * 将评审员结果格式化为结构化数据，council agent
+ *（调用该工具的 agent）将作为工具响应接收。
+ * council agent 的系统提示包含综合指令。
+ * 当所有评审员均未产生输出时返回特殊消息。
  */
 export function formatCouncillorResults(
   originalPrompt: string,
@@ -147,8 +139,8 @@ export function formatCouncillorResults(
     .map((cr) => `**${cr.name}**: ${cr.status} — ${cr.error ?? 'Unknown'}`)
     .join('\n');
 
-  // Defensive guard: caller (runCouncil) short-circuits when all fail,
-  // but this function may be reused in other contexts.
+  // 防御性保护：调用方（runCouncil）在所有评审员失败时会短路处理，
+  // 但此函数可能在其它上下文中重用。
   if (completedWithResults.length === 0) {
     const errorDetails = councillorResults
       .map(
@@ -159,17 +151,17 @@ export function formatCouncillorResults(
       )
       .join('\n');
 
-    return `---\n\n**Original Prompt**:\n${originalPrompt}\n\n---\n\n**Councillor Responses**:\nAll councillors failed to produce output:\n${errorDetails}\n\nPlease generate a response based on the original prompt alone.`;
+    return `---\n\n**原始提示**:\n${originalPrompt}\n\n---\n\n**评审员响应**:\n所有评审员均未产生输出：\n${errorDetails}\n\n请仅根据原始提示生成响应。`;
   }
 
-  let prompt = `---\n\n**Original Prompt**:\n${originalPrompt}\n\n---\n\n**Councillor Responses**:\n${councillorSection}`;
+  let prompt = `---\n\n**原始提示**:\n${originalPrompt}\n\n---\n\n**评审员响应**:\n${councillorSection}`;
 
   if (failedSection) {
-    prompt += `\n\n---\n\n**Failed/Timed-out Councillors**:\n${failedSection}`;
+    prompt += `\n\n---\n\n**失败/超时的评审员**:\n${failedSection}`;
   }
 
   prompt +=
-    '\n\n---\n\nYou MUST follow the Synthesis Process steps before producing output: review each councillor response individually, then produce the required output with a synthesized Council Response, per-councillor details using their exact names, and a Council Summary with consensus confidence rating (unanimous, majority, or split).';
+    '\n\n---\n\n在生成输出之前，你必须遵循综合流程的步骤：逐一审查每位评审员的响应，然后生成所需的输出，包括综合后的 Council 响应、使用确切名称的每位评审员详情，以及带有共识置信度评级（一致、多数或分裂）的 Council 总结。';
 
   return prompt;
 }

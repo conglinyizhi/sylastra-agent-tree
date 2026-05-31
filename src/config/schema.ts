@@ -178,7 +178,7 @@ export const InterviewConfigSchema = z.object({
     .boolean()
     .default(true)
     .describe(
-      'Automatically open the interview UI in your default browser during interactive runs. Disabled automatically in tests and CI.',
+      '在交互式运行期间自动在默认浏览器中打开面试 UI。在测试和 CI 中自动禁用。',
     ),
   port: z.number().int().min(0).max(65535).default(0),
   dashboard: z.boolean().default(false),
@@ -226,31 +226,25 @@ export const TodoContinuationConfigSchema = z.object({
     .min(1)
     .max(50)
     .default(5)
-    .describe(
-      'Maximum consecutive auto-continuations before stopping to ask user',
-    ),
+    .describe('停止询问用户前的最大连续自动继续次数'),
   cooldownMs: z
     .number()
     .int()
     .min(0)
     .max(30_000)
     .default(3000)
-    .describe('Delay in ms before auto-continuing (gives user time to abort)'),
+    .describe('自动继续前的延迟（毫秒），给用户中止的时间'),
   autoEnable: z
     .boolean()
     .default(false)
-    .describe(
-      'Automatically enable auto-continue when the orchestrator session has enough todos',
-    ),
+    .describe('当编排器会话有足够待办事项时自动启用自动继续'),
   autoEnableThreshold: z
     .number()
     .int()
     .min(1)
     .max(50)
     .default(4)
-    .describe(
-      'Number of todos that triggers auto-enable (only used when autoEnable is true)',
-    ),
+    .describe('触发自动启用的待办事项数（仅 autoEnable 为 true 时生效）'),
 });
 
 export type TodoContinuationConfig = z.infer<
@@ -268,7 +262,7 @@ export const SubtaskConfigSchema = z.object({
     .max(24 * 60 * 60 * 1000)
     .optional()
     .describe(
-      'Subtask worker timeout in ms. 0 disables the timeout. Defaults to 300000 (5 minutes).',
+      '子任务工作器超时时间（毫秒）。0 表示禁用超时。默认为 300000（5 分钟）。',
     ),
 });
 
@@ -283,8 +277,7 @@ export const FailoverConfigSchema = z.object({
     .boolean()
     .default(true)
     .describe(
-      'When true (default), empty provider responses are treated as failures, ' +
-        'triggering fallback/retry. Set to false to treat them as successes.',
+      '当为 true（默认）时，空的提供者响应被视为失败，触发回退/重试。设置为 false 则视为成功。',
     ),
 });
 
@@ -308,7 +301,7 @@ function validateCustomOnlyPromptFields(
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: [...pathPrefix, name, 'prompt'],
-        message: 'prompt is only supported for custom agents',
+        message: 'prompt 仅支持自定义代理',
       });
     }
 
@@ -316,7 +309,7 @@ function validateCustomOnlyPromptFields(
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: [...pathPrefix, name, 'orchestratorPrompt'],
-        message: 'orchestratorPrompt is only supported for custom agents',
+        message: 'orchestratorPrompt 仅支持自定义代理',
       });
     }
   }
@@ -331,9 +324,7 @@ export const PluginConfigSchema = z
     autoUpdate: z
       .boolean()
       .optional()
-      .describe(
-        'Disable automatic installation of plugin updates when false. Defaults to true.',
-      ),
+      .describe('为 false 时禁用插件更新的自动安装。默认为 true。'),
     manualPlan: ManualPlanSchema.optional(),
     presets: z.record(z.string(), PresetSchema).optional(),
     agents: z.record(z.string(), AgentOverrideConfigSchema).optional(),
@@ -341,10 +332,10 @@ export const PluginConfigSchema = z
       .array(z.string())
       .optional()
       .describe(
-        'Agent names to disable completely. ' +
-          'Disabled agents are not instantiated and cannot be delegated to. ' +
-          'Orchestrator and council internal agents (councillor) cannot be disabled. ' +
-          "By default, 'observer' is disabled. Remove it from this list and configure a vision-capable model to enable.",
+        '完全禁用的代理名称。' +
+          '被禁用的代理不会被实例化，也无法被委托。' +
+          '编排器和委员会内部代理（councillor）不可禁用。' +
+          "默认情况下，'observer' 被禁用。将其移出此列表并配置视觉模型以启用。",
       ),
     disabled_mcps: z.array(z.string()).optional(),
     // Multiplexer config (new unified config - preferred)

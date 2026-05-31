@@ -21,15 +21,13 @@ const ModelIdSchema = z
  */
 export const CouncillorConfigSchema = z.object({
   model: ModelIdSchema.describe(
-    'Model ID in provider/model format (e.g. "openai/gpt-5.4-mini")',
+    '提供者/模型格式的模型 ID（例如 "openai/gpt-5.4-mini"）',
   ),
   variant: z.string().optional(),
   prompt: z
     .string()
     .optional()
-    .describe(
-      'Optional role/guidance injected into the councillor user prompt',
-    ),
+    .describe('注入到 councillor 用户提示中的可选角色/指导说明'),
 });
 
 export type CouncillorConfig = z.infer<typeof CouncillorConfigSchema>;
@@ -63,7 +61,7 @@ export const CouncilPresetSchema = z
           if (!innerParsed.success) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: `Invalid councillor "${innerKey}" (nested under legacy "councillors" key): ${innerParsed.error.issues
+              message: `无效的 councillor "${innerKey}"（嵌套在旧的 "councillors" 键下）：${innerParsed.error.issues
                 .map((i) => i.message)
                 .join(', ')}`,
             });
@@ -78,7 +76,7 @@ export const CouncilPresetSchema = z
       if (!parsed.success) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `Invalid councillor "${key}": ${parsed.error.issues
+          message: `无效的 councillor "${key}"：${parsed.error.issues
             .map((i) => i.message)
             .join(', ')}`,
         });
@@ -101,8 +99,8 @@ export const CouncillorExecutionModeSchema = z
   .enum(['parallel', 'serial'])
   .default('parallel')
   .describe(
-    'Execution mode for councillors. Use "serial" for single-model systems to avoid conflicts. ' +
-      'Use "parallel" for multi-model systems for faster execution.',
+    'councillor 的执行模式。单模型系统请使用 "serial" 以避免冲突。' +
+      '多模型系统请使用 "parallel" 以获得更快的执行速度。',
   );
 
 /**
@@ -131,7 +129,7 @@ export const CouncilConfigSchema = z
     timeout: z.number().min(0).default(180000),
     default_preset: z.string().default('default'),
     councillor_execution_mode: CouncillorExecutionModeSchema.describe(
-      'Execution mode for councillors. "serial" runs them one at a time (required for single-model systems). "parallel" runs them concurrently (default, faster for multi-model systems).',
+      'councillor 的执行模式。"serial" 逐个运行（单模型系统必需）。"parallel" 并发运行（默认，多模型系统更快）。',
     ),
     councillor_retries: z
       .number()
@@ -140,8 +138,7 @@ export const CouncilConfigSchema = z
       .max(5)
       .default(3)
       .describe(
-        'Number of retry attempts for councillors that return empty responses ' +
-          '(e.g. due to provider rate limiting). Default: 3 retries.',
+        'councillor 返回空响应时的重试次数（例如因提供者速率限制）。默认值：3 次重试。',
       ),
     // Deprecated fields — accepted for backward compatibility but ignored.
     // The council agent now synthesizes directly; no separate master session.
@@ -150,15 +147,15 @@ export const CouncilConfigSchema = z
     master: z
       .unknown()
       .optional()
-      .describe('DEPRECATED — ignored. Council agent synthesizes directly.'),
+      .describe('已弃用 — 忽略。Council agent 直接进行综合。'),
     master_timeout: z
       .unknown()
       .optional()
-      .describe('DEPRECATED — ignored. Use "timeout" instead.'),
+      .describe('已弃用 — 忽略。请使用 "timeout" 代替。'),
     master_fallback: z
       .unknown()
       .optional()
-      .describe('DEPRECATED — ignored. No separate master session.'),
+      .describe('已弃用 — 忽略。不再有独立的 master 会话。'),
   })
   .transform((data) => {
     // Detect deprecated fields and attach warning for consumers

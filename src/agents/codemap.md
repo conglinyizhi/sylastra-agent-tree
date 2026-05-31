@@ -1,108 +1,99 @@
-# Agents Directory Codemap
+# Agents 目录代码地图
 
-## Responsibility
+## 职责
 
-`src/agents/` defines built-in specialists plus custom agents and converts
-configuration into OpenCode SDK registration data.
+`src/agents/` 定义了内置专家代理以及自定义代理，并将配置转换为 OpenCode SDK 注册数据。
 
-Responsibilities:
+职责包括：
 
-- Build orchestrator and specialist agent definitions from factory functions.
-- Resolve overrides for model, variant, temperature, options, prompt, and display
-  name.
-- Normalize/validate custom agent names and custom-orchestrator-facing aliases.
-- Compose permissions, MCP allow-lists, and visibility metadata for OpenCode.
+- 通过工厂函数构建编排代理和专家代理定义。
+- 解析模型、变体、温度、选项、提示和显示名称的覆盖。
+- 规范化/验证自定义代理名称和面向自定义编排代理的别名。
+- 为 OpenCode 组合权限、MCP 白名单和可见性元数据。
 
-## Core architecture
+## 核心架构
 
-### Construction flow (`createAgents`)
+### 构建流程（`createAgents`）
 
-1. Compute the disabled set via `getDisabledAgents()`:
-   - from `config.disabled_agents`
-   - with protected-agent guard (`orchestrator`, `councillor` never disabled)
-2. Build built-in subagents from `SUBAGENT_FACTORIES` (`SUBAGENT_NAMES`).
-3. Discover custom agent names from `config.agents` keys that are not built-ins
-   or aliases.
-4. Validate custom names (`/^[a-z][a-z0-9_-]*$/i`) and model presence:
-   skip with warning if `model` missing.
-5. Load prompt files for each agent:
-   - `<agent>.md` replacement prompt
-   - `<agent>_append.md` append prompt
-6. Apply override handling:
-   - string model → `config.model`
-   - array model → `agent._modelArray` and clear `config.model`
-   - merge `temperature`, `variant`, `options`, `displayName`.
-7. Apply permission defaults per agent (`applyDefaultPermissions`).
-8. Apply compatibility fallbacks:
-   - `fixer` may inherit `librarian` model when not explicitly configured.
-   - `council` may inherit deprecated `council.master.model` when no explicit
-     `council` override and default remains unresolved.
-9. Build orchestrator using prompt files + disabled-agent filtering.
-10. Normalize/collect display names and inject `@displayName` references into:
-    orchestrator prompt and all custom `orchestratorPrompt` snippets.
-11. Validate display-name collisions/agent-name conflicts.
-12. Return `[orchestrator, ...subagents]`.
+1. 通过 `getDisabledAgents()` 计算禁用集：
+   - 来自 `config.disabled_agents`
+   - 包含受保护代理保护（`orchestrator`、`councillor` 永远不会被禁用）
+2. 从 `SUBAGENT_FACTORIES`（`SUBAGENT_NAMES`）构建内置子代理。
+3. 发现来自 `config.agents` 键中非内置或别名的自定义代理名称。
+4. 验证自定义名称（`/^[a-z][a-z0-9_-]*$/i`）和模型存在性：如果缺少 `model`，跳过并发出警告。
+5. 为每个代理加载提示文件：
+   - `<agent>.md` 替换提示
+   - `<agent>_append.md` 追加提示
+6. 应用覆盖处理：
+   - 字符串类型 `model` → `config.model`
+   - 数组类型 `model` → `agent._modelArray` 并清除 `config.model`
+   - 合并 `temperature`、`variant`、`options`、`displayName`
+7. 为每个代理应用权限默认值（`applyDefaultPermissions`）。
+8. 应用兼容性回退：
+   - 当未显式配置时，`fixer` 可能继承 `librarian` 模型。
+   - 当没有显式 `council` 覆盖且默认值仍未解析时，`council` 可能继承弃用的 `council.master.model`。
+9. 使用提示文件和禁用代理过滤构建编排代理。
+10. 规范化/收集显示名称，并将 `@displayName` 引用注入到：
+    编排代理提示和所有自定义 `orchestratorPrompt` 片段中。
+11. 验证显示名称冲突/代理名称冲突。
+12. 返回 `[orchestrator, ...subagents]`。
 
-### Runtime model behavior
+### 运行时模型行为
 
-- `_modelArray` is used as the ordered runtime failover chain when supplied.
-- `orchestrator` may start unresolved (`model` undefined) to allow downstream
-  runtime resolution.
-- `subagent` overrides preserve per-model variants inside `_modelArray` while
-  optionally keeping top-level `variant` as default fallback.
+- 当提供 `_modelArray` 时，它用作有序的运行时故障切换链。
+- `orchestrator` 可能以未解析（`model` 未定义）状态启动，以允许下游运行时解析。
+- `subagent` 覆盖在 `_modelArray` 内保留每个模型的变体，同时可选地将顶级 `variant` 保留为默认回退。
 
-## Delegation and registration semantics
+## 委托和注册语义
 
-- `getAgentConfigs(config)` converts definitions to SDK configs and sets:
+- `getAgentConfigs(config)` 将定义转换为 SDK 配置并设置：
   - `orchestrator` → `mode: primary`
-  - built-in specialists → `mode: subagent`
+  - 内置专家代理 → `mode: subagent`
   - `council` → `mode: all`
-  - `councillor` → `mode: subagent`, `hidden: true`
-- If `displayName` is set:
-  - internal key remains registered but hidden
-  - host-facing key becomes normalized display name
+  - `councillor` → `mode: subagent`，`hidden: true`
+- 如果设置了 `displayName`：
+  - 内部键仍然注册但隐藏
+  - 面向宿主的键变为规范化的显示名称
 
-Permission defaults:
+权限默认值：
 
-- `question` defaults to `allow` unless existing explicit deny.
-- `council_session` defaults to `allow` only for `council`.
-- Nested `skill` permissions come from `getSkillPermissionsForAgent` and are
-  merged with existing permission maps.
+- `question` 默认 `allow`，除非存在显式拒绝。
+- `council_session` 仅对 `council` 默认 `allow`。
+- 嵌套的 `skill` 权限来自 `getSkillPermissionsForAgent`，并与现有权限映射合并。
 
-## Capability and policy inputs
+## 能力和策略输入
 
-- MCP allow-lists:
-  - `getAgentMcpList(name, config)` from `src/config/agent-mcps.ts`
-  - `agent-mcps` defaults in `src/config/agent-mcps.ts`
-- Agent metadata/aliases:
-  - `AGENT_ALIASES`, `SUBAGENT_NAMES`, `PROTECTED_AGENTS`
-  - `getAgentOverride`, `getCustomAgentNames` from `src/config/utils.ts`
-- Skills:
+- MCP 白名单：
+  - `getAgentMcpList(name, config)` 来自 `src/config/agent-mcps.ts`
+  - `agent-mcps` 默认值位于 `src/config/agent-mcps.ts`
+- 代理元数据/别名：
+  - `AGENT_ALIASES`、`SUBAGENT_NAMES`、`PROTECTED_AGENTS`
+  - `getAgentOverride`、`getCustomAgentNames` 来自 `src/config/utils.ts`
+- 技能：
   - `cli/skills.ts`
 
-## Flow and integration
+## 流程和集成
 
 ```text
 src/index.ts
   └─> loadPluginConfig()
       └─> createAgents(config) / getAgentConfigs(config)
-          └─> registration + runtime chat hooks
+          └─> 注册 + 运行时聊天钩子
 
   loadPluginConfig()
-    └─> prompt overrides + presets
-        └─> createAgents/create custom/orchestrator prompts
+    └─> 提示覆盖 + 预设
+        └─> createAgents/创建自定义/编排代理提示
 ```
 
-## Utilities and helpers
+## 工具和辅助函数
 
-- `isSubagent(name)` — type guard for subagent names.
-- `getDisabledAgents(config)` and `getEnabledAgentNames(config)`.
-- `resolvePrompt()` in `orchestrator.ts` centralizes replacement vs append behavior.
+- `isSubagent(name)` — 子代理名称的类型守卫。
+- `getDisabledAgents(config)` 和 `getEnabledAgentNames(config)`。
+- `orchestrator.ts` 中的 `resolvePrompt()` 集中处理替换与追加行为。
 
-## File structure
+## 文件结构
 
-- `index.ts` (agent registry, overrides, classification, custom agents)
-- `orchestrator.ts` (base prompts, prompt resolution, model-array type)
-- `council.ts`, `councillor.ts` (council tool orchestration + formatting)
-- `explorer.ts`, `librarian.ts`, `oracle.ts`, `designer.ts`, `fixer.ts`,
-  `observer.ts` (specialist factory prompts/config)
+- `index.ts`（代理注册表、覆盖、分类、自定义代理）
+- `orchestrator.ts`（基础提示、提示解析、模型数组类型）
+- `council.ts`、`councillor.ts`（委员会工具编排 + 格式化）
+- `explorer.ts`、`librarian.ts`、`oracle.ts`、`designer.ts`、`fixer.ts`、`observer.ts`（专家工厂提示/配置）

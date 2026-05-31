@@ -1,23 +1,23 @@
-# CLI Module Codemap
+# CLI 模块代码地图
 
-## Responsibility
+## 职责
 
-`src/cli/` provides the plugin installation workflow and the utilities that generate and persist runtime configuration.
+`src/cli/` 提供插件安装工作流以及生成和持久化运行时配置的工具。
 
-Current responsibilities:
+当前职责：
 
-- parse/install command arguments
-- install-time validation and environment checks
-- OpenCode configuration mutation (atomic)
-- lite config generation for provider/agent presets
-- optional skill installation and bundled-skill copying
+- 解析/安装命令参数
+- 安装时验证和环境检查
+- OpenCode 配置变更（原子操作）
+- 为提供者/代理预设生成精简配置
+- 可选的技能安装和捆绑技能复制
 
-## Design
+## 设计
 
-### Command surface
+### 命令面
 
-- `src/cli/index.ts` only dispatches:
-  - `install` subcommand and flags
+- `src/cli/index.ts` 仅分派：
+  - `install` 子命令和标志
     - `--skills=yes|no`
     - `--preset=<name>`
     - `--no-tui`
@@ -25,53 +25,53 @@ Current responsibilities:
     - `--reset`
     - `--help`
 
-The CLI is intentionally non-interactive-only now; it prints usage and steps to stdout with exit codes.
+CLI 现在刻意仅为非交互式；它打印用法和步骤到标准输出并返回退出码。
 
-### Module decomposition
+### 模块分解
 
-- `paths.ts`: config directory and file discovery (`opencode.json`/`.jsonc`, lite config path).
-- `config-io.ts`: JSON/JSONC parsing, normalize write behavior, atomic writes (`.tmp` + `.bak`), plugin registration, default-agent disabling.
-- `providers.ts`: provider model mapping + `generateLiteConfig()`.
-- `system.ts`: OpenCode binary/version/path checks.
-- `skills.ts`: bundled and permission-only skill permission defaults.
-- `custom-skills.ts`: bundled skill registry and copy-to-config-directory implementation.
-- `config-manager.ts`: re-export barrel for CLI config utilities.
-- `install.ts`: end-to-end install orchestration and console messaging.
-- `types.ts`: install/config DTOs.
+- `paths.ts`：配置目录和文件发现（`opencode.json`/`.jsonc`、精简配置路径）。
+- `config-io.ts`：JSON/JSONC 解析、规范化写入行为、原子写入（`.tmp` + `.bak`）、插件注册、默认代理禁用。
+- `providers.ts`：提供者模型映射 + `generateLiteConfig()`。
+- `system.ts`：OpenCode 二进制/版本/路径检查。
+- `skills.ts`：捆绑技能和仅权限技能的权限默认值。
+- `custom-skills.ts`：捆绑技能注册表和复制到配置目录的实现。
+- `config-manager.ts`：CLI 配置工具的重导出桶文件。
+- `install.ts`：端到端安装编排和控制台消息。
+- `types.ts`：安装/配置 DTO。
 
-## Flow
+## 流程
 
 ```text
-CLI install command
-  └─> install.ts (runInstall)
-      1) check OpenCode installed
-      2) add plugin entry to main OpenCode config
-      3) disable legacy default agents
-      4) write/preview generated lite config
-      5) optional install phase:
-         - installCustomSkill(...) for each CUSTOM_SKILL
+CLI install 命令
+  └─> install.ts（runInstall）
+      1) 检查 OpenCode 是否已安装
+      2) 将插件条目添加到主 OpenCode 配置
+      3) 禁用遗留默认代理
+      4) 写入/预览生成的精简配置
+      5) 可选安装阶段：
+         - 为每个 CUSTOM_SKILL 执行 installCustomSkill(...)
 ```
 
-`generateLiteConfig(installConfig)` behavior:
+`generateLiteConfig(installConfig)` 行为：
 
-- sets `$schema`, a selected `preset` that defaults to `openai`
-- always materializes generated presets `openai` and `opencode-go`
-- install-time `--preset` only selects between generated presets
-- maps each built-in agent name to provider-specific model/variant
-- injects skill list from bundled custom skill registries
-- injects default MCP sets from `DEFAULT_AGENT_MCPS`
-- includes tmux block (`layout`, `main_pane_size`) when enabled
+- 设置 `$schema`、一个选定的 `preset`（默认为 `openai`）
+- 始终物化生成的预设 `openai` 和 `opencode-go`
+- 安装时 `--preset` 仅在生成的预设之间选择
+- 将每个内置代理名称映射到特定提供者的模型/变体
+- 从捆绑的自定义技能注册表注入技能列表
+- 从 `DEFAULT_AGENT_MCPS` 注入默认 MCP 集合
+- 包含 tmux 块（`layout`、`main_pane_size`）（当启用时）
 
-`writeLiteConfig()` writes target file atomically and supports `--reset`/dry-run branching in `install.ts`.
+`writeLiteConfig()` 原子地写入目标文件，并支持 `install.ts` 中的 `--reset`/dry-run 分支。
 
-## Runtime integration
+## 运行时集成
 
-- Output file produced by install (`sylastra-agent-tree.json`) is consumed by runtime `config/loader.ts`.
-- Permission defaults for installed/available skills are shared with `agents/index.ts` via `cli/skills.ts`.
-- Generated provider/multiplexer settings are consumed by OpenCode session runtime via `src/index.ts` bootstrap.
+- 安装产生的输出文件（`sylastra-agent-tree.json`）由运行时 `config/loader.ts` 消费。
+- 已安装/可用技能的权限默认值通过 `cli/skills.ts` 与 `agents/index.ts` 共享。
+- 生成的提供者/复用器设置通过 `src/index.ts` 引导由 OpenCode 会话运行时消费。
 
-## Notes for architecture/docs accuracy
+## 关于架构/文档准确性的说明
 
-- The previous TUI references are stale; no dedicated interactive flow exists in current sources.
-- `--skills` controls bundled/custom skill installation only.
-- Built-in preset support includes `openai`, `opencode-go`, `kimi`, `copilot`, and `zai-plan`.
+- 先前的 TUI 引用已过时；当前源码中不存在专用交互式流程。
+- `--skills` 仅控制捆绑/自定义技能的安装。
+- 内置预设支持包括 `openai`、`opencode-go`、`kimi`、`copilot` 和 `zai-plan`。

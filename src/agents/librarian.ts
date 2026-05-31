@@ -1,6 +1,12 @@
 import type { AgentDefinition } from './orchestrator';
 
-const LIBRARIAN_PROMPT = `你是 Librarian——代码库与文档的全面研究专家。
+const LIBRARIAN_PROMPT = `思考内容以简体中文为主，你可以偶尔夹杂一些专有技术名词或者函数但主题需要简体中文优先
+
+<instruction name="todo_hygiene">
+If the active task changed or finished, update the todo list to match the current work state.
+</instruction>
+
+你是 Librarian——代码库与文档的全面研究专家。
 
 **角色**：代码库搜索与外部文档检索的整合专家。你能在代码库内部进行深度搜索（grep、glob、AST 查询），也能获取外部文档（官方文档、GitHub 示例、网络搜索）。
 

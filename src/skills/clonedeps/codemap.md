@@ -1,41 +1,27 @@
 # src/skills/clonedeps/
 
-## Responsibility
+## 职责
 
-Workflow-only bundled OpenCode skill for local dependency source mirroring. It
-instructs the orchestrator to use `@librarian` for dependency discovery and
-source URL/ref resolution, then perform approved git/filesystem operations
-directly.
+一个仅用于工作流的 OpenCode 内置技能，用于本地依赖源码镜像。它指导编排器使用 `@librarian` 进行依赖发现和源码 URL/引用解析，然后直接执行经过批准的 git/文件系统操作。
 
-## Design
+## 设计
 
-- `SKILL.md` is the prompt contract loaded by OpenCode and assigned only to the
-  orchestrator.
-- No helper script is bundled. The skill avoids brittle cross-ecosystem parsing
-  and keeps repo-specific judgment in librarian/orchestrator.
-- State is trackable project metadata stored in `.slim/clonedeps.json`; clone
-  contents live under `.slim/clonedeps/repos/<safe-dependency-name>/` and are
-  ignored by git.
-- The workflow updates `.gitignore`, `.ignore`, and root `AGENTS.md` with
-  concise marker sections so cloned source stays out of git but visible to
-  OpenCode and discoverable by future agents.
+- `SKILL.md` 是由 OpenCode 加载的 prompt 契约，且仅分配给编排器。
+- 没有附带辅助脚本。该技能避免了脆弱的跨生态解析，并将仓库特定的判断保留在 librarian/编排器中。
+- 状态存储在可追踪的项目元数据文件 `.slim/clonedeps.json` 中；克隆内容存放在 `.slim/clonedeps/repos/<安全的依赖名>/` 下，并被 git 忽略。
+- 工作流会更新 `.gitignore`、`.ignore` 和根目录的 `AGENTS.md`，添加简洁的标记段，使克隆源码不出现在 git 中但对 OpenCode 可见，且可被未来的 agent 发现。
 
-## Flow
+## 流程
 
-1. Orchestrator checks `.slim/clonedeps.json` first and reuses existing clones
-   when they satisfy the current task.
-2. Orchestrator asks librarian for a small source-resolution plan across the
-   repository's actual languages/ecosystems.
-3. Orchestrator verifies refs where possible and asks the user to approve.
-4. Orchestrator clones/fetches each approved source repo once into
-   `.slim/clonedeps/repos/<safe-repo-name>/`.
-5. Orchestrator writes `.slim/clonedeps.json` with paths, refs, and reasons.
-6. Orchestrator updates `.gitignore`, `.ignore`, and root `AGENTS.md`; the
-   AGENTS section lists each read-only clone path directly with a one-sentence
-   purpose.
+1. 编排器首先检查 `.slim/clonedeps.json`，如果现有克隆满足当前任务则直接复用。
+2. 编排器请求 librarian 根据仓库实际的语言/生态系统制定一个小型的源码解析计划。
+3. 编排器在可能的情况下验证引用，并请求用户批准。
+4. 编排器将每个获批的源码仓库克隆/拉取到 `.slim/clonedeps/repos/<安全的仓库名>/`。
+5. 编排器写入 `.slim/clonedeps.json`，包含路径、引用和原因。
+6. 编排器更新 `.gitignore`、`.ignore` 和根目录的 `AGENTS.md`；AGENTS 部分直接列出每个只读克隆路径及其一句话用途说明。
 
-## Integration
+## 集成
 
-- Registered in `src/cli/custom-skills.ts` with orchestrator-only permission.
-- Included in release verification via `scripts/verify-release-artifact.ts`.
-- Documented in `docs/skills.md` and included in `src/skills/codemap.md`.
+- 在 `src/cli/custom-skills.ts` 中注册，仅限编排器权限。
+- 通过 `scripts/verify-release-artifact.ts` 包含在发布验证中。
+- 在 `docs/skills.md` 中有文档说明，并包含在 `src/skills/codemap.md` 中。

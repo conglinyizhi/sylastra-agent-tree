@@ -1,107 +1,89 @@
 # src/tools/
 
-## Responsibility
+## 职责
 
-`src/tools/` exposes plugin tooling and runtime command hooks used by OpenCode.
+`src/tools/` 提供 OpenCode 使用的插件工具和运行时命令钩子。
 
-- AST-aware search/replace via `ast-grep` stack.
-- Remote fetch/transform utility via `smartfetch` (`webfetch` tool).
-- Council orchestration via `createCouncilTool` (`council.ts`).
-- Child-session subtasks via `subtask` and `/subtask` (`subtask/`).
-- Runtime preset switching via `/preset` hook via `createPresetManager` (`preset-manager.ts`).
+- 基于 `ast-grep` 的 AST 感知搜索/替换。
+- 通过 `smartfetch`（`webfetch` 工具）实现的远程获取/转换工具。
+- 通过 `createCouncilTool`（`council.ts`）实现的委员会编排。
+- 通过 `subtask` 和 `/subtask`（`subtask/`）实现的子会话子任务。
+- 通过 `createPresetManager`（`preset-manager.ts`）实现的 `/preset` 运行时预设切换。
 
-It is the bridge between plugin runtime integration (`src/index.ts`) and the lower-level
-implementations in feature folders.
+它是插件运行时集成（`src/index.ts`）与各功能文件夹中底层实现之间的桥梁。
 
-## Export surface (`src/tools/index.ts`)
+## 导出面（`src/tools/index.ts`）
 
-- `ast_grep_search`, `ast_grep_replace` from `./ast-grep`
-- `createWebfetchTool`, `WEBFETCH_DESCRIPTION`, and related types from `./smartfetch`
+- `ast_grep_search`、`ast_grep_replace` 来自 `./ast-grep`
+- `createWebfetchTool`、`WEBFETCH_DESCRIPTION` 及相关类型来自 `./smartfetch`
 - `createCouncilTool`
-- `createSubtaskTool`, `createSubtaskCommandManager`, `createSubtaskState`, and
-  `createReadSessionTool` from `./subtask`
-- `createPresetManager` and `PresetManager` type
+- `createSubtaskTool`、`createSubtaskCommandManager`、`createSubtaskState` 和 `createReadSessionTool` 来自 `./subtask`
+- `createPresetManager` 和 `PresetManager` 类型
 
-## Design patterns
+## 设计模式
 
-- **Factory-based registration:** each feature exposes a factory that returns an
-  executable/tool or handler object bound to plugin context.
-- **Clear boundaries:** all plugin lifecycle hooks are emitted from factory methods
-  (`handleCommandExecuteBefore`, `handleEvent`, `registerCommand`) rather than in tool
-  modules.
-- **Metadata-first output:** tool calls return text plus internal metadata writes when
-  possible (for richer UI surfaces).
+- **基于工厂的注册：** 每个功能暴露一个工厂，返回绑定到插件上下文的可执行工具或处理器对象。
+- **清晰的边界：** 所有插件生命周期钩子都从工厂方法（`handleCommandExecuteBefore`、`handleEvent`、`registerCommand`）发出，而非在工具模块中。
+- **元数据优先输出：** 工具调用在可能时返回文本及内部元数据写入（以获得更丰富的 UI 面）。
 
-## Subsystems and data flow
+## 子系统与数据流
 
-### Council tool path
+### Council 工具路径
 
-- `createCouncilTool` defines `council_session`.
-- `execute` performs guarded invocation:
-  - validates `toolContext` and `sessionID`,
-  - only allows direct use by `agent: 'council'` (or missing agent for backward compatibility),
-  - calls `CouncilManager.runCouncil(prompt, preset, parentSessionId)`.
-- On success, appends a councillor response summary and normalized model list to output.
-- On failure, returns a concise error string.
-- Shows config deprecation warnings when `CouncilManager` exposes deprecated field metadata.
+- `createCouncilTool` 定义 `council_session`。
+- `execute` 执行受保护的调用：
+  - 验证 `toolContext` 和 `sessionID`，
+  - 仅允许 `agent: 'council'`（或缺失 agent 时的向后兼容）直接使用，
+  - 调用 `CouncilManager.runCouncil(prompt, preset, parentSessionId)`。
+- 成功时，将 councillor 响应摘要和标准化模型列表附加到输出。
+- 失败时，返回简洁的错误字符串。
+- 当 `CouncilManager` 暴露已弃用的字段元数据时，显示配置弃用警告。
 
-### Preset-manager command path
+### Preset-manager 命令路径
 
-- `createPresetManager(ctx, config)` returns:
-  - `registerCommand(opencodeConfig)`: injects `/preset` command definition if absent,
-  - `handleCommandExecuteBefore(input, output)`: intercepts `/preset` command handling.
-- Command behavior:
-  - no args → clear output and list available presets (`active` marker supported),
-  - single token arg → switch preset through `client.config.update(...)` with mapped agent overrides,
-  - multi-word arg → suggestion + no update.
-- Mapping logic converts plugin preset override format (`AgentOverrideConfig`) into runtime
-  SDK `agent` config (`model`, `temperature`, `variant`, `options`) and skips fields not
-  supported in runtime updates (`prompt`, `orchestratorPrompt`, `skills`, `mcps`,
-  `displayName`).
-- In-memory `activePreset` supports immediate status display and updates after successful switches.
+- `createPresetManager(ctx, config)` 返回：
+  - `registerCommand(opencodeConfig)`：如果不存在则注入 `/preset` 命令定义，
+  - `handleCommandExecuteBefore(input, output)`：拦截 `/preset` 命令处理。
+- 命令行为：
+  - 无参数 → 清空输出并列出可用预设（支持 `active` 标记），
+  - 单个 token 参数 → 通过 `client.config.update(...)` 切换预设，附带映射后的 agent 覆盖，
+  - 多词参数 → 提示建议且不更新。
+- 映射逻辑将插件预设覆盖格式（`AgentOverrideConfig`）转换为运行时 SDK 的 `agent` 配置（`model`、`temperature`、`variant`、`options`），并跳过运行时更新不支持的字段（`prompt`、`orchestratorPrompt`、`skills`、`mcps`、`displayName`）。
+- 内存中的 `activePreset` 支持即时状态显示和在成功切换后更新。
 
-### Subtask path
+### Subtask 路径
 
-- `createSubtaskCommandManager` registers `/subtask` and asks the current
-  agent to call the `subtask` tool with the worker prompt and relevant files.
-- `createSubtaskTool` creates a real child session with `parentID`, injects
-  referenced files as synthetic Read-tool context, waits for the worker to
-  finish, returns `<subtask_summary>`, then aborts the child for cleanup.
-- `createReadSessionTool` lets a subtask worker read only the source session
-  that spawned it when the summary prompt lacks details.
-- `SubtaskState` marks child sessions so nested subtasks can be blocked and
-  session.deleted events can clear stale markers.
+- `createSubtaskCommandManager` 注册 `/subtask` 并请求当前 agent 调用 `subtask` 工具，附带 worker prompt 和相关文件。
+- `createSubtaskTool` 创建一个带有 `parentID` 的真实子会话，注入引用的文件作为合成 Read 工具上下文，等待 worker 完成，返回 `<subtask_summary>`，然后中止子会话以进行清理。
+- `createReadSessionTool` 允许子任务 worker 在摘要 prompt 缺少细节时，仅读取创建它的源会话。
+- `SubtaskState` 标记子会话，以便嵌套子任务可以被阻塞，并且 `session.deleted` 事件可以清除过期的标记。
 
-### Smartfetch path
+### Smartfetch 路径
 
-- `createWebfetchTool` owns fetch orchestration, permission prompts, cache checks,
-  llms.txt probing, binary/text branching, and optional secondary-model post-processing.
-- `smartfetch` modules split work into:
-  - transport/policy (`network.ts`),
-  - cache + TTL semantics (`cache.ts`),
-  - output shaping (`utils.ts`),
-  - file-backed binaries (`binary.ts`),
-  - secondary-model summarization (`secondary-model.ts`),
-  - constants and types.
-- `webfetch` is always registered from `src/index.ts` as a public tool.
+- `createWebfetchTool` 负责获取编排、权限提示、缓存检查、`llms.txt` 探测、二进制/文本分支以及可选的辅助模型后处理。
+- `smartfetch` 模块将工作拆分为：
+  - 传输/策略（`network.ts`），
+  - 缓存及 TTL 语义（`cache.ts`），
+  - 输出格式化（`utils.ts`），
+  - 文件支持的二进制（`binary.ts`），
+  - 辅助模型摘要（`secondary-model.ts`），
+  - 常量和类型。
+- `webfetch` 始终从 `src/index.ts` 注册为公共工具。
 
-### AST-grep path
+### AST-grep 路径
 
-- `ast-grep` is split into CLI/CLI-discovery and tool-definition concerns.
-- `ast_grep_search`/`ast_grep_replace` execution calls into `runSg`, which handles
-  argument normalization, binary availability, timeout/error handling, and output truncation.
-- `src/tools/ast-grep/index.ts` re-exports tool definitions and utility helpers for
-  discoverability (`ensureCliAvailable`, `getAstGrepPath`, downloader/runtime checks).
+- `ast-grep` 拆分为 CLI/CLI 发现和工具定义关注点。
+- `ast_grep_search`/`ast_grep_replace` 的执行调用 `runSg`，后者处理参数规范化、二进制可用性、超时/错误处理和输出截断。
+- `src/tools/ast-grep/index.ts` 重新导出工具定义和工具函数以便发现（`ensureCliAvailable`、`getAstGrepPath`、下载器/运行时检查）。
 
-## Integration points in `src/index.ts`
+## `src/index.ts` 中的集成点
 
-- Tool registration:
-  - `council` tools (only when `config.council` exists),
-  - `webfetch`,
-  - `subtask`, `read_session`,
-  - AST tools.
-- `presetManager` is initialized in plugin init and:
-  - calls `registerCommand` during config hook,
-  - handles command interception in `command.execute.before`.
-- `/preset` handling is explicitly user-facing (command hook), while webfetch and
-  council are tool-facing.
+- 工具注册：
+  - `council` 工具（仅当 `config.council` 存在时），
+  - `webfetch`，
+  - `subtask`、`read_session`，
+  - AST 工具。
+- `presetManager` 在插件初始化时初始化，并且：
+  - 在配置钩子期间调用 `registerCommand`，
+  - 在 `command.execute.before` 中处理命令拦截。
+- `/preset` 处理是面向用户的（命令钩子），而 webfetch 和 council 是面向工具的。

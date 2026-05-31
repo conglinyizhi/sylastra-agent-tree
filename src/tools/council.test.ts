@@ -77,9 +77,9 @@ describe('council_session tool', () => {
       const councilManager = createMockCouncilManager();
       const tools = createCouncilTool(ctx, councilManager);
 
-      expect(tools.council_session.description).toContain('multi-LLM');
-      expect(tools.council_session.description).toContain('consensus');
-      expect(tools.council_session.description).toContain('councillors');
+      expect(tools.council_session.description).toContain('多 LLM');
+      expect(tools.council_session.description).toContain('共识');
+      expect(tools.council_session.description).toContain('councillor');
     });
 
     test('defines required prompt argument', () => {
@@ -297,7 +297,7 @@ describe('council_session tool', () => {
 
       await expect(
         tools.council_session.execute({ prompt: 'Test' }, undefined as any),
-      ).rejects.toThrow('Invalid toolContext');
+      ).rejects.toThrow('无效的 toolContext');
     });
 
     test('throws error when toolContext is not object', async () => {
@@ -307,7 +307,7 @@ describe('council_session tool', () => {
 
       await expect(
         tools.council_session.execute({ prompt: 'Test' }, 'invalid' as any),
-      ).rejects.toThrow('Invalid toolContext');
+      ).rejects.toThrow('无效的 toolContext');
     });
 
     test('throws error when toolContext is missing sessionID', async () => {
@@ -317,7 +317,7 @@ describe('council_session tool', () => {
 
       await expect(
         tools.council_session.execute({ prompt: 'Test' }, {} as any),
-      ).rejects.toThrow('Invalid toolContext');
+      ).rejects.toThrow('无效的 toolContext');
     });
 
     test('handles CouncilManager throwing exception', async () => {
@@ -369,9 +369,7 @@ describe('council_session tool', () => {
           sessionID: 'test',
           agent: 'orchestrator',
         } as any),
-      ).rejects.toThrow(
-        'Council sessions can only be invoked by the council agent',
-      );
+      ).rejects.toThrow('委员会会话只能由委员会 agent 调用');
       expect(councilManager.runCouncil).not.toHaveBeenCalled();
     });
 
@@ -385,9 +383,7 @@ describe('council_session tool', () => {
           sessionID: 'test',
           agent: 'explorer',
         } as any),
-      ).rejects.toThrow(
-        'Council sessions can only be invoked by the council agent',
-      );
+      ).rejects.toThrow('委员会会话只能由委员会 agent 调用');
       expect(councilManager.runCouncil).not.toHaveBeenCalled();
     });
 

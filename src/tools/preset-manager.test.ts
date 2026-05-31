@@ -626,7 +626,7 @@ describe('createPresetManager', () => {
       const command = (opencodeConfig.command as Record<string, unknown>)
         .preset as { template: string; description: string };
       expect(command).toBeDefined();
-      expect(command.template).toContain('presets');
+      expect(command.template).toContain('预设');
       expect(command.description).toContain('/preset');
     });
 

@@ -14,7 +14,7 @@ const CONFIG_WARNING_COLOR = 'orange';
 const FALLBACK_SIDEBAR_AGENTS = SUBAGENT_NAMES.filter(
   (agent) =>
     agent !== 'councillor' &&
-    agent !== 'council' &&
+    agent !== 'composer' &&
     !DEFAULT_DISABLED_AGENTS.includes(agent),
 );
 const BORDER = { type: 'single' };

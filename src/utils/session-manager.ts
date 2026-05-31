@@ -29,20 +29,16 @@ interface SessionManagerOptions {
 
 function aliasPrefix(agentType: AgentName): string {
   switch (agentType) {
-    case 'explorer':
-      return 'exp';
     case 'librarian':
       return 'lib';
     case 'oracle':
       return 'ora';
-    case 'designer':
-      return 'des';
-    case 'fixer':
-      return 'fix';
     case 'observer':
       return 'obs';
-    case 'council':
-      return 'cnc';
+    case 'sylastra':
+      return 'syl';
+    case 'composer':
+      return 'cmp';
     case 'councillor':
       return 'clr';
     case 'orchestrator':

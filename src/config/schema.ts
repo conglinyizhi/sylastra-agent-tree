@@ -359,7 +359,7 @@ export const PluginConfigSchema = z
     todoContinuation: TodoContinuationConfigSchema.optional(),
     subtask: SubtaskConfigSchema.optional(),
     fallback: FailoverConfigSchema.optional(),
-    council: CouncilConfigSchema.optional(),
+    composer: CouncilConfigSchema.optional(),
   })
   .superRefine((value, ctx) => {
     if (value.agents) {

@@ -203,7 +203,7 @@ export function mergePluginConfigs(
     sessionManager: deepMerge(base.sessionManager, override.sessionManager),
     divoom: deepMerge(base.divoom, override.divoom),
     fallback: deepMerge(base.fallback, override.fallback),
-    council: deepMerge(base.council, override.council),
+    composer: deepMerge(base.composer, override.composer),
     subtask: deepMerge(base.subtask, override.subtask),
   };
 }

@@ -9,13 +9,11 @@ import {
 
 export const DEFAULT_AGENT_MCPS: Record<AgentName, string[]> = {
   orchestrator: ['*', '!context7'],
-  designer: [],
   oracle: [],
   librarian: ['websearch', 'context7', 'grep_app'],
-  explorer: [],
-  fixer: ['better-edit-tools'],
   observer: [],
-  council: [],
+  sylastra: ['better-edit-tools'],
+  composer: [],
   councillor: [],
 };
 

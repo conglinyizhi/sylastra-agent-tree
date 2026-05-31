@@ -1,17 +1,19 @@
 // Agent names
 export const AGENT_ALIASES: Record<string, string> = {
-  explore: 'explorer',
-  'frontend-ui-ux-engineer': 'designer',
+  explore: 'librarian',
+  explorer: 'librarian',
+  'frontend-ui-ux-engineer': 'observer',
+  fixer: 'sylastra',
+  council: 'composer',
+  designer: 'observer',
 };
 
 export const SUBAGENT_NAMES = [
-  'explorer',
   'librarian',
   'oracle',
-  'designer',
-  'fixer',
   'observer',
-  'council',
+  'sylastra',
+  'composer',
   'councillor',
 ] as const;
 
@@ -22,22 +24,17 @@ export const ALL_AGENT_NAMES = [ORCHESTRATOR_NAME, ...SUBAGENT_NAMES] as const;
 // Agent name type (for use in DEFAULT_MODELS)
 export type AgentName = (typeof ALL_AGENT_NAMES)[number];
 
-// Subagent delegation rules: which agents can spawn which subagents
-// orchestrator: can spawn all subagents (full delegation)
-// fixer: leaf node — prompt forbids delegation; use grep/glob for lookups
-// designer: can spawn explorer (for research during design)
-// explorer/librarian/oracle: cannot spawn any subagents (leaf nodes)
-// Unknown agent types not listed here default to explorer-only access
+// sylastra: leaf node — prompt forbids delegation; use grep/glob for lookups
+// observer: leaf node (includes visual + UI/UX capabilities)
+// librarian/oracle: cannot spawn any subagents (leaf nodes)
 // Which agents each agent type can spawn via delegation.
 // councillor is internal — only CouncilManager spawns it.
 export const ORCHESTRATABLE_AGENTS = [
-  'explorer',
   'librarian',
   'oracle',
-  'designer',
-  'fixer',
   'observer',
-  'council',
+  'sylastra',
+  'composer',
 ] as const;
 
 /** Agents that cannot be disabled even if listed in disabled_agents config. */
@@ -55,13 +52,11 @@ export function getOrchestratableAgents(
 
 export const SUBAGENT_DELEGATION_RULES: Record<AgentName, readonly string[]> = {
   orchestrator: ORCHESTRATABLE_AGENTS,
-  fixer: [],
-  designer: [],
-  explorer: [],
+  sylastra: [],
   librarian: [],
   oracle: [],
   observer: [],
-  council: [],
+  composer: [],
   councillor: [],
 };
 
@@ -71,11 +66,9 @@ export const DEFAULT_MODELS: Record<AgentName, string | undefined> = {
   orchestrator: undefined,
   oracle: 'openai/gpt-5.5',
   librarian: 'openai/gpt-5.4-mini',
-  explorer: 'openai/gpt-5.4-mini',
-  designer: 'openai/gpt-5.4-mini',
-  fixer: 'openai/gpt-5.4-mini',
   observer: 'openai/gpt-5.4-mini',
-  council: 'openai/gpt-5.4-mini',
+  sylastra: 'openai/gpt-5.4-mini',
+  composer: 'openai/gpt-5.4-mini',
   councillor: 'openai/gpt-5.4-mini',
 };
 

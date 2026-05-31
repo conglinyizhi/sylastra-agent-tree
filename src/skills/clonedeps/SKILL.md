@@ -1,39 +1,38 @@
 ---
 name: clonedeps
-description: Clone important project dependency source code into an ignored local workspace so OpenCode can inspect library internals. Use when the user asks to clone dependencies, inspect dependency/source internals, understand SDK/framework behavior from source, debug library implementation details, or make core dependency repos locally readable. Do not use for ordinary API/docs questions where @librarian is enough.
+description: 将重要项目依赖的源代码克隆到被忽略的本地工作空间中，以便 OpenCode 可以检查库的内部实现。当用户要求克隆依赖、检查依赖/源码内部实现、从源码理解 SDK/框架行为、调试库实现细节，或使核心依赖仓库在本地可读时使用。对于普通的 API/文档问题（@librarian 已足够），请勿使用此技能。
 ---
 
-# Clonedeps Skill
+# Clonedeps 技能
 
-You help users make a small set of important dependency source repositories
-locally readable to OpenCode.
+您帮助用户将一小组重要的依赖源码仓库
+变为 OpenCode 可本地读取的状态。
 
-This is a workflow skill, not a command wrapper. Do not use a helper script for
-dependency detection, ref validation, cloning, status, or cleanup. The
-orchestrator and `@librarian` do the repo-specific thinking; the orchestrator
-performs the approved filesystem/git operations directly.
+这是一个工作流技能，而非命令包装器。请勿使用辅助脚本来进行
+依赖检测、引用验证、克隆、状态检查或清理。
+协调者（orchestrator）和 `@librarian` 负责仓库相关的分析；协调者
+直接执行经审批的文件系统/git 操作。
 
-## Workflow
+## 工作流
 
-### Step 1: Check Existing State
+### 步骤 1：检查现有状态
 
-First check whether `.slim/clonedeps.json` exists.
+首先检查 `.slim/clonedeps.json` 是否存在。
 
-If it exists:
+如果存在：
 
-1. Read it before asking librarian for a new plan.
-2. Check whether each listed `path` exists under `.slim/clonedeps/repos/`.
-3. Reuse existing cloned repos when they already satisfy the user's task.
-4. Only ask librarian for new recommendations if the existing manifest is
-   missing, stale, or insufficient for the current task.
+1. 在向 librarian 请求新计划之前先读取它。
+2. 检查列出的每个 `path` 是否存在于 `.slim/clonedeps/repos/` 下。
+3. 如果现有的克隆仓库已满足用户的任务，则复用它们。
+4. 仅当现有清单缺失、过期或不足以完成当前任务时，才向 librarian 请求新的推荐。
 
-Do not rescan/re-plan from scratch when the manifest already has useful entries.
+当清单中已有有效条目时，不要从头开始重新扫描/重新规划。
 
-### Step 2: Ask Librarian for the Clone Plan
+### 步骤 2：向 Librarian 请求克隆计划
 
-Delegate dependency discovery and source resolution to `@librarian`.
+将依赖发现和源码解析委托给 `@librarian`。
 
-Use this prompt:
+使用以下提示：
 
 ```md
 Understand this project first, then recommend remote source repos that would
@@ -70,74 +69,74 @@ Keep it small. Prefer 0–3 strong recommendations over 5 weak ones. If nothing
 clearly needs cloning, say so.
 ```
 
-Librarian should return a small plan with:
+Librarian 应返回一个精简计划，包含：
 
-- dependency name;
-- current version/range if discoverable;
-- official source repository URL;
-- tag/commit/ref to check out;
-- package subdirectory if the source is a monorepo;
-- reason local source helps;
-- caveats such as huge repo, missing tag, or uncertain version mapping.
+- 依赖名称；
+- 当前版本/范围（如果可以获取到）；
+- 官方源码仓库 URL；
+- 要检出的标签/提交/引用；
+- 如果是 monorepo，则包含包子目录；
+- 本地源码有帮助的原因；
+- 注意事项，如仓库过大、缺少标签或版本映射不确定。
 
-Prefer at most 3-5 core dependencies. Include user-mentioned dependencies and
-central frameworks, SDKs, ORMs, runtime/plugin APIs, or build/runtime tools. Do
-not clone tiny utilities, transitive dependencies, or dev-only tools unless they
-are directly relevant to the active task.
+优先选择最多 3-5 个核心依赖。包括用户提及的依赖以及
+核心框架、SDK、ORM、运行时/插件 API 或构建/运行时工具。不要
+克隆小型工具库、传递依赖或仅用于开发的工具，除非它们
+与当前任务直接相关。
 
-### Step 3: Verify and Confirm the Plan
+### 步骤 3：验证并确认计划
 
-The orchestrator owns final approval. Before cloning:
+协调者拥有最终审批权。在克隆之前：
 
-1. Verify refs manually where possible with `git ls-remote`.
-2. Prefer pinned tags or commit SHAs. If no exact tag exists, ask librarian to
-   find the correct module-specific tag/commit or explain the fallback.
-3. Only use HTTPS GitHub/GitLab-style repository URLs by default. Reject
-   `file://`, SSH URLs, local paths, URLs with embedded credentials, and private
-   or auth-required repositories unless the user explicitly approves that case.
-4. Present the plan to the user with dependency, repo URL, ref, reason, and
-   caveats.
-5. Ask for confirmation before network cloning unless the user explicitly asked
-   to clone immediately.
+1. 在可行的情况下使用 `git ls-remote` 手动验证引用。
+2. 优先使用固定的标签或提交 SHA。如果没有精确的标签，请让 librarian
+   找到正确的模块特定标签/提交或说明回退方案。
+3. 默认只使用 HTTPS 的 GitHub/GitLab 风格的仓库 URL。拒绝
+   `file://`、SSH URL、本地路径、包含凭据的 URL 以及私有
+   或需要认证的仓库，除非用户明确批准该情况。
+4. 向用户展示计划，包括依赖、仓库 URL、引用、原因和
+   注意事项。
+5. 在进行网络克隆前请求确认，除非用户明确要求
+   立即克隆。
 
-### Step 4: Clone Sources Manually
+### 步骤 4：手动克隆源码
 
-Create one folder per source repository under:
+为每个源码仓库创建一个文件夹，位于：
 
 ```text
 .slim/clonedeps/repos/<safe-repo-name>/
 ```
 
-Derive the safe name from the repository owner/name, not from the package name.
-For example, `https://github.com/opencode-ai/opencode.git` becomes
-`opencode-ai__opencode`. Replace `/` with `__`, strip common `.git` suffixes,
-and replace other unsafe path characters with `_`.
+安全名称从仓库的拥有者/名称派生，而非包名。
+例如，`https://github.com/opencode-ai/opencode.git` 变为
+`opencode-ai__opencode`。将 `/` 替换为 `__`，去除常见的 `.git` 后缀，
+并将其他不安全的路径字符替换为 `_`。
 
-If multiple packages come from the same monorepo, clone the repository once and
-point each manifest entry at the same repo path with different `packagePath`
-values as needed. Do not create ecosystem folders, per-package clone folders, or
-per-version folders. If two different source repositories normalize to the same
-safe name, disambiguate manually and record the chosen path in
-`.slim/clonedeps.json`.
+如果多个包来自同一个 monorepo，则克隆一次仓库，
+让每个清单条目指向同一个仓库路径，使用不同的 `packagePath`
+值。不要创建生态系统文件夹、按包划分的克隆文件夹或
+按版本划分的文件夹。如果两个不同的源码仓库归一化为相同的
+安全名称，手动消除歧义并将所选路径记录在
+`.slim/clonedeps.json` 中。
 
-Clone/fetch with normal git commands. For an existing clone, first verify that
-`git remote get-url origin` matches the approved repo URL. If it does not match,
-stop and ask whether to clean/reclone.
+使用普通的 git 命令进行克隆/拉取。对于已有的克隆，首先验证
+`git remote get-url origin` 是否与批准的仓库 URL 匹配。如果不匹配，
+停止并询问是否要清理/重新克隆。
 
-Safe manual git pattern:
+安全的手动 git 模式：
 
-1. `git ls-remote <repoUrl> <ref>` to verify the ref where practical.
-2. Clone without submodules/recursive behavior.
-3. Prefer shallow fetch/clone where practical.
-4. Clone into a temporary directory under `.slim/clonedeps/repos/`, then move it
-   into the final safe-name path after checkout succeeds.
-5. Remove failed temporary clones.
+1. `git ls-remote <repoUrl> <ref>` 在实际可行时验证引用。
+2. 不克隆子模块/递归行为。
+3. 在实际可行时优先使用浅层拉取/克隆。
+4. 克隆到 `.slim/clonedeps/repos/` 下的临时目录，然后在检出生效后
+   移动到最终的安全名称路径。
+5. 删除失败的临时克隆。
 
-Do not run dependency install/build/test scripts from cloned repositories.
+不要运行从克隆仓库中安装/构建/测试依赖的脚本。
 
-### Step 5: Write Local State
+### 步骤 5：写入本地状态
 
-Write `.slim/clonedeps.json` so future agents know what exists:
+写入 `.slim/clonedeps.json`，以便未来的 agent 知道存在哪些内容：
 
 ```json
 {
@@ -166,16 +165,16 @@ Write `.slim/clonedeps.json` so future agents know what exists:
 }
 ```
 
-If a clone fails after earlier clones succeeded, still write state for the
-successful clones so future inspection is not misleading.
+如果某个克隆在之前的克隆成功后失败，仍然为成功的克隆写入状态，
+这样未来的检查不会产生误导。
 
-Do not add `.slim/clonedeps.json` to `.gitignore`. It is small, reviewable
-project metadata that can be committed. Only the cloned repository contents
-under `.slim/clonedeps/repos/` should be ignored.
+不要将 `.slim/clonedeps.json` 添加到 `.gitignore`。它是小型、可审查的
+项目元数据，可以提交。只有克隆的仓库内容
+位于 `.slim/clonedeps/repos/` 下才应被忽略。
 
-### Step 6: Update Ignore Files
+### 步骤 6：更新忽略文件
 
-Update `.gitignore` with an idempotent marker block:
+使用幂等的标记块更新 `.gitignore`：
 
 ```gitignore
 # BEGIN sylastra-agent-tree clonedeps
@@ -183,8 +182,7 @@ Update `.gitignore` with an idempotent marker block:
 # END sylastra-agent-tree clonedeps
 ```
 
-Update `.ignore` so OpenCode can read the cloned source while git still ignores
-it:
+更新 `.ignore`，以便 OpenCode 可以读取克隆的源码，同时 git 仍然忽略它：
 
 ```ignore
 # BEGIN sylastra-agent-tree clonedeps
@@ -198,40 +196,40 @@ it:
 # END sylastra-agent-tree clonedeps
 ```
 
-Only edit content inside these marker blocks.
+只编辑这些标记块内部的内容。
 
-### Step 7: Register Dependency Source in AGENTS.md
+### 步骤 7：在 AGENTS.md 中注册依赖源码
 
-After successful cloning, update the repository root `AGENTS.md` so future
-agents know why the dependency source exists and where to look.
+克隆成功后，更新仓库根目录的 `AGENTS.md`，以便未来的
+agent 知道依赖源码存在的原因以及在哪里查找。
 
-If `AGENTS.md` already has a `## Cloned Dependency Source` section, update that
-section. Otherwise append this section:
+如果 `AGENTS.md` 已有 `## 克隆的依赖源码` 部分，则更新该
+部分。否则追加此部分：
 
-Use this format and list the actual repos directly. Keep each item to one short
-sentence so future agents do not need an extra read just to know what is there:
+使用以下格式，直接列出实际的仓库。每项保持一句话，
+这样未来的 agent 无需额外读取就能知道有什么内容：
 
 ```markdown
-## Cloned Dependency Source
+## 克隆的依赖源码
 
-Read-only dependency source repositories are available under
-`.slim/clonedeps/repos/` for inspection. Do not edit these clones.
+只读的依赖源码仓库可在
+`.slim/clonedeps/repos/` 下查看。不要编辑这些克隆。
 
-- `.slim/clonedeps/repos/<safe-name>/` — `<repo>` at `<ref>`; <one sentence on
-  why this source is useful>.
-- `.slim/clonedeps/repos/<safe-name-2>/` — `<repo>` at `<ref>`; <one sentence on
-  why this source is useful>.
+- `.slim/clonedeps/repos/<safe-name>/` — `<repo>` at `<ref>`；<一句话说明
+  此源码有何用途>。
+- `.slim/clonedeps/repos/<safe-name-2>/` — `<repo>` at `<ref>`；<一句话说明
+  此源码有何用途>。
 ```
 
-Also keep `.slim/clonedeps.json` updated as the structured manifest, but do not
-make agents read it for the basic repo list.
+同时保持 `.slim/clonedeps.json` 作为结构化清单的更新，但不要
+让 agent 为了获取基本的仓库列表而去读取它。
 
-## Cleanup
+## 清理
 
-When the user asks to clean cloned dependencies, remove:
+当用户要求清理克隆的依赖时，移除：
 
 - `.slim/clonedeps/repos/`
-- the managed clonedeps marker blocks from `.gitignore` and `.ignore`
+- 来自 `.gitignore` 和 `.ignore` 的被管理的 clonedeps 标记块
 
-Ask before removing `.slim/clonedeps.json` or the `AGENTS.md` section because
-they may be intentional project metadata.
+在移除 `.slim/clonedeps.json` 或 `AGENTS.md` 部分之前先询问，因为
+它们可能是刻意的项目元数据。

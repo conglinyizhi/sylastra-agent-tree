@@ -689,7 +689,7 @@
         }
       }
     },
-    "council": {
+    "composer": {
       "type": "object",
       "properties": {
         "presets": {

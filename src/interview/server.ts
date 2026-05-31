@@ -31,8 +31,8 @@ function getSubmissionStatus(error: unknown): number {
     message.includes('There are no active interview questions') ||
     message.includes('Answer every active interview question') ||
     message.includes('Answers do not match') ||
-    message.includes('Request body too large') ||
-    message.includes('Invalid answers payload') ||
+    message.includes('请求体过大') ||
+    message.includes('无效的回答载荷') ||
     message.includes('no longer active')
   ) {
     return 400;
@@ -43,24 +43,24 @@ function getSubmissionStatus(error: unknown): number {
 
 function parseAnswersPayload(value: unknown): { answers: InterviewAnswer[] } {
   if (!value || typeof value !== 'object') {
-    throw new Error('Invalid answers payload.');
+    throw new Error('无效的回答载荷。');
   }
   const answersRaw = (value as { answers?: unknown }).answers;
   if (!Array.isArray(answersRaw)) {
-    throw new Error('Invalid answers payload.');
+    throw new Error('无效的回答载荷。');
   }
 
   return {
     answers: answersRaw.map((answer) => {
       if (!answer || typeof answer !== 'object') {
-        throw new Error('Invalid answers payload.');
+        throw new Error('无效的回答载荷。');
       }
       const record = answer as { questionId?: unknown; answer?: unknown };
       if (
         typeof record.questionId !== 'string' ||
         typeof record.answer !== 'string'
       ) {
-        throw new Error('Invalid answers payload.');
+        throw new Error('无效的回答载荷。');
       }
       return {
         questionId: record.questionId.trim(),

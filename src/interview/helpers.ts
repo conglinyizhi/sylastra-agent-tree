@@ -43,7 +43,7 @@ export async function readJsonBody(request: IncomingMessage): Promise<unknown> {
     size += buffer.length;
     if (size > MAX_BODY_SIZE) {
       request.destroy();
-      throw new Error('Request body too large');
+      throw new Error('请求体过大');
     }
     chunks.push(buffer);
   }

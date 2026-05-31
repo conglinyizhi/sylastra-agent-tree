@@ -1,5 +1,7 @@
+> **Fork**: 本项目是 [oh-my-opencode-slim](https://github.com/alvinunreal/oh-my-opencode-slim) 的一个分支(Fork)。原作者 Alvin (alvinunreal) 采用 MIT 许可证。
+
 <div align="center">
-  <a href="https://github.com/alvinunreal/oh-my-opencode-slim/stargazers">
+  <a href="https://github.com/conglinyizhi/sylastra-agent-tree/stargazers">
     <img src="img/v2beta.webp" alt="V2 Beta Release" style="border-radius: 10px;">
   </a>
   <h3>✨ V2 Beta 版本：后台编排已上线 ✨</h3>
@@ -23,7 +25,7 @@
 
 ## 什么是该插件？
 
-oh-my-opencode-slim 是一个用于 OpenCode 的智能体编排插件。它内置了一支专业的智能体团队，可以在同一个编排者（Orchestrator）下，完成侦察代码库、查询最新文档、审查架构、处理 UI 工作以及执行范围明确的实现任务。
+sylastra-agent-tree 是一个用于 OpenCode 的智能体编排插件，派生自 oh-my-opencode-slim。它内置了一支专业的智能体团队，可以在同一个编排者（Orchestrator）下，完成侦察代码库、查询最新文档、审查架构、处理 UI 工作以及执行范围明确的实现任务。
 
 其核心理念非常简单：与其强迫单个模型做所有事情，本插件会将工作的每个部分路由到最适合它的智能体，从而平衡**质量、速度和成本**。
 
@@ -34,13 +36,13 @@ oh-my-opencode-slim 是一个用于 OpenCode 的智能体编排插件。它内�
 将此提示词复制并粘贴到您的 LLM 智能体中（例如 Claude Code、AmpCode、Cursor 等）：
 
 ```
-Install and configure oh-my-opencode-slim: https://raw.githubusercontent.com/alvinunreal/oh-my-opencode-slim/refs/heads/master/README.md
+Install and configure sylastra-agent-tree: https://raw.githubusercontent.com/conglinyizhi/sylastra-agent-tree/refs/heads/main/README.md
 ```
 
 ### 手动安装
 
 ```bash
-bunx oh-my-opencode-slim@latest install
+bun run build
 ```
 
 ### V2 后台编排 Beta 版
@@ -49,13 +51,13 @@ V2 将编排者（Orchestrator）从默认的执行工作器转变为调度器�
 它规划工作、将专家作为后台任务分发、轮询其状态，并在继续执行之前核对结果。这需要 OpenCode 原生的后台子智能体支持，因此 Beta 版用户必须在启用实验性标志的情况下启动 OpenCode。
 
 ```bash
-bunx oh-my-opencode-slim@beta install
+bun run build
 OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=1 opencode
 ```
 
 ### 入门指南
 
-安装程序会同时生成 OpenAI 和 OpenCode Go 的预设（Preset），默认启用 OpenAI 预设。OpenAI 使用 `openai/gpt-5.5` 作为具备高级判断力智能体的模型，并使用 `openai/gpt-5.4-mini` 作为响应更快速、针对具体任务智能体的模型。若要在安装过程中激活 OpenCode Go 预设，请运行 `bunx oh-my-opencode-slim@latest install --preset=opencode-go` 或在安装后修改 `~/.config/opencode/oh-my-opencode-slim.json` 文件中的默认预设名称。
+安装程序会同时生成 OpenAI 和 OpenCode Go 的预设（Preset），默认启用 OpenAI 预设。OpenAI 使用 `openai/gpt-5.5` 作为具备高级判断力智能体的模型，并使用 `openai/gpt-5.4-mini` 作为响应更快速、针对具体任务智能体的模型。若要在安装过程中激活 OpenCode Go 预设，请运行 `bunx oh-my-opencode-slim@latest install --preset=opencode-go` 或在安装后修改 `~/.config/opencode/sylastra-agent-tree.json` 文件中的默认预设名称。
 
 然后：
 
@@ -69,18 +71,18 @@ OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=1 opencode
    ```bash
    opencode models --refresh
    ```
-3. **打开您的插件配置文件**，路径为 `~/.config/opencode/oh-my-opencode-slim.json`
+3. **打开您的插件配置文件**，路径为 `~/.config/opencode/sylastra-agent-tree.json`
 
 4. **为您要分配的每个智能体更新模型配置**
 
 > [!TIP]
-> **强烈建议**了解自动委派（Automatic Delegation）的工作原理。**[编排者提示词 (Orchestrator prompt)](https://github.com/alvinunreal/oh-my-opencode-slim/blob/master/src/agents/orchestrator.ts#L28)** 包含了委派规则、专家路由逻辑，以及主智能体何时将工作转交给子智能体的阈值。您始终可以通过以下方式手动委派任务：`@智能体名称 <任务内容>`
+> **强烈建议**了解自动委派（Automatic Delegation）的工作原理。**[编排者提示词 (Orchestrator prompt)](https://github.com/conglinyizhi/sylastra-agent-tree/blob/main/src/agents/orchestrator.ts#L28)** 包含了委派规则、专家路由逻辑，以及主智能体何时将工作转交给子智能体的阈值。您始终可以通过以下方式手动委派任务：`@智能体名称 <任务内容>`
 
 默认生成的配置包含 `openai` 和 `opencode-go` 两个预设：
 
 ```jsonc
 {
-  "$schema": "https://unpkg.com/oh-my-opencode-slim@latest/oh-my-opencode-slim.schema.json",
+  "$schema": "https://raw.githubusercontent.com/conglinyizhi/sylastra-agent-tree/main/sylastra-agent-tree.schema.json",
   "preset": "openai",
   "presets": {
     "openai": {

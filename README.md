@@ -1,5 +1,7 @@
+> **Fork**: This is a fork of [oh-my-opencode-slim](https://github.com/alvinunreal/oh-my-opencode-slim). The original project by Alvin (alvinunreal) is MIT licensed.
+
 <div align="center">
-  <a href="https://github.com/alvinunreal/oh-my-opencode-slim/stargazers">
+  <a href="https://github.com/conglinyizhi/sylastra-agent-tree/stargazers">
     <img src="img/v2beta.webp" alt="V2 Beta Release" style="border-radius: 10px;">
   </a>
   <h3>✨ V2 Beta Release: Background Orchestration Has Arrived ✨</h3>
@@ -23,7 +25,7 @@
 
 ## What's This Plugin
 
-oh-my-opencode-slim is an agent orchestration plugin for OpenCode. It includes a built-in team of specialized agents that can scout a codebase, look up fresh documentation, review architecture, handle UI work, and execute well-scoped implementation tasks under one orchestrator.
+sylastra-agent-tree is an agent orchestration plugin for OpenCode, forked from oh-my-opencode-slim. It includes a built-in team of specialized agents that can scout a codebase, look up fresh documentation, review architecture, handle UI work, and execute well-scoped implementation tasks under one orchestrator.
 
 The main idea is simple: instead of forcing one model to do everything, the plugin routes each part of the job to the agent best suited for it, balancing **quality, speed and cost**.
 
@@ -35,14 +37,14 @@ Copy and paste this prompt to your LLM agent (Claude Code, AmpCode, Cursor, etc.
 
 
 ```
-Install and configure oh-my-opencode-slim: https://raw.githubusercontent.com/alvinunreal/oh-my-opencode-slim/refs/heads/master/README.md
+Install and configure sylastra-agent-tree: https://raw.githubusercontent.com/conglinyizhi/sylastra-agent-tree/refs/heads/main/README.md
 ```
 
 
 ### Manual Installation
 
 ```bash
-bunx oh-my-opencode-slim@latest install
+bun run build
 ```
 
 ### V2 Background-Orchestration Beta
@@ -54,13 +56,13 @@ background subagent support, so beta users must start OpenCode with the
 experimental flag enabled.
 
 ```bash
-bunx oh-my-opencode-slim@beta install
+bun run build
 OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=1 opencode
 ```
 
 ### Getting Started
 
-The installer generates both OpenAI and OpenCode Go presets, with OpenAI active by default. OpenAI uses `openai/gpt-5.5` for the higher-judgment agents and `openai/gpt-5.4-mini` for the faster scoped agents. To make OpenCode Go active during install, run `bunx oh-my-opencode-slim@latest install --preset=opencode-go` or change the default preset name in `~/.config/opencode/oh-my-opencode-slim.json` after installation.
+The installer generates both OpenAI and OpenCode Go presets, with OpenAI active by default. OpenAI uses `openai/gpt-5.5` for the higher-judgment agents and `openai/gpt-5.4-mini` for the faster scoped agents. To make OpenCode Go active during install, run `bunx oh-my-opencode-slim@latest install --preset=opencode-go` or change the default preset name in `~/.config/opencode/sylastra-agent-tree.json` after installation.
 
 Then:
 
@@ -74,18 +76,18 @@ Then:
    ```bash
    opencode models --refresh
    ```
-3. **Open your plugin config** at `~/.config/opencode/oh-my-opencode-slim.json`
+3. **Open your plugin config** at `~/.config/opencode/sylastra-agent-tree.json`
 
 4. **Update the models you want for each agent**
 
 > [!TIP]
-> It's **recommended** to understand how automatic delegation works. The **[Orchestrator prompt](https://github.com/alvinunreal/oh-my-opencode-slim/blob/master/src/agents/orchestrator.ts#L28)** contains the delegation rules, specialist routing logic, and the thresholds for when the main agent should hand work off to subagents. You can alway delegate manually by calling a subagent via: `@agentName <task>`
+> It's **recommended** to understand how automatic delegation works. The **[Orchestrator prompt](https://github.com/conglinyizhi/sylastra-agent-tree/blob/main/src/agents/orchestrator.ts#L28)** contains the delegation rules, specialist routing logic, and the thresholds for when the main agent should hand work off to subagents. You can alway delegate manually by calling a subagent via: `@agentName <task>`
 
 The default generated configuration includes both `openai` and `opencode-go` presets.
 
 ```jsonc
 {
-  "$schema": "https://unpkg.com/oh-my-opencode-slim@latest/oh-my-opencode-slim.schema.json",
+  "$schema": "https://raw.githubusercontent.com/conglinyizhi/sylastra-agent-tree/main/sylastra-agent-tree.schema.json",
   "preset": "openai",
   "presets": {
     "openai": {

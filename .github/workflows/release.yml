@@ -1,0 +1,123 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. v1.1.1). Defaults to package.json version'
+        required: false
+        type: string
+      bet-version:
+        description: 'better-edit-tools-mcp version tag (e.g. v0.4.0). Defaults to latest'
+        required: false
+        type: string
+        default: latest
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build plugin
+        run: bun run build
+
+      - name: Determine version
+        id: version
+        run: |
+          PKG_VER="v$(jq -r '.version' package.json)"
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "tag=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${PKG_VER}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create release directory
+        run: |
+          VERSION="${{ steps.version.outputs.tag }}"
+          DIR="sylastra-agent-tree-${VERSION}"
+          mkdir -p "${DIR}/dist" "${DIR}/bin"
+
+          # Copy built artifacts
+          cp -r dist/* "${DIR}/dist/"
+          cp package.json README.md LICENSE sylastra-agent-tree.schema.json "${DIR}/"
+          cp scripts/install-release.sh "${DIR}/install.sh"
+          chmod +x "${DIR}/install.sh"
+
+          # Save dir name for later steps
+          echo "dir=${DIR}" >> "$GITHUB_OUTPUT"
+        id: release-dir
+
+      - name: Download better-edit-tools (linux-amd64)
+        run: |
+          DIR="${{ steps.release-dir.outputs.dir }}"
+          BET_VERSION="${{ inputs.bet-version }}"
+          REPO="conglinyizhi/better-edit-tools-mcp"
+
+          download_bet() {
+            local os=$1 arch=$2 suffix=$3
+            local url
+            if [ "${BET_VERSION}" = "latest" ]; then
+              url="https://github.com/${REPO}/releases/latest/download/better-edit-tools-${os}-${arch}.tar.gz"
+            else
+              url="https://github.com/${REPO}/releases/download/${BET_VERSION}/better-edit-tools-${os}-${arch}.tar.gz"
+            fi
+            echo "  ↓ Downloading better-edit-tools-${os}-${arch}..."
+            curl -fsSL "${url}" -o "/tmp/bet-${os}-${arch}.tar.gz"
+            tar xzf "/tmp/bet-${os}-${arch}.tar.gz" -C "/tmp/"
+            mv "/tmp/better-edit-tools" "${DIR}/bin/${suffix}"
+            chmod +x "${DIR}/bin/${suffix}"
+          }
+
+          download_bet linux  amd64  "better-edit-tools-linux-amd64"
+          download_bet linux  arm64  "better-edit-tools-linux-arm64"
+          download_bet darwin amd64  "better-edit-tools-darwin-amd64"
+          download_bet darwin arm64  "better-edit-tools-darwin-arm64"
+
+      - name: Create tarball
+        run: |
+          DIR="${{ steps.release-dir.outputs.dir }}"
+          VERSION="${{ steps.version.outputs.tag }}"
+          ARCHIVE="sylastra-agent-tree-${VERSION}.tar.gz"
+
+          tar czf "${ARCHIVE}" "${DIR}/"
+          echo "archive=${ARCHIVE}" >> "$GITHUB_OUTPUT"
+          du -sh "${ARCHIVE}"
+        id: archive
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          body: |
+            ## sylastra-agent-tree ${{ steps.version.outputs.tag }}
+
+            基于 oh-my-opencode-slim 的 Agent 编排插件。
+
+            ### 内含
+            - 预构建的插件代码（跨平台）
+            - better-edit-tools 文件编辑工具（含 linux/darwin amd64+arm64）
+
+            ### 安装
+            ```bash
+            tar xzf sylastra-agent-tree-${{ steps.version.outputs.tag }}.tar.gz
+            cd sylastra-agent-tree-${{ steps.version.outputs.tag }}
+            bash install.sh
+            ```
+          files: |
+            ${{ steps.archive.outputs.archive }}
+          draft: false
+          prerelease: false

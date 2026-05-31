@@ -1,6 +1,6 @@
 {
   "name": "sylastra-agent-tree",
-  "version": "1.1.1",
+  "version": "0.0.1",
   "description": "Agent orchestration plugin for OpenCode - forked from oh-my-opencode-slim",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -116,7 +116,15 @@ function buildCustomAgentDefinition(
   filePrompt?: string,
   fileAppendPrompt?: string,
 ): AgentDefinition {
-  const basePrompt = override.prompt ?? `你是 ${name} 专家。`;
+  const basePrompt =
+    override.prompt ??
+    `思考内容以简体中文为主，你可以偶尔夹杂一些专有技术名词或者函数但主题需要简体中文优先
+
+<instruction name="todo_hygiene">
+If the active task changed or finished, update the todo list to match the current work state.
+</instruction>
+
+你是 ${name} 专家。`;
 
   return {
     name,

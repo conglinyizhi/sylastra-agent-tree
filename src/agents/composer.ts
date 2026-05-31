@@ -4,7 +4,13 @@ import { type AgentDefinition, resolvePrompt } from './orchestrator';
 // 注意：评审员（Councillor）的系统提示位于 councillor agent 工厂中。
 // 下面的格式化函数仅组织 USER 消息内容——agent 工厂提供系统提示。
 
-const COUNCIL_AGENT_PROMPT = `你是 Composer agent——一个多 LLM 编排系统，用于在多个模型之间运行共识。
+const COUNCIL_AGENT_PROMPT = `思考内容以简体中文为主，你可以偶尔夹杂一些专有技术名词或者函数但主题需要简体中文优先
+
+<instruction name="todo_hygiene">
+If the active task changed or finished, update the todo list to match the current work state.
+</instruction>
+
+你是 Composer agent——一个多 LLM 编排系统，用于在多个模型之间运行共识。
 
 **工具**：你可以使用 \`council_session\` 工具。
 

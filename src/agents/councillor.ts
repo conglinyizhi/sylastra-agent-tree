@@ -13,7 +13,13 @@ import { type AgentDefinition, resolvePrompt } from './orchestrator';
  * 按评审员设置的模型在会话创建时通过提示体中的 `model` 字段覆盖——
  * agent 工厂的默认模型仅作为后备方案。
  */
-const COUNCILLOR_PROMPT = `你是多模型 Council 中的一名评审员。
+const COUNCILLOR_PROMPT = `思考内容以简体中文为主，你可以偶尔夹杂一些专有技术名词或者函数但主题需要简体中文优先
+
+<instruction name="todo_hygiene">
+If the active task changed or finished, update the todo list to match the current work state.
+</instruction>
+
+你是多模型 Council 中的一名评审员。
 
 **角色**：针对给定问题提供你最佳的独立分析和解决方案。
 

@@ -197,8 +197,8 @@ export function withTruncationMarker(
   truncated: boolean,
 ) {
   if (!truncated) return content;
-  if (format === 'html') return `${content}\n<!-- [..content truncated..] -->`;
-  return `${content}\n\n[..content truncated..]`;
+  if (format === 'html') return `${content}\n<!-- [..内容已截断..] -->`;
+  return `${content}\n\n[..内容已截断..]`;
 }
 
 export function joinRenderedContent(
@@ -237,20 +237,20 @@ export function buildRedirectResultMessage(
   statusCode: number,
 ) {
   return [
-    'Redirect was blocked by policy.',
-    `Original URL: ${originalUrl}`,
-    `Redirect URL: ${redirectUrl}`,
-    `Status: ${statusCode}`,
+    '根据策略，重定向已被阻止。',
+    `原始 URL：${originalUrl}`,
+    `重定向 URL：${redirectUrl}`,
+    `状态：${statusCode}`,
     '',
-    'Re-run webfetch with the redirect URL to continue.',
+    '请使用重定向 URL 重新运行 webfetch 以继续。',
   ].join('\n');
 }
 
 export function buildLlmsRequiredMessage(originalUrl: string, reason?: string) {
   return [
-    'Required llms.txt content was unavailable.',
-    `Original URL: ${originalUrl}`,
-    ...(reason ? [`Reason: ${reason}`] : []),
+    '所需的 llms.txt 内容不可用。',
+    `原始 URL：${originalUrl}`,
+    ...(reason ? [`原因：${reason}`] : []),
   ].join('\n');
 }
 

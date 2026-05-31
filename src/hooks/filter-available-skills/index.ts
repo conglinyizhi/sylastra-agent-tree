@@ -89,7 +89,7 @@ function filterAvailableSkillsText(
       );
 
       if (allowedEntries.length === 0) {
-        return '<available_skills>\nNo skills available.\n</available_skills>';
+        return '<available_skills>\n当前没有可用的技能。\n</available_skills>';
       }
 
       return `<available_skills>\n${allowedEntries

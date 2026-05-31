@@ -443,7 +443,7 @@ export function createTodoContinuationHook(
 
   const autoContinue = tool({
     description:
-      'Toggle auto-continuation for incomplete todos. When enabled, the orchestrator will automatically continue working through its todo list when it stops with incomplete items.',
+      '切换未完成待办事项的自动继续功能。启用后，编排器将在停止时自动继续处理其待办事项列表中的未完成项。',
     args: { enabled: tool.schema.boolean() },
     execute: async (args) => {
       const enabled = args.enabled;
@@ -453,13 +453,13 @@ export function createTodoContinuationHook(
       if (enabled) {
         state.suppressUntil = 0;
         log(`[${HOOK_NAME}] Auto-continue enabled`, { maxContinuations });
-        return `Auto-continue enabled. Will auto-continue for up to ${maxContinuations} consecutive injections.`;
+        return `已启用自动继续。将自动继续最多 ${maxContinuations} 次连续注入。`;
       }
 
       // Cancel any pending timer on disable
       cancelPendingTimer(state);
       log(`[${HOOK_NAME}] Auto-continue disabled`);
-      return 'Auto-continue disabled.';
+      return '已禁用自动继续。';
     },
   });
 

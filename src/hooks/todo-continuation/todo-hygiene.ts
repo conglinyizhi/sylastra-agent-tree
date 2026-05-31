@@ -1,7 +1,7 @@
 export const TODO_HYGIENE_REMINDER =
-  'If the active task changed or finished, update the todo list to match the current work state.';
+  '如果当前任务已变更或完成，请更新 todo 列表以反映实际工作状态。';
 export const TODO_FINAL_ACTIVE_REMINDER =
-  'If you are finishing now, do not leave the active todo in_progress. Mark it completed, or move unfinished work back to pending.';
+  '如果即将完成，请不要将活跃 todo 保留为 in_progress。请将其标记为 completed，或将未完成的工作移回 pending。';
 
 const RESET = new Set(['todowrite']);
 const IGNORE = new Set(['auto_continue']);

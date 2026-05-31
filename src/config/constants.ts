@@ -86,9 +86,9 @@ export const FALLBACK_FAILOVER_TIMEOUT_MS = 15_000;
 export const DEFAULT_MAX_SUBAGENT_DEPTH = 3;
 
 // Workflow reminders
-export const PHASE_REMINDER_TEXT = `!IMPORTANT! Recall the workflow rules:
-Understand → choose the best parallelized path based on your capabilities and agents delegation rules → recall session reuse rules → execute → verify.
-If delegating, launch the specialist in the same turn you mention it !END!`;
+export const PHASE_REMINDER_TEXT = `!重要！请回顾工作流规则：
+理解 → 基于自身能力和 agent 委托规则选择最佳并行路径 → 回顾会话复用规则 → 执行 → 验证。
+如需委托，在同一轮对话中启动专家！结束！`;
 
 // Tmux pane spawn delay (ms) — gives TmuxSessionManager time to create pane
 export const TMUX_SPAWN_DELAY_MS = 500;

@@ -116,7 +116,7 @@ function buildCustomAgentDefinition(
   filePrompt?: string,
   fileAppendPrompt?: string,
 ): AgentDefinition {
-  const basePrompt = override.prompt ?? `You are the ${name} specialist.`;
+  const basePrompt = override.prompt ?? `你是 ${name} 专家。`;
 
   return {
     name,

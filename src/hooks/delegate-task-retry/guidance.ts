@@ -16,16 +16,16 @@ export function buildRetryGuidance(errorInfo: DetectedError): string {
   );
 
   if (!pattern) {
-    return '\n[delegate-task retry] Fix parameters and retry with corrected arguments.';
+    return '\n[delegate-task 重试] 修复参数后使用修正的参数重试。';
   }
 
   const available = extractAvailableList(errorInfo.originalOutput);
 
   const lines = [
     '',
-    '[delegate-task retry suggestion]',
-    `Error type: ${errorInfo.errorType}`,
-    `Fix: ${pattern.fixHint}`,
+    '[delegate-task 重试建议]',
+    `错误类型：${errorInfo.errorType}`,
+    `修复：${pattern.fixHint}`,
   ];
 
   if (available) {
@@ -33,7 +33,7 @@ export function buildRetryGuidance(errorInfo: DetectedError): string {
   }
 
   lines.push(
-    'Retry now with corrected parameters. Example:',
+    '立即使用修正后的参数重试。示例：',
     'task(description="...", prompt="...", category="unspecified-low", run_in_background=false, load_skills=[])',
   );
 

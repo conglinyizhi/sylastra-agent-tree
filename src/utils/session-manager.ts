@@ -253,8 +253,8 @@ export class SessionManager {
     if (lines.length === 0) return undefined;
 
     return [
-      '### Resumable Sessions',
-      'Reuse only for clear continuation of the same thread. Otherwise start fresh.',
+      '### 可恢复的会话',
+      '仅在明确延续同一线程时复用。否则请全新开始。',
       '',
       ...lines,
     ].join('\n');

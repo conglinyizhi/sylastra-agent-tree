@@ -253,7 +253,7 @@ export function processImageAttachments(args: {
       .concat([
         {
           type: 'text',
-          text: `[Image attachment detected.${pathsText} Your model may not support image input. Delegate to @observer with the file path(s) above so it can read the file with its read tool.]`,
+          text: `[检测到图片附件。${pathsText} 你的模型可能不支持图片输入。请将上述文件路径委托给 @observer，以便其使用读取工具查看文件。]`,
         },
       ]);
   }

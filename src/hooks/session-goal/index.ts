@@ -41,9 +41,9 @@ function pushText(
 function formatGoal(state: GoalState, inherited: boolean): string {
   const tag = inherited ? 'parent_goal' : 'active_goal';
   const guidance = inherited
-    ? 'This is context only. Your delegated prompt remains the bounded task.'
-    : 'Use todos as the execution ledger. Keep planning, delegation, edits, and verification aligned to this goal. Do not broaden scope unless the user changes the goal.';
-  return `<${tag}>\nObjective: ${state.text}\n${guidance}\n</${tag}>`;
+    ? '这仅提供上下文。你的委托提示词仍然是那个有边界的任务。'
+    : '使用 todos 作为执行账本。确保规划、委托、编辑和验证与此目标保持一致。除非用户更改目标，否则不要扩大范围。';
+  return `<${tag}>\n目标：${state.text}\n${guidance}\n</${tag}>`;
 }
 
 async function readInterviewGoal(
@@ -133,9 +133,8 @@ export function createSessionGoalHook(
       if (commandConfig?.[COMMAND_NAME]) return;
       if (!opencodeConfig.command) opencodeConfig.command = {};
       (opencodeConfig.command as Record<string, unknown>)[COMMAND_NAME] = {
-        template: 'Set or show the current session goal',
-        description:
-          'Pin a session objective that keeps todos, delegation, and verification aligned',
+        template: '设置或显示当前会话目标',
+        description: '设定一个会话目标，使 todos、委托和验证保持对齐',
       };
     },
 
@@ -150,15 +149,15 @@ export function createSessionGoalHook(
         pushText(
           output,
           resolved
-            ? `Active goal:\n${resolved.goal.text}\n\nUse todos for execution steps. Auto-continuation continues only while todos remain.`
-            : 'No active goal. Set one with /goal <objective>.',
+            ? `当前目标：\n${resolved.goal.text}\n\n使用 todos 作为执行步骤。自动继续仅在仍有 todos 时持续。`
+            : '没有活跃目标。使用 /goal <目标> 设置一个。',
         );
         return;
       }
 
       if (args === 'clear') {
         goals.delete(input.sessionID);
-        pushText(output, 'Cleared the active goal for this session.');
+        pushText(output, '已清除此会话的活跃目标。');
         return;
       }
 
@@ -170,10 +169,7 @@ export function createSessionGoalHook(
           value,
         );
         if (!interviewGoal) {
-          pushText(
-            output,
-            `Could not find a readable interview spec for "${value}".`,
-          );
+          pushText(output, `无法为 "${value}" 找到可读的面试规格。`);
           return;
         }
         goals.set(input.sessionID, {
@@ -182,10 +178,7 @@ export function createSessionGoalHook(
           sourcePath: interviewGoal.sourcePath,
           createdAt: Date.now(),
         });
-        pushText(
-          output,
-          `Set active goal from interview:\n${interviewGoal.text}`,
-        );
+        pushText(output, `已从面试中设置活跃目标：\n${interviewGoal.text}`);
         return;
       }
 
@@ -195,7 +188,7 @@ export function createSessionGoalHook(
         source: 'manual',
         createdAt: Date.now(),
       });
-      pushText(output, `Set active goal:\n${text}`);
+      pushText(output, `已设置活跃目标：\n${text}`);
     },
 
     handleEvent: (input) => {

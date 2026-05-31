@@ -14,23 +14,23 @@ const COMMAND_NAME = 'subtask';
  * The subtask command template that guides the AI in generating subtask
  * prompts.
  */
-const SUBTASK_COMMAND_TEMPLATE = `Start a focused subtask worker.
+const SUBTASK_COMMAND_TEMPLATE = `启动一个聚焦的子任务工作器。
 
-The user's request below is the full scope for the worker. Do not broaden it.
-Create a self-contained worker prompt that includes:
-- the exact objective
-- relevant context from this conversation
-- specific files/paths that matter
-- expected deliverables
-- validation the worker should run, if applicable
+以下用户的请求是该工作器的全部范围。不要扩大范围。
+创建一个自包含的工作器提示词，包括：
+- 精确的目标
+- 来自此会话的相关上下文
+- 相关的具体文件/路径
+- 预期交付物
+- 工作器应运行的验证（如适用）
 
-USER REQUEST:
+用户请求：
 $ARGUMENTS
 
-Then call the subtask tool:
+然后调用 subtask 工具：
 \`subtask(prompt="...", files=["src/foo.ts", "docs/bar.md"])\`
 
-Only include files that are clearly relevant. If no files are needed, omit files.`;
+仅包含明确相关的文件。如果不需要文件，则省略 files 参数。`;
 
 /**
  * Creates a subtask command manager.
@@ -54,7 +54,7 @@ export function createSubtaskCommandManager(
         opencodeConfig.command = {};
       }
       (opencodeConfig.command as Record<string, unknown>)[COMMAND_NAME] = {
-        description: 'Create a focused subtask prompt for a new session',
+        description: '为新的会话创建一个聚焦的子任务提示词',
         template: SUBTASK_COMMAND_TEMPLATE,
       };
     }

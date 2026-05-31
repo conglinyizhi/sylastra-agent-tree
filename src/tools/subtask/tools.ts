@@ -60,14 +60,13 @@ export function createSubtaskTool(
   const timeoutMs = options.timeoutMs ?? DEFAULT_SUBTASK_TIMEOUT_MS;
 
   return tool({
-    description:
-      'Run a child worker session and return its completion summary to the caller',
+    description: '运行一个子工作会话，并将其完成摘要返回给调用方',
     args: {
-      prompt: tool.schema.string().describe('The generated subtask prompt'),
+      prompt: tool.schema.string().describe('生成的子任务提示词'),
       files: tool.schema
         .array(tool.schema.string())
         .optional()
-        .describe("Array of file paths to load into the new session's context"),
+        .describe('要加载到新会话上下文中的文件路径数组'),
     },
     async execute(args, context) {
       const directory =
@@ -83,21 +82,21 @@ export function createSubtaskTool(
           : 'unknown';
       const abortSignal = getAbortSignal(context);
       if (state.isSubtaskSession(sessionID)) {
-        return 'Nested subtask is disabled: this session is already a subtask worker. Finish this worker and return its summary to the parent session instead.';
+        return '嵌套子任务已禁用：此会话已经是子任务工作器。请完成此工作器，将其摘要返回给父会话。';
       }
       if (
         sessionID !== 'unknown' &&
         depthTracker &&
         depthTracker.getDepth(sessionID) + 1 > depthTracker.maxDepth
       ) {
-        return `Subtask worker blocked: max subagent depth ${depthTracker.maxDepth} would be exceeded.`;
+        return `子任务工作器被阻止：将超过最大子 agent 深度 ${depthTracker.maxDepth}。`;
       }
 
-      const sessionReference = `You are a subtask worker spawned by parent session ${sessionID}.
+      const sessionReference = `你是一个由父会话 ${sessionID} 生成的子任务工作器。
 
-Your job is bounded: complete only the task below. Do not expand scope.
-If needed context is missing, use read_session to inspect the parent session.
-Do not spawn another subtask.`;
+你的工作是有边界的：仅完成以下任务。不要扩大范围。
+如果缺少必要的上下文，请使用 read_session 查看父会话。
+不要生成另一个子任务。`;
       const files = new Set([
         ...parseFileReferences(args.prompt),
         ...(args.files ?? []).map(cleanFileReference),
@@ -151,7 +150,7 @@ Do not spawn another subtask.`;
               parts: [
                 {
                   type: 'text',
-                  text: `${fullPrompt}\n\nInstructions:\n1. Understand the task and relevant file context.\n2. Make only necessary changes.\n3. Run the most relevant validation checks when practical.\n4. Stop when the requested task is done.\n\nReturn your final response in this format:\n\n<subtask_summary>\nStatus: completed | blocked | partial\n\nWhat changed:\n- ...\n\nFiles touched:\n- ...\n\nValidation:\n- ...\n\nRisks / follow-up:\n- ...\n</subtask_summary>`,
+                  text: `${fullPrompt}\n\n说明：\n1. 理解任务和相关文件上下文。\n2. 仅进行必要的更改。\n3. 在可行时运行最相关的验证检查。\n4. 请求的任务完成后停止。\n\n以以下格式返回最终响应：\n\n<subtask_summary>\n状态：completed（已完成） | blocked（受阻） | partial（部分完成）\n\n变更内容：\n- ...\n\n涉及文件：\n- ...\n\n验证结果：\n- ...\n\n风险/后续事项：\n- ...\n</subtask_summary>`,
                 },
                 ...(await buildSyntheticFileParts(directory, files)),
               ],
@@ -166,7 +165,7 @@ Do not spawn another subtask.`;
           includeReasoning: false,
         });
         if (extraction.empty) {
-          throw new Error('Subtask worker returned no summary');
+          throw new Error('子任务工作器未返回摘要');
         }
         const summary = normalizeSubtaskSummary(extraction.text);
 
@@ -220,7 +219,7 @@ function formatTranscript(
     }>;
 
     if (role === 'user') {
-      lines.push('## User');
+      lines.push('## 用户');
       for (const part of parts) {
         if (
           part.type === 'text' &&
@@ -230,14 +229,14 @@ function formatTranscript(
           lines.push(part.text);
         }
         if (part.type === 'file') {
-          lines.push(`[Attached: ${part.filename || 'file'}]`);
+          lines.push(`[已附加：${part.filename || 'file'}]`);
         }
       }
       lines.push('');
     }
 
     if (role === 'assistant') {
-      lines.push('## Assistant');
+      lines.push('## 助手');
       for (const part of parts) {
         if (part.type === 'text' && typeof part.text === 'string') {
           lines.push(part.text);
@@ -247,7 +246,7 @@ function formatTranscript(
           part.state?.status === 'completed' &&
           part.tool
         ) {
-          lines.push(`[Tool: ${part.tool}] ${part.state.title ?? ''}`);
+          lines.push(`[工具：${part.tool}] ${part.state.title ?? ''}`);
         }
       }
       lines.push('');
@@ -259,11 +258,11 @@ function formatTranscript(
   if (messages.length >= (limit ?? 100)) {
     return (
       output +
-      `\n\n(Showing ${messages.length} most recent messages. Use a higher 'limit' to see more.)`
+      `\n\n（显示最近的 ${messages.length} 条消息。使用更大的 'limit' 值查看更多内容。）`
     );
   }
 
-  return `${output}\n\n(End of session - ${messages.length} messages)`;
+  return `${output}\n\n（会话结束 - 共 ${messages.length} 条消息）`;
 }
 
 /**
@@ -277,17 +276,15 @@ export function createReadSessionTool(
 ): ToolDefinition {
   return tool({
     description:
-      "Read the conversation transcript from a previous session. Use this when you need specific information from the source session that wasn't included in the subtask summary.",
+      '读取之前会话的对话记录。当来自源会话的特定信息未包含在子任务摘要中时使用。',
     args: {
       sessionID: tool.schema
         .string()
-        .describe('The full session ID (e.g., sess_01jxyz...)'),
+        .describe('完整的会话 ID（例如 sess_01jxyz...）'),
       limit: tool.schema
         .number()
         .optional()
-        .describe(
-          'Maximum number of messages to read (defaults to 100, max 500)',
-        ),
+        .describe('读取的最大消息数（默认为 100，最大 500）'),
     },
     async execute(args, context) {
       const limit = Math.min(args.limit ?? 100, 500);
@@ -303,10 +300,10 @@ export function createReadSessionTool(
           ? (context as { sessionID?: string }).sessionID
           : undefined;
       if (!callerSessionID || !state.isSubtaskSession(callerSessionID)) {
-        return 'read_session is only available from subtask worker sessions.';
+        return 'read_session 仅在子任务工作器会话中可用。';
       }
       if (state.sourceFor(callerSessionID) !== args.sessionID) {
-        return 'read_session can only read the source session for this subtask worker.';
+        return 'read_session 只能读取此子任务工作器的源会话。';
       }
 
       try {
@@ -316,12 +313,12 @@ export function createReadSessionTool(
         })) as { data?: Array<{ info: { role?: string }; parts: unknown[] }> };
 
         if (!response.data || response.data.length === 0) {
-          return 'Session has no messages or does not exist.';
+          return '会话没有消息或不存在。';
         }
 
         return formatTranscript(response.data, limit);
       } catch (error) {
-        return `Could not read session ${args.sessionID}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+        return `无法读取会话 ${args.sessionID}：${error instanceof Error ? error.message : '未知错误'}`;
       }
     },
   });

@@ -1,23 +1,23 @@
 # src/mcp/
 
-## Responsibility
+## 职责
 
-- Define and expose the built-in MCP endpoints (websearch, context7, grep.app) alongside the shared type aliases so the application can treat remote and local MCPs uniformly (`src/mcp/index.ts`, `src/mcp/types.ts`).
-- Provide a single entry point (`createBuiltinMcps`) for instantiating the default connectors while honoring feature flags/disabled lists.
+- 定义并暴露内置的 MCP 端点（websearch、context7、grep.app）以及共享类型别名，使应用程序能够统一处理远程和本地 MCP（`src/mcp/index.ts`、`src/mcp/types.ts`）。
+- 提供单一入口点（`createBuiltinMcps`）用于实例化默认连接器，同时遵循功能开关/禁用列表。
 
-## Design
+## 设计
 
-- `types.ts` defines the discriminated union `McpConfig` with `RemoteMcpConfig` and `LocalMcpConfig`, keeping the shape of every connector explicit and easy to validate at compile time.
-- Each service file exports a `RemoteMcpConfig` literal that points at the remote URL and optionally supplies headers derived from the corresponding environment variable to avoid leaking secrets (`websearch.ts`, `context7.ts`, `grep-app.ts`).
-- `index.ts` aggregates the built-in configs in a `Record<McpName, McpConfig>` and exposes helpers/types for external consumers, keeping the set of hard-coded MCPs centralized.
+- `types.ts` 定义了判别联合类型 `McpConfig`，包含 `RemoteMcpConfig` 和 `LocalMcpConfig`，使每个连接器的结构都明确且易于在编译时校验。
+- 每个服务文件导出一个 `RemoteMcpConfig` 字面量，指向远程 URL 并可选择提供从对应环境变量派生的头部信息，以避免泄露密钥（`websearch.ts`、`context7.ts`、`grep-app.ts`）。
+- `index.ts` 将内置配置聚合在 `Record<McpName, McpConfig>` 中，并暴露辅助函数/类型供外部消费者使用，保持硬编码的 MCP 集合集中管理。
 
-## Flow
+## 流程
 
-- On startup `createBuiltinMcps` iterates over the in-module registry and filters out any MCP listed in `disabled_mcps`, returning the remaining configs as a string-keyed record for the higher-level stack (`src/index.ts`).
-- Each remote config is evaluated eagerly, so the only per-request variability is the `disabled_mcps` list and the presence of environment-provided API keys for headers.
+- 启动时，`createBuiltinMcps` 遍历模块内注册表，过滤掉任何列在 `disabled_mcps` 中的 MCP，将剩余配置作为字符串键记录返回给上层栈（`src/index.ts`）。
+- 每个远程配置被即时求值，因此唯一随请求变化的变量是 `disabled_mcps` 列表和环境提供的 API 密钥（用于头部）。
 
-## Integration
+## 集成
 
-- `src/index.ts` imports `createBuiltinMcps` to construct the MCP map used by the runtime, passing the user/cli-configured `disabled_mcps` array.
-- Types exported from `src/mcp/types.ts` are re-exported by `src/mcp/index.ts`, letting other modules reference `McpConfig`, `LocalMcpConfig`, and `RemoteMcpConfig` without reaching into individual files.
-- Remote configs are pure data objects consumed by the runtime's MCP execution layer (via the `McpConfig` contract) and depend only on environment-provided credentials and the URLs defined here.
+- `src/index.ts` 导入 `createBuiltinMcps` 以构造运行时使用的 MCP 映射，传入用户/CLI 配置的 `disabled_mcps` 数组。
+- 从 `src/mcp/types.ts` 导出的类型由 `src/mcp/index.ts` 重新导出，使其他模块可以引用 `McpConfig`、`LocalMcpConfig` 和 `RemoteMcpConfig`，而无需深入到单个文件。
+- 远程配置是纯数据对象，由运行时的 MCP 执行层（通过 `McpConfig` 约定）消费，仅依赖环境提供的凭据和此处定义的 URL。

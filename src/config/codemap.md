@@ -1,103 +1,93 @@
-# Config Module Codemap
+# Config 模块 Codemap
 
-## Responsibility
+## 职责
 
-`src/config/` owns plugin configuration schema, load/merge pipeline, prompt
-resolution, and helper APIs used by agents, council, and runtime subsystems.
+`src/config/` 负责插件配置 schema、加载/合并流水线、提示词解析以及供 agent、council 和运行时子系统使用的辅助 API。
 
-## Architecture
+## 架构
 
-### Core entry points
+### 核心入口点
 
-- `loadPluginConfig(directory)` is the top-level loader used by `src/index.ts`.
-- `PluginConfigSchema` validates and normalizes raw config, including:
-  - legacy council field deprecation capture
-  - strict guard that `prompt` / `orchestratorPrompt` are only for custom
-    agents.
-- `getAgentPrompt`/`loadAgentPrompt` and related helpers are consumed by
-  agent registry.
+- `loadPluginConfig(directory)` 是由 `src/index.ts` 使用的顶级加载器。
+- `PluginConfigSchema` 校验并规范化原始配置，包括：
+  - 旧版 council 字段弃用捕获
+  - 严格限制 `prompt` / `orchestratorPrompt` 仅用于自定义 agent。
+- `getAgentPrompt`/`loadAgentPrompt` 及相关辅助函数由 agent 注册表使用。
 
-### Merge and load pipeline
+### 合并与加载流水线
 
-`loadPluginConfig(directory)`:
+`loadPluginConfig(directory)`：
 
-1. Locate user config (prefer `.jsonc`, then `.json`) from:
+1. 从以下位置定位用户配置（优先 `.jsonc`，其次 `.json`）：
    - `OPENCODE_CONFIG_DIR`
    - `XDG_CONFIG_HOME/opencode`
    - `~/.config/opencode`
-2. Locate project config at
-   `<directory>/.opencode/sylastra-agent-tree.(jsonc|json)`.
-3. Validate with schema. Invalid/malformed files are warned and ignored by
-   returning `null` for that file.
-4. Merge user+project configs where project takes precedence:
-   nested merges for `agents`, `tmux`, `multiplexer`, `interview`, `sessionManager`,
-   `fallback`, `council`.
-   top-level arrays/values are overridden.
-5. If `tmux` is enabled and no explicit `multiplexer` is configured,
-   migrate to `multiplexer` (`tmux` compatibility path).
-6. Apply env override `OH_MY_OPENCODE_SLIM_PRESET` over config file preset.
-7. If preset exists, merge preset agents into `agents` so explicit root agents
-   still win (`deepMerge(preset, config.agents)`).
-8. Return merged config object.
+2. 在 `<directory>/.opencode/sylastra-agent-tree.(jsonc|json)` 定位项目配置。
+3. 使用 schema 校验。无效/格式错误的文件会发出警告并以返回 `null` 的方式忽略该文件。
+4. 合并用户+项目配置，项目配置优先级更高：
+   对 `agents`、`tmux`、`multiplexer`、`interview`、`sessionManager`、`fallback`、`council` 进行嵌套合并。
+   顶层数组/值被覆盖。
+5. 如果启用了 `tmux` 且未配置显式的 `multiplexer`，则迁移到 `multiplexer`（`tmux` 兼容路径）。
+6. 应用环境变量 `OH_MY_OPENCODE_SLIM_PRESET` 覆盖配置文件中的 preset。
+7. 如果存在 preset，将 preset 中的 agent 合并到 `agents` 中，使得显式根级 agent 仍然优先（`deepMerge(preset, config.agents)`）。
+8. 返回合并后的配置对象。
 
-### Prompt discovery
+### 提示词发现
 
-`loadAgentPrompt(agentName, preset?)`:
+`loadAgentPrompt(agentName, preset?)`：
 
-- Searches config directories for `sylastra-agent-tree/` prompt roots.
-- Supports optional preset subdirectory lookup when `preset` is alphanumeric/
-  hyphen/underscore-safe.
-- For each agent:
-  - `<agent>.md` replacement prompt
-  - `<agent>_append.md` appended prompt
-- Read errors are warned and do not fail config load.
+- 在配置目录中搜索 `sylastra-agent-tree/` 提示词根目录。
+- 当 `preset` 为字母/连字符/下划线安全字符时，支持可选的 preset 子目录查找。
+- 对每个 agent：
+  - `<agent>.md` 替换式提示词
+  - `<agent>_append.md` 追加式提示词
+- 读取错误会发出警告，不会导致配置加载失败。
 
-### Schema surface and compatibility
+### Schema 表面与兼容性
 
-- Agent override schema supports:
-  - `model` string or ordered fallback array (string or `{id, variant}`)
-  - `temperature`, `variant`, `options`, `skills`, `mcps`, `displayName`
-  - custom agent prompts (`prompt`, `orchestratorPrompt`) only.
-- Multiplexer:
-  - new unified `multiplexer` schema (`auto|tmux|zellij|none`)
-  - legacy `tmux` schema retained and migrated at load time.
-- Council:
-  - `CouncilConfigSchema` now normalizes deprecated `master*` fields into
-    `_legacyMasterModel` metadata for compatibility
-  - supports presets + timeout/retry/execution mode.
-- Fallback config supports per-agent chain arrays and retry/backoff values.
+- Agent 覆盖 schema 支持：
+  - `model` 字符串或有序回退数组（字符串或 `{id, variant}`）
+  - `temperature`、`variant`、`options`、`skills`、`mcps`、`displayName`
+  - 仅自定义 agent 的提示词（`prompt`、`orchestratorPrompt`）。
+- Multiplexer：
+  - 新的统一 `multiplexer` schema（`auto|tmux|zellij|none`）
+  - 保留旧版 `tmux` schema，加载时迁移。
+- Council：
+  - `CouncilConfigSchema` 现在将弃用的 `master*` 字段规范化为 `_legacyMasterModel` 元数据以保持兼容
+  - 支持 presets + 超时/重试/执行模式。
+- Fallback 配置支持每个 agent 的链式数组和重试/退避值。
 
-## Control flow and dependencies
+## 控制流与依赖
 
 ```text
 src/index.ts
   └─> loadPluginConfig(directory)
-      ├─> Agent override application in src/agents/index.ts
-      ├─> MCP defaults/filters in src/config/agent-mcps.ts
-      ├─> Council session behavior in src/council/*
-      ├─> Fallback/session behavior in runtime hooks
-      └─> Multiplexer behavior in src/multiplexer/*
+      ├─> Agent 覆盖应用在 src/agents/index.ts
+      ├─> MCP 默认值/过滤在 src/config/agent-mcps.ts
+      ├─> Council 会话行为在 src/council/*
+      ├─> Fallback/会话行为在运行时钩子中
+      └─> Multiplexer 行为在 src/multiplexer/*
 ```
 
-### Key collaborators
+### 关键协作者
 
 - `constants.ts`
-  - names/aliases, orchestratable lists, default models/timeouts/modes.
+  - 名称/别名、可编排列表、默认模型/超时/模式。
 - `agent-mcps.ts`
-  - `getAgentMcpList`, `parseList`, `getAvailableMcpNames`.
+  - `getAgentMcpList`、`parseList`、`getAvailableMcpNames`。
 - `utils.ts`
-  - alias resolution and custom-agent key discovery.
+  - 别名解析和自定义 agent 键发现。
 - `loader.ts`
-  - config IO, deep merge, preset composition, env override, prompt loading.
-- `schema.ts`, `council-schema.ts`
-  - type/shape validation + transformation.
+  - 配置 IO、深度合并、preset 组合、环境变量覆盖、提示词加载。
+- `schema.ts`、`council-schema.ts`
+  - 类型/形状校验 + 转换。
 
-## File structure
+## 文件结构
 
-- `index.ts` — exported config surface
-- `loader.ts` — load, merge, prompt resolution, tmux migration
-- `schema.ts` — plugin config + agent override schemas
-- `council-schema.ts` — council-specific and legacy compatibility schema
-- `constants.ts` — defaults, names, delegation rules, timeouts
-- `agent-mcps.ts` — MCP defaults and allow-list parsing
-- `utils.ts` — config helper methods
+- `index.ts` — 导出的配置接口
+- `loader.ts` — 加载、合并、提示词解析、tmux 迁移
+- `schema.ts` — 插件配置 + agent 覆盖 schema
+- `council-schema.ts` — council 特有及旧版兼容 schema
+- `constants.ts` — 默认值、名称、委派规则、超时
+- `agent-mcps.ts` — MCP 默认值和允许列表解析
+- `utils.ts` — 配置辅助方法

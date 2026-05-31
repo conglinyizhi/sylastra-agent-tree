@@ -1,6 +1,6 @@
 # Installation Guide
 
-Complete installation instructions for oh-my-opencode-slim.
+Complete installation instructions for sylastra-agent-tree.
 
 ## Table of Contents
 
@@ -18,13 +18,13 @@ Complete installation instructions for oh-my-opencode-slim.
 Run the interactive installer:
 
 ```bash
-bunx oh-my-opencode-slim@latest install
+bunx sylastra-agent-tree@latest install
 ```
 
 Or use non-interactive mode:
 
 ```bash
-bunx oh-my-opencode-slim@latest install --no-tui --skills=yes
+bunx sylastra-agent-tree@latest install --no-tui --skills=yes
 ```
 
 ### Configuration Options
@@ -41,23 +41,23 @@ The installer supports the following options:
 
 ### Non-Destructive Behavior
 
-By default, the installer is non-destructive. If an `oh-my-opencode-slim.json` configuration file already exists, the installer will **not** overwrite it. Instead, it will display a message:
+By default, the installer is non-destructive. If an `sylastra-agent-tree.json` configuration file already exists, the installer will **not** overwrite it. Instead, it will display a message:
 
 ```
-[i] Configuration already exists at ~/.config/opencode/oh-my-opencode-slim.json. Use --reset to overwrite.
+[i] Configuration already exists at ~/.config/opencode/sylastra-agent-tree.json. Use --reset to overwrite.
 ```
 
 To force overwrite of your existing configuration, use the `--reset` flag:
 
 ```bash
-bunx oh-my-opencode-slim@latest install --reset
+bunx sylastra-agent-tree@latest install --reset
 ```
 
 **Note:** When using `--reset`, the installer creates a `.bak` backup file before overwriting, so your previous configuration is preserved.
 
 ### After Installation
 
-The installer generates both OpenAI and OpenCode Go presets, with OpenAI active by default (using `gpt-5.5` and `gpt-5.4-mini` models). To make OpenCode Go active during install, run `bunx oh-my-opencode-slim@latest install --preset=opencode-go`. That preset uses GLM-5.1 for Orchestrator, so the installer also enables Observer with `opencode-go/kimi-k2.6` for visual analysis. To switch providers later or build a mixed setup, use **[Configuration Reference](configuration.md)** for the full option reference and the preset docs for copyable examples.
+The installer generates both OpenAI and OpenCode Go presets, with OpenAI active by default (using `gpt-5.5` and `gpt-5.4-mini` models). To make OpenCode Go active during install, run `bunx sylastra-agent-tree@latest install --preset=opencode-go`. That preset uses GLM-5.1 for Orchestrator, so the installer also enables Observer with `opencode-go/kimi-k2.6` for visual analysis. To switch providers later or build a mixed setup, use **[Configuration Reference](configuration.md)** for the full option reference and the preset docs for copyable examples.
 
 Then:
 
@@ -70,7 +70,7 @@ opencode auth login
 opencode models --refresh
 ```
 
-Open your generated config at `~/.config/opencode/oh-my-opencode-slim.json`
+Open your generated config at `~/.config/opencode/sylastra-agent-tree.json`
 and adjust models if needed.
 
 Then run OpenCode and verify the agents:
@@ -79,7 +79,7 @@ Then run OpenCode and verify the agents:
 ping all agents
 ```
 
-> **💡 Tip: Models are fully customizable.** The installer sets sensible defaults, but you can assign *any* model to *any* agent. Edit `~/.config/opencode/oh-my-opencode-slim.json` (or `.jsonc` for comments support) to override models, adjust reasoning effort, or disable agents entirely.
+> **💡 Tip: Models are fully customizable.** The installer sets sensible defaults, but you can assign *any* model to *any* agent. Edit `~/.config/opencode/sylastra-agent-tree.json` (or `.jsonc` for comments support) to override models, adjust reasoning effort, or disable agents entirely.
 
 ### Alternative: Ask Any Coding Agent
 
@@ -87,14 +87,14 @@ Paste this into Claude Code, AmpCode, Cursor, or any coding agent:
 
 ```
 Install and configure by following the instructions here:
-https://raw.githubusercontent.com/alvinunreal/oh-my-opencode-slim/refs/heads/master/README.md
+https://raw.githubusercontent.com/alvinunreal/sylastra-agent-tree/refs/heads/master/README.md
 ```
 
 ---
 
 ## For LLM Agents
 
-If you're an LLM Agent helping set up oh-my-opencode-slim, follow these steps.
+If you're an LLM Agent helping set up sylastra-agent-tree, follow these steps.
 
 ### Step 1: Check OpenCode Installation
 
@@ -109,32 +109,32 @@ If not installed, direct the user to https://opencode.ai/docs first.
 The installer generates OpenAI and OpenCode Go presets, with OpenAI active by default:
 
 ```bash
-bunx oh-my-opencode-slim@latest install --no-tui --skills=yes
+bunx sylastra-agent-tree@latest install --no-tui --skills=yes
 ```
 
 **Examples:**
 ```bash
 # Interactive install
-bunx oh-my-opencode-slim@latest install
+bunx sylastra-agent-tree@latest install
 
 # Non-interactive with bundled skills
-bunx oh-my-opencode-slim@latest install --no-tui --skills=yes
+bunx sylastra-agent-tree@latest install --no-tui --skills=yes
 
 # Make the generated OpenCode Go preset active
-bunx oh-my-opencode-slim@latest install --preset=opencode-go
+bunx sylastra-agent-tree@latest install --preset=opencode-go
 
 # Non-interactive without skills
-bunx oh-my-opencode-slim@latest install --no-tui --skills=no
+bunx sylastra-agent-tree@latest install --no-tui --skills=no
 
 # Force overwrite existing configuration
-bunx oh-my-opencode-slim@latest install --reset
+bunx sylastra-agent-tree@latest install --reset
 ```
 
 The installer automatically:
 - Adds the plugin to `~/.config/opencode/opencode.json`
 - Disables default OpenCode agents
 - Enables OpenCode LSP integration when no explicit `lsp` setting exists
-- Generates agent model mappings in `~/.config/opencode/oh-my-opencode-slim.json` (or `.jsonc`)
+- Generates agent model mappings in `~/.config/opencode/sylastra-agent-tree.json` (or `.jsonc`)
 
 ### Step 3: Authenticate with Providers
 
@@ -157,9 +157,9 @@ Ask the user to:
 Verify all agents respond successfully.
 
 **Crucial Advice for the User:**
-- They can easily assign **different models to different agents** by editing `~/.config/opencode/oh-my-opencode-slim.json` (or `.jsonc`).
+- They can easily assign **different models to different agents** by editing `~/.config/opencode/sylastra-agent-tree.json` (or `.jsonc`).
 - If they want to add a different provider later (OpenCode Go, Kimi, GitHub Copilot, ZAI), they can update this file manually. See **[Configuration Reference](configuration.md)** and the preset docs for examples.
-- Read the generated `~/.config/opencode/oh-my-opencode-slim.json` (or `.jsonc`) file to understand the current configuration.
+- Read the generated `~/.config/opencode/sylastra-agent-tree.json` (or `.jsonc`) file to understand the current configuration.
 
 ---
 
@@ -169,11 +169,11 @@ Verify all agents respond successfully.
 
 Check the expected config format:
 ```bash
-bunx oh-my-opencode-slim@latest install --help
+bunx sylastra-agent-tree@latest install --help
 ```
 
 Then manually create the config files at:
-- `~/.config/opencode/oh-my-opencode-slim.json` (or `.jsonc`)
+- `~/.config/opencode/sylastra-agent-tree.json` (or `.jsonc`)
 
 ### Configuration Already Exists
 
@@ -183,7 +183,7 @@ If the installer reports that the configuration already exists, you have two opt
 
 2. **Reset configuration**: Use `--reset` to overwrite:
    ```bash
-   bunx oh-my-opencode-slim@latest install --reset
+   bunx sylastra-agent-tree@latest install --reset
    ```
    A `.bak` backup file will be created automatically.
 
@@ -196,7 +196,7 @@ If the installer reports that the configuration already exists, you have two opt
 
 2. From your project root, verify your config file exists and is valid:
    ```bash
-   bunx oh-my-opencode-slim@latest doctor
+   bunx sylastra-agent-tree@latest doctor
    ```
 
 3. Check that your provider is configured in `~/.config/opencode/opencode.json`
@@ -217,7 +217,7 @@ If providers are not working:
 
 3. Verify your config file has the correct provider configuration:
    ```bash
-   cat ~/.config/opencode/oh-my-opencode-slim.json
+   cat ~/.config/opencode/sylastra-agent-tree.json
    ```
 
 ### Editor Validation
@@ -226,7 +226,7 @@ Add a `$schema` reference to your config for autocomplete and inline validation:
 
 ```jsonc
 {
-  "$schema": "https://unpkg.com/oh-my-opencode-slim@latest/oh-my-opencode-slim.schema.json",
+  "$schema": "https://unpkg.com/sylastra-agent-tree@latest/sylastra-agent-tree.schema.json",
   // your config...
 }
 ```
@@ -251,12 +251,12 @@ See the [Multiplexer Integration Guide](multiplexer-integration.md) for more det
 
 1. **Remove the plugin from your OpenCode config**:
 
-   Edit `~/.config/opencode/opencode.json` and remove `"oh-my-opencode-slim"` from the `plugin` array.
+   Edit `~/.config/opencode/opencode.json` and remove `"sylastra-agent-tree"` from the `plugin` array.
 
 2. **Remove configuration files (optional)**:
    ```bash
-   rm -f ~/.config/opencode/oh-my-opencode-slim.json
-   rm -f ~/.config/opencode/oh-my-opencode-slim.json.bak
+   rm -f ~/.config/opencode/sylastra-agent-tree.json
+   rm -f ~/.config/opencode/sylastra-agent-tree.json.bak
    ```
 
 3. **Remove skills (optional)**:

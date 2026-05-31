@@ -17,8 +17,8 @@ const repoRoot = path.resolve(__dirname, '..');
 const distDir = path.join(repoRoot, 'dist');
 
 const suspiciousPathPatterns = [
-  /\/Users\/[^\s'"`]+(?:node_modules|oh-my-opencode-slim)[^\s'"`]*/,
-  /\/home\/[^\s'"`]+(?:node_modules|oh-my-opencode-slim)[^\s'"`]*/,
+  /\/Users\/[^\s'"`]+(?:node_modules|sylastra-agent-tree)[^\s'"`]*/,
+  /\/home\/[^\s'"`]+(?:node_modules|sylastra-agent-tree)[^\s'"`]*/,
 ];
 const suspiciousImportPatterns = [/from\s+["']vscode-jsonrpc\/node["']/];
 
@@ -38,7 +38,7 @@ const packagedRequiredFiles = [
   'dist/divoom/librarian.gif',
   'dist/divoom/oracle.gif',
   'dist/divoom/orchestrator.gif',
-  'oh-my-opencode-slim.schema.json',
+  'sylastra-agent-tree.schema.json',
   'src/skills/simplify/SKILL.md',
   'src/skills/codemap/SKILL.md',
   'src/skills/clonedeps/SKILL.md',
@@ -165,7 +165,7 @@ function verifyFreshInstall(tarballPath: string) {
     const installedEntry = path.join(
       installDir,
       'node_modules',
-      'oh-my-opencode-slim',
+      'sylastra-agent-tree',
       'dist',
       'index.js',
     );
@@ -180,7 +180,7 @@ function verifyFreshInstall(tarballPath: string) {
     }
 
     const smokeScript = [
-      "import pkg from 'oh-my-opencode-slim';",
+      "import pkg from 'sylastra-agent-tree';",
       "if (typeof pkg !== 'function') throw new Error('default export is not a function');",
       "console.log('package loads');",
       'process.exit(0);',

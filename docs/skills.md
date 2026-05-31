@@ -2,7 +2,7 @@
 
 Skills are specialized capabilities you can assign to agents. Unlike MCPs (which are running servers), skills are **prompt-based tool configurations** — instructions injected into an agent's system prompt that describe how to use a particular tool.
 
-Bundled skills are installed by the `oh-my-opencode-slim` installer.
+Bundled skills are installed by the `sylastra-agent-tree` installer.
 
 ---
 
@@ -83,7 +83,7 @@ See **[Clonedeps](clonedeps.md)** for the full workflow and file layout.
 
 ## Skills Assignment
 
-Control which skills each agent can use in `~/.config/opencode/oh-my-opencode-slim.json` (or `.jsonc`):
+Control which skills each agent can use in `~/.config/opencode/sylastra-agent-tree.json` (or `.jsonc`):
 
 | Syntax | Meaning |
 |--------|---------|

@@ -33,7 +33,7 @@ All of these must pass before continuation happens:
 
 ## Configuration
 
-Configure it in `~/.config/opencode/oh-my-opencode-slim.json` or `~/.config/opencode/oh-my-opencode-slim.jsonc`:
+Configure it in `~/.config/opencode/sylastra-agent-tree.json` or `~/.config/opencode/sylastra-agent-tree.jsonc`:
 
 ```jsonc
 {

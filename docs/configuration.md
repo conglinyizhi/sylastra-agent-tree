@@ -1,6 +1,6 @@
 # Configuration Reference
 
-Complete reference for all configuration files and options in oh-my-opencode-slim.
+Complete reference for all configuration files and options in sylastra-agent-tree.
 
 ---
 
@@ -9,31 +9,31 @@ Complete reference for all configuration files and options in oh-my-opencode-sli
 | File | Purpose |
 |------|---------|
 | `~/.config/opencode/opencode.json` | OpenCode core settings (plugin registration, providers) |
-| `~/.config/opencode/oh-my-opencode-slim.json` | Plugin settings — agents, multiplexer, MCPs, council |
-| `~/.config/opencode/oh-my-opencode-slim.jsonc` | Same, but with JSONC (comments + trailing commas). Takes precedence over `.json` if both exist |
-| `.opencode/oh-my-opencode-slim.json` | Project-local overrides (optional, checked first) |
+| `~/.config/opencode/sylastra-agent-tree.json` | Plugin settings — agents, multiplexer, MCPs, council |
+| `~/.config/opencode/sylastra-agent-tree.jsonc` | Same, but with JSONC (comments + trailing commas). Takes precedence over `.json` if both exist |
+| `.opencode/sylastra-agent-tree.json` | Project-local overrides (optional, checked first) |
 
 > **💡 JSONC recommended:** Use the `.jsonc` extension to add comments and trailing commas. If both `.jsonc` and `.json` exist, `.jsonc` takes precedence.
 
-If OmO-slim detects an invalid plugin config for the current project, the TUI sidebar shows a warning. Run `oh-my-opencode-slim doctor` from your project root for full diagnostics.
+If OmO-slim detects an invalid plugin config for the current project, the TUI sidebar shows a warning. Run `sylastra-agent-tree doctor` from your project root for full diagnostics.
 
 ---
 
 ## Prompt Overriding
 
-Customize agent prompts without modifying source code. Create markdown files in `~/.config/opencode/oh-my-opencode-slim/`:
+Customize agent prompts without modifying source code. Create markdown files in `~/.config/opencode/sylastra-agent-tree/`:
 
 | File | Effect |
 |------|--------|
 | `{agent}.md` | Replaces the agent's default prompt entirely |
 | `{agent}_append.md` | Appends custom instructions to the default prompt |
 
-When a `preset` is active, the plugin checks `~/.config/opencode/oh-my-opencode-slim/{preset}/` first, then falls back to the root directory.
+When a `preset` is active, the plugin checks `~/.config/opencode/sylastra-agent-tree/{preset}/` first, then falls back to the root directory.
 
 **Example directory structure:**
 
 ```
-~/.config/opencode/oh-my-opencode-slim/
+~/.config/opencode/sylastra-agent-tree/
   ├── best/
   │   ├── orchestrator.md        # Preset-specific override (used when preset=best)
   │   └── explorer_append.md
@@ -171,14 +171,14 @@ see that a new version is available, but the plugin won't install it
 automatically.
 
 > Pinned plugin entries in `opencode.json` (for example
-> `"oh-my-opencode-slim@1.0.1"`) are the true version lock. Those stay pinned
+> `"sylastra-agent-tree@1.0.1"`) are the true version lock. Those stay pinned
 > regardless of `autoUpdate`.
 
 ### Divoom Display Integration
 
 Divoom integration is disabled by default. Install and start the Divoom MiniToo
 macOS daemon from
-[`divoom-minitoo-osx`](https://github.com/alvinunreal/divoom-minitoo-osx)
+[`divoom-minitoo-osx`](https://github.com/conglinyizhi/divoom-minitoo-osx)
 first, then enable this plugin integration. See the full
 **[Divoom guide](divoom.md)** for setup, daemon startup, and troubleshooting.
 

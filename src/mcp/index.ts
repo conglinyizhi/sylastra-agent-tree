@@ -1,4 +1,5 @@
 import type { McpName, WebsearchConfig } from '../config';
+import { betterEditTools } from './better-edit-tools';
 import { context7 } from './context7';
 import { grep_app } from './grep-app';
 import type { McpConfig } from './types';
@@ -10,6 +11,7 @@ const allBuiltinMcps: Record<McpName, McpConfig> = {
   websearch,
   context7,
   grep_app,
+  'better-edit-tools': betterEditTools,
 };
 
 /**

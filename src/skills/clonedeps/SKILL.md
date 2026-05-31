@@ -178,16 +178,16 @@ under `.slim/clonedeps/repos/` should be ignored.
 Update `.gitignore` with an idempotent marker block:
 
 ```gitignore
-# BEGIN oh-my-opencode-slim clonedeps
+# BEGIN sylastra-agent-tree clonedeps
 .slim/clonedeps/repos/
-# END oh-my-opencode-slim clonedeps
+# END sylastra-agent-tree clonedeps
 ```
 
 Update `.ignore` so OpenCode can read the cloned source while git still ignores
 it:
 
 ```ignore
-# BEGIN oh-my-opencode-slim clonedeps
+# BEGIN sylastra-agent-tree clonedeps
 !.slim/
 !.slim/clonedeps.json
 !.slim/clonedeps/
@@ -195,7 +195,7 @@ it:
 !.slim/clonedeps/repos/**
 .slim/clonedeps/repos/**/.git/
 .slim/clonedeps/repos/**/.git/**
-# END oh-my-opencode-slim clonedeps
+# END sylastra-agent-tree clonedeps
 ```
 
 Only edit content inside these marker blocks.

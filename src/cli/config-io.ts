@@ -26,7 +26,7 @@ import type {
   OpenCodeConfig,
 } from './types';
 
-const PACKAGE_NAME = 'oh-my-opencode-slim';
+const PACKAGE_NAME = 'sylastra-agent-tree';
 
 function isString(value: unknown): value is string {
   return typeof value === 'string';
@@ -369,7 +369,7 @@ export async function addPluginToOpenCodeConfig(): Promise<ConfigMergeResult> {
 
     const pluginEntry = getPluginEntry();
 
-    // Remove existing oh-my-opencode-slim entries
+    // Remove existing sylastra-agent-tree entries
     const filteredPlugins = plugins.filter(
       (plugin) => !isMatchingPluginEntry(plugin),
     );

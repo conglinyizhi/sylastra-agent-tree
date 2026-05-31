@@ -39,7 +39,7 @@ export interface LoadPluginConfigOptions {
   silent?: boolean;
 }
 
-const PROMPTS_DIR_NAME = 'oh-my-opencode-slim';
+const PROMPTS_DIR_NAME = 'sylastra-agent-tree';
 
 /**
  * Load and validate plugin configuration from a specific file path.
@@ -76,7 +76,7 @@ function loadConfigFromPath(
       });
       if (!options?.silent) {
         console.warn(
-          `[oh-my-opencode-slim] Invalid JSON in ${configPath}:`,
+          `[sylastra-agent-tree] Invalid JSON in ${configPath}:`,
           message,
         );
       }
@@ -92,7 +92,7 @@ function loadConfigFromPath(
         formatted: result.error.format(),
       });
       if (!options?.silent) {
-        console.warn(`[oh-my-opencode-slim] Invalid config at ${configPath}:`);
+        console.warn(`[sylastra-agent-tree] Invalid config at ${configPath}:`);
         console.warn(result.error.format());
       }
       return null;
@@ -113,7 +113,7 @@ function loadConfigFromPath(
       });
       if (!options?.silent) {
         console.warn(
-          `[oh-my-opencode-slim] Error reading config from ${configPath}:`,
+          `[sylastra-agent-tree] Error reading config from ${configPath}:`,
           error.message,
         );
       }
@@ -126,7 +126,7 @@ function loadConfigFromPath(
  * Find existing config file path, preferring .jsonc over .json.
  * Checks for .jsonc first, then falls back to .json.
  *
- * @param basePath - Base path without extension (e.g., /path/to/oh-my-opencode-slim)
+ * @param basePath - Base path without extension (e.g., /path/to/sylastra-agent-tree)
  * @returns Path to existing config file, or null if neither exists
  */
 function findConfigPath(basePath: string): string | null {
@@ -160,7 +160,7 @@ function findConfigPathInDirs(
 /**
  * Find plugin config paths (user and project) for a given directory.
  * User config uses getConfigSearchDirs() for lookup.
- * Project config uses <directory>/.opencode/oh-my-opencode-slim.
+ * Project config uses <directory>/.opencode/sylastra-agent-tree.
  *
  * @param directory - Project directory to search for .opencode config
  * @returns Object with userConfigPath and projectConfigPath (null if not found)
@@ -171,13 +171,13 @@ export function findPluginConfigPaths(directory: string): {
 } {
   const userConfigPath = findConfigPathInDirs(
     getConfigSearchDirs(),
-    'oh-my-opencode-slim',
+    'sylastra-agent-tree',
   );
 
   const projectConfigBasePath = path.join(
     directory,
     '.opencode',
-    'oh-my-opencode-slim',
+    'sylastra-agent-tree',
   );
 
   const projectConfigPath = findConfigPath(projectConfigBasePath);
@@ -251,9 +251,9 @@ export function deepMerge<T extends Record<string, unknown>>(
  * Load plugin configuration from user and project config files, merging them appropriately.
  *
  * Configuration is loaded from two locations:
- * 1. User config: $OPENCODE_CONFIG_DIR/oh-my-opencode-slim.jsonc or .json,
- *    or ~/.config/opencode/oh-my-opencode-slim.jsonc or .json (or $XDG_CONFIG_HOME)
- * 2. Project config: <directory>/.opencode/oh-my-opencode-slim.jsonc or .json
+ * 1. User config: $OPENCODE_CONFIG_DIR/sylastra-agent-tree.jsonc or .json,
+ *    or ~/.config/opencode/sylastra-agent-tree.jsonc or .json (or $XDG_CONFIG_HOME)
+ * 2. Project config: <directory>/.opencode/sylastra-agent-tree.jsonc or .json
  *
  * JSONC format is preferred over JSON (allows comments and trailing commas).
  * Project config takes precedence over user config. Nested objects (agents, tmux) are
@@ -310,7 +310,7 @@ export function loadPluginConfig(
         message,
       });
       if (!options?.silent) {
-        console.warn(`[oh-my-opencode-slim] ${message}`);
+        console.warn(`[sylastra-agent-tree] ${message}`);
       }
     }
   }
@@ -359,7 +359,7 @@ export function loadAgentPrompt(
         return fs.readFileSync(promptPath, 'utf-8');
       } catch (error) {
         console.warn(
-          `[oh-my-opencode-slim] ${errorPrefix} ${promptPath}:`,
+          `[sylastra-agent-tree] ${errorPrefix} ${promptPath}:`,
           error instanceof Error ? error.message : String(error),
         );
       }

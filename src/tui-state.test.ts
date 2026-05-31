@@ -67,7 +67,7 @@ describe('tui-state persistence', () => {
       tempDir,
       'opencode',
       'storage',
-      'oh-my-opencode-slim',
+      'sylastra-agent-tree',
       'tui-state.json',
     );
     fs.mkdirSync(path.dirname(filePath), { recursive: true });

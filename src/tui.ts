@@ -9,7 +9,7 @@ import {
   type TuiSnapshot,
 } from './tui-state';
 
-const PLUGIN_NAME = 'oh-my-opencode-slim';
+const PLUGIN_NAME = 'sylastra-agent-tree';
 const CONFIG_WARNING_COLOR = 'orange';
 const FALLBACK_SIDEBAR_AGENTS = SUBAGENT_NAMES.filter(
   (agent) =>

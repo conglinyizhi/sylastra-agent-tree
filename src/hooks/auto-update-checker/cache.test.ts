@@ -23,21 +23,21 @@ describe('auto-update-checker/cache', () => {
       const existsSpy = spyOn(fs, 'existsSync').mockImplementation(
         (p: string) =>
           p ===
-          '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/package.json',
+          '/home/user/.cache/opencode/packages/sylastra-agent-tree@latest/package.json',
       );
       const { resolveInstallContext } = await import(
         `./cache?test=${importCounter++}`
       );
 
       const context = resolveInstallContext(
-        '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/node_modules/oh-my-opencode-slim/package.json',
+        '/home/user/.cache/opencode/packages/sylastra-agent-tree@latest/node_modules/sylastra-agent-tree/package.json',
       );
 
       expect(context).toEqual({
         installDir:
-          '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest',
+          '/home/user/.cache/opencode/packages/sylastra-agent-tree@latest',
         packageJsonPath:
-          '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/package.json',
+          '/home/user/.cache/opencode/packages/sylastra-agent-tree@latest/package.json',
       });
 
       existsSpy.mockRestore();
@@ -50,7 +50,7 @@ describe('auto-update-checker/cache', () => {
       );
 
       const context = resolveInstallContext(
-        '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/node_modules/oh-my-opencode-slim/package.json',
+        '/home/user/.cache/opencode/packages/sylastra-agent-tree@latest/node_modules/sylastra-agent-tree/package.json',
       );
 
       expect(context).toBeNull();
@@ -76,19 +76,19 @@ describe('auto-update-checker/cache', () => {
       const existsSpy = spyOn(fs, 'existsSync').mockImplementation(
         (p: string) =>
           p ===
-            '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/package.json' ||
+            '/home/user/.cache/opencode/packages/sylastra-agent-tree@latest/package.json' ||
           p ===
-            '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/node_modules/oh-my-opencode-slim',
+            '/home/user/.cache/opencode/packages/sylastra-agent-tree@latest/node_modules/sylastra-agent-tree',
       );
       const readSpy = spyOn(fs, 'readFileSync').mockImplementation(
         (p: string) => {
           if (
             p ===
-            '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/package.json'
+            '/home/user/.cache/opencode/packages/sylastra-agent-tree@latest/package.json'
           ) {
             return JSON.stringify({
               dependencies: {
-                'oh-my-opencode-slim': '0.9.1',
+                'sylastra-agent-tree': '0.9.1',
               },
             });
           }
@@ -108,21 +108,21 @@ describe('auto-update-checker/cache', () => {
 
       const result = preparePackageUpdate(
         '0.9.11',
-        'oh-my-opencode-slim',
-        '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/node_modules/oh-my-opencode-slim/package.json',
+        'sylastra-agent-tree',
+        '/home/user/.cache/opencode/packages/sylastra-agent-tree@latest/node_modules/sylastra-agent-tree/package.json',
       );
 
       expect(result).toBe(
-        '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest',
+        '/home/user/.cache/opencode/packages/sylastra-agent-tree@latest',
       );
       expect(rmSyncSpy).toHaveBeenCalledWith(
-        '/home/user/.cache/opencode/packages/oh-my-opencode-slim@latest/node_modules/oh-my-opencode-slim',
+        '/home/user/.cache/opencode/packages/sylastra-agent-tree@latest/node_modules/sylastra-agent-tree',
         { recursive: true, force: true },
       );
       expect(writtenData.length).toBeGreaterThan(0);
       expect(JSON.parse(writtenData[0])).toEqual({
         dependencies: {
-          'oh-my-opencode-slim': '0.9.11',
+          'sylastra-agent-tree': '0.9.11',
         },
       });
 
@@ -136,12 +136,12 @@ describe('auto-update-checker/cache', () => {
       const existsSpy = spyOn(fs, 'existsSync').mockImplementation(
         (p: string) =>
           p.endsWith('/.cache/opencode/package.json') ||
-          p.endsWith('/.cache/opencode/node_modules/oh-my-opencode-slim'),
+          p.endsWith('/.cache/opencode/node_modules/sylastra-agent-tree'),
       );
       const readSpy = spyOn(fs, 'readFileSync').mockReturnValue(
         JSON.stringify({
           dependencies: {
-            'oh-my-opencode-slim': '1.0.1',
+            'sylastra-agent-tree': '1.0.1',
           },
         }),
       );
@@ -151,7 +151,7 @@ describe('auto-update-checker/cache', () => {
         `./cache?test=${importCounter++}`
       );
 
-      const result = preparePackageUpdate('1.0.1', 'oh-my-opencode-slim', null);
+      const result = preparePackageUpdate('1.0.1', 'sylastra-agent-tree', null);
 
       expect(result?.endsWith('/.cache/opencode')).toBe(true);
       expect(writeSpy).not.toHaveBeenCalled();

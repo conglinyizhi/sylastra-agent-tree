@@ -88,14 +88,14 @@ describe('warmOpenCodePluginCache', () => {
 
     const packageRoot = join(
       tmpDir,
-      'bunx-1000-oh-my-opencode-slim@latest',
+      'bunx-1000-sylastra-agent-tree@latest',
       'node_modules',
-      'oh-my-opencode-slim',
+      'sylastra-agent-tree',
     );
     mkdirSync(join(packageRoot, 'dist', 'cli'), { recursive: true });
     writeFileSync(
       join(packageRoot, 'package.json'),
-      JSON.stringify({ name: 'oh-my-opencode-slim' }),
+      JSON.stringify({ name: 'sylastra-agent-tree' }),
     );
     process.argv[1] = join(packageRoot, 'dist', 'cli', 'index.js');
 
@@ -106,7 +106,7 @@ describe('warmOpenCodePluginCache', () => {
       cacheHome,
       'opencode',
       'packages',
-      'oh-my-opencode-slim@latest',
+      'sylastra-agent-tree@latest',
     );
 
     expect(result?.success).toBe(true);
@@ -123,10 +123,10 @@ describe('warmOpenCodePluginCache', () => {
     expect(
       JSON.parse(readFileSync(join(expectedCacheDir, 'package.json'), 'utf-8')),
     ).toEqual({
-      name: 'oh-my-opencode-slim-cache',
+      name: 'sylastra-agent-tree-cache',
       private: true,
       dependencies: {
-        'oh-my-opencode-slim': 'latest',
+        'sylastra-agent-tree': 'latest',
       },
     });
 
@@ -140,14 +140,14 @@ describe('warmOpenCodePluginCache', () => {
 
     const packageRoot = join(
       tmpDir,
-      'bunx-1000-oh-my-opencode-slim@latest',
+      'bunx-1000-sylastra-agent-tree@latest',
       'node_modules',
-      'oh-my-opencode-slim',
+      'sylastra-agent-tree',
     );
     mkdirSync(join(packageRoot, 'dist', 'cli'), { recursive: true });
     writeFileSync(
       join(packageRoot, 'package.json'),
-      JSON.stringify({ name: 'oh-my-opencode-slim' }),
+      JSON.stringify({ name: 'sylastra-agent-tree' }),
     );
     process.argv[1] = join(packageRoot, 'dist', 'cli', 'index.js');
 
@@ -155,7 +155,7 @@ describe('warmOpenCodePluginCache', () => {
       cacheHome,
       'opencode',
       'packages',
-      'oh-my-opencode-slim@latest',
+      'sylastra-agent-tree@latest',
     );
     mkdirSync(expectedCacheDir, { recursive: true });
     writeFileSync(
@@ -174,10 +174,10 @@ describe('warmOpenCodePluginCache', () => {
     expect(
       JSON.parse(readFileSync(join(expectedCacheDir, 'package.json'), 'utf-8')),
     ).toEqual({
-      name: 'oh-my-opencode-slim-cache',
+      name: 'sylastra-agent-tree-cache',
       private: true,
       dependencies: {
-        'oh-my-opencode-slim': 'latest',
+        'sylastra-agent-tree': 'latest',
       },
     });
 
@@ -191,14 +191,14 @@ describe('warmOpenCodePluginCache', () => {
 
     const packageRoot = join(
       tmpDir,
-      'bunx-1000-oh-my-opencode-slim@latest',
+      'bunx-1000-sylastra-agent-tree@latest',
       'node_modules',
-      'oh-my-opencode-slim',
+      'sylastra-agent-tree',
     );
     mkdirSync(join(packageRoot, 'dist', 'cli'), { recursive: true });
     writeFileSync(
       join(packageRoot, 'package.json'),
-      JSON.stringify({ name: 'oh-my-opencode-slim' }),
+      JSON.stringify({ name: 'sylastra-agent-tree' }),
     );
     process.argv[1] = join(packageRoot, 'dist', 'cli', 'index.js');
     crossSpawnMock.mockImplementation(() => createSpawnResult());
@@ -212,15 +212,15 @@ describe('warmOpenCodePluginCache', () => {
         cacheHome,
         'opencode',
         'packages',
-        'oh-my-opencode-slim@latest',
+        'sylastra-agent-tree@latest',
       ),
       error: `Cached plugin package not found at ${join(
         cacheHome,
         'opencode',
         'packages',
-        'oh-my-opencode-slim@latest',
+        'sylastra-agent-tree@latest',
         'node_modules',
-        'oh-my-opencode-slim',
+        'sylastra-agent-tree',
         'package.json',
       )}`,
     });
@@ -235,14 +235,14 @@ describe('warmOpenCodePluginCache', () => {
 
     const packageRoot = join(
       tmpDir,
-      'bunx-1000-oh-my-opencode-slim@latest',
+      'bunx-1000-sylastra-agent-tree@latest',
       'node_modules',
-      'oh-my-opencode-slim',
+      'sylastra-agent-tree',
     );
     mkdirSync(join(packageRoot, 'dist', 'cli'), { recursive: true });
     writeFileSync(
       join(packageRoot, 'package.json'),
-      JSON.stringify({ name: 'oh-my-opencode-slim' }),
+      JSON.stringify({ name: 'sylastra-agent-tree' }),
     );
     process.argv[1] = join(packageRoot, 'dist', 'cli', 'index.js');
     crossSpawnMock.mockImplementation(() => ({
@@ -259,7 +259,7 @@ describe('warmOpenCodePluginCache', () => {
         cacheHome,
         'opencode',
         'packages',
-        'oh-my-opencode-slim@latest',
+        'sylastra-agent-tree@latest',
       ),
       error: 'registry unavailable',
     });
@@ -274,19 +274,19 @@ describe('warmOpenCodePluginCache', () => {
 
     const packageRoot = join(
       tmpDir,
-      'bunx-1000-oh-my-opencode-slim@latest',
+      'bunx-1000-sylastra-agent-tree@latest',
       'node_modules',
-      'oh-my-opencode-slim',
+      'sylastra-agent-tree',
     );
     mkdirSync(join(packageRoot, 'dist', 'cli'), { recursive: true });
     writeFileSync(
       join(packageRoot, 'package.json'),
-      JSON.stringify({ name: 'oh-my-opencode-slim' }),
+      JSON.stringify({ name: 'sylastra-agent-tree' }),
     );
     process.argv[1] = join(packageRoot, 'dist', 'cli', 'index.js');
 
     const packageJsonSuffix = join(
-      'oh-my-opencode-slim@latest',
+      'sylastra-agent-tree@latest',
       'package.json',
     );
     const fs = await import('node:fs');
@@ -309,7 +309,7 @@ describe('warmOpenCodePluginCache', () => {
           cacheHome,
           'opencode',
           'packages',
-          'oh-my-opencode-slim@latest',
+          'sylastra-agent-tree@latest',
         ),
         error: 'Failed to write cache package.json: Error: disk full',
       });
@@ -326,7 +326,7 @@ describe('warmOpenCodePluginCache', () => {
     mkdirSync(join(packageRoot, 'dist', 'cli'), { recursive: true });
     writeFileSync(
       join(packageRoot, 'package.json'),
-      JSON.stringify({ name: 'oh-my-opencode-slim' }),
+      JSON.stringify({ name: 'sylastra-agent-tree' }),
     );
     process.argv[1] = join(packageRoot, 'dist', 'cli', 'index.js');
 
@@ -347,10 +347,10 @@ function mkdirTemp(): string {
 function writeCachedPluginPackage(cacheDir?: string): void {
   if (!cacheDir) return;
 
-  const pluginRoot = join(cacheDir, 'node_modules', 'oh-my-opencode-slim');
+  const pluginRoot = join(cacheDir, 'node_modules', 'sylastra-agent-tree');
   mkdirSync(pluginRoot, { recursive: true });
   writeFileSync(
     join(pluginRoot, 'package.json'),
-    JSON.stringify({ name: 'oh-my-opencode-slim' }),
+    JSON.stringify({ name: 'sylastra-agent-tree' }),
   );
 }

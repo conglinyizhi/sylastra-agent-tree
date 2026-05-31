@@ -8,7 +8,7 @@ export interface TuiSnapshot {
   agentModels: Record<string, string>;
 }
 
-const STATE_DIR = 'oh-my-opencode-slim';
+const STATE_DIR = 'sylastra-agent-tree';
 const STATE_FILE = 'tui-state.json';
 
 function dataDir(): string {

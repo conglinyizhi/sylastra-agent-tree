@@ -1,30 +1,30 @@
 # src/hooks/phase-reminder/
 
-## Responsibility
+## 职责
 
-Keep orchestrator guidance aligned over long turns by prepending a phase reminder to the latest user message text before the next LLM request.
+在下一次 LLM 请求前，将阶段提醒（phase reminder）前置到最新用户消息文本中，以保持编排器（orchestrator）指引在长轮次中的一致性。
 
-## Design
+## 设计
 
-- `PHASE_REMINDER` constant is composed from `PHASE_REMINDER_TEXT` (`config/constants.ts`).
-- `createPhaseReminderHook()` returns a single `experimental.chat.messages.transform` handler.
-- Message filtering is role/agent-aware:
-  - locates the latest `'user'` role in `output.messages`,
-  - only mutates if no explicit agent or `agent === 'orchestrator'`,
-  - no-op for internal control messages containing `SLIM_INTERNAL_INITIATOR_MARKER`.
-- Mutation target is the first `text` part in that message; replacement is an in-place prefix.
-- Uses `SLIM_INTERNAL_INITIATOR_MARKER` from `../../utils` to avoid feedback loops.
+- `PHASE_REMINDER` 常量由 `PHASE_REMINDER_TEXT` 组成（位于 `config/constants.ts`）。
+- `createPhaseReminderHook()` 返回一个 `experimental.chat.messages.transform` 处理器。
+- 消息过滤具有角色/代理感知：
+  - 定位 `output.messages` 中最新的一条 `'user'` 角色消息，
+  - 仅当没有显式代理或 `agent === 'orchestrator'` 时进行修改，
+  - 对包含 `SLIM_INTERNAL_INITIATOR_MARKER` 的内部控制消息无操作。
+- 修改目标是该消息中的第一个 `text` 部分；替换方式是原地添加前缀。
+- 使用来自 `../../utils` 的 `SLIM_INTERNAL_INITIATOR_MARKER` 以避免反馈循环。
 
-## Flow
+## 流程
 
-1. On transform, scan backward through `messages` for last `info.role === 'user'`.
-2. If agent is non-orchestrator, return.
-3. Locate first part where `type === 'text'`.
-4. If marker exists, return.
-5. Prefix `part.text` with `PHASE_REMINDER + '\n\n---\n\n'`.
+1. 在 transform 时，反向扫描 `messages` 找到最后一个 `info.role === 'user'`。
+2. 如果代理非 orchestrator，则返回。
+3. 定位第一个 `type === 'text'` 的部分。
+4. 如果已存在标记，则返回。
+5. 将 `PHASE_REMINDER + '\n\n---\n\n'` 前置到 `part.text`。
 
-## Integration
+## 集成
 
-- Registered through `src/hooks/index.ts` and plugin-level hook wiring in `src/index.ts`.
-- Consumes `experimental.chat.messages.transform` and mutates the outgoing `messages` payload only.
-- Does not depend on stateful services; no network or client APIs are required.
+- 通过 `src/hooks/index.ts` 注册，并在 `src/index.ts` 中进行插件级钩子接线。
+- 消费 `experimental.chat.messages.transform`，仅修改传出的 `messages` 载荷。
+- 不依赖有状态的服务；不需要网络或客户端 API。

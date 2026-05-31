@@ -1,60 +1,44 @@
 # src/hooks/task-session-manager/
 
-## Responsibility
+## 职责
 
-Provides resumable-task state for `task` tool calls so orchestrator users can
-resume work in a parent session by using short aliases (`exp-1`, `ora-2`) instead
-of raw child session IDs.
+为 `task` 工具调用提供可恢复任务状态，使编排器（orchestrator）用户能够通过短别名（`exp-1`、`ora-2`）而非原始子会话 ID 在父会话中恢复工作。
 
-## Design
+## 设计
 
-- `createTaskSessionManagerHook(ctx, options)` returns handlers for:
+- `createTaskSessionManagerHook(ctx, options)` 返回以下处理器：
   - `tool.execute.before`
   - `tool.execute.after`
   - `experimental.chat.system.transform`
   - `event`
-- Internally uses `SessionManager` from `src/utils/session-manager.ts` to store
-  remembered task sessions with bounded per-agent history.
-- Task labels are derived from `description`/`prompt` via
-  `deriveTaskSessionLabel` and converted to compact aliases by `SessionManager`.
-- In-flight calls are tracked by `callID` in a capped ordered map (`MAX_PENDING_TASK_CALLS`)
-  to rewrite inputs and correlate outputs safely.
-- Session governance is feature-gated by `shouldManageSession(sessionID)`, allowing
-  the hook to run only for orchestrator-managed sessions.
+- 内部使用 `src/utils/session-manager.ts` 中的 `SessionManager` 来存储已记忆的任务会话，并限制每个代理的历史记录。
+- 任务标签通过 `deriveTaskSessionLabel` 从 `description`/`prompt` 派生，并由 `SessionManager` 转换为紧凑别名。
+- 正在进行的调用通过 `callID` 在有上限的有序映射（`MAX_PENDING_TASK_CALLS`）中跟踪，以安全地重写输入和关联输出。
+- 会话治理通过 `shouldManageSession(sessionID)` 进行特性开关控制，使钩子仅对 orchestrator 管理的会话生效。
 
-## Flow
+## 流程
 
-1. `tool.execute.before` receives a `task` call.
-2. If `subagent_type` is a recognized agent, it derives a short label.
-3. When `task_id` is provided, it attempts resolution against remembered aliases
-   for the current parent session/agent.
-4. On success, `args.task_id` is rewritten to the real task ID; on miss it is
-   removed to force fresh task creation.
-5. The call metadata is stored in the pending-call map to correlate the
-   subsequent post-tool event.
-6. `tool.execute.after` reads the output task ID from `task` output text.
-7. On first successful parse, it `remember()`s the task entry and associates it
-   with the alias map.
-8. If this call was a resume attempt, and the returned ID changed, the stale
-   predecessor alias is dropped.
-9. If resume returns an error like `[ERROR] Session not found`/`Session no
-   session`, the predecessor alias is dropped so future commands fall back to
-   fresh execution.
-10. `experimental.chat.system.transform` injects a rendered block from
-    `SessionManager.formatForPrompt` under `### Resumable Sessions`.
-11. On `session.deleted`, the hook clears all task state for that parent session
-    and removes any pending task call records for that parent.
+1. `tool.execute.before` 接收到 `task` 调用。
+2. 如果 `subagent_type` 是已识别的代理，则派生一个短标签。
+3. 当提供了 `task_id` 时，尝试针对当前父会话/代理的记忆别名进行解析。
+4. 成功时，将 `args.task_id` 重写为真实任务 ID；解析失败时则移除它以强制创建新任务。
+5. 调用元数据存储在待处理调用映射中，用于关联后续的 post-tool 事件。
+6. `tool.execute.after` 从 `task` 输出文本中读取输出任务 ID。
+7. 首次成功解析时，它会 `remember()` 该任务条目并将其与别名映射关联。
+8. 如果此次调用是恢复尝试，且返回的 ID 发生了变化，则删除陈旧的前驱别名。
+9. 如果恢复返回类似 `[ERROR] Session not found`/`Session no session` 的错误，则删除前驱别名，使后续命令回退到全新执行。
+10. `experimental.chat.system.transform` 在 `### Resumable Sessions` 下注入来自 `SessionManager.formatForPrompt` 的渲染块。
+11. 在 `session.deleted` 时，钩子清除该父会话的所有任务状态，并移除该父会话的任何待处理任务调用记录。
 
-## Integration
+## 集成
 
-- Wired in `src/index.ts`:
-  - invoked in `tool.execute.before`
-  - invoked in `tool.execute.after`
-  - injected into `experimental.chat.system.transform`
-  - cleaned up in `event` on `session.deleted`
-- Exposes no side effects outside hook handling and `SessionManager`.
-- Depends on:
-  - `SessionManager` and `deriveTaskSessionLabel` (from `src/utils/session-manager.ts`)
-  - `parseTaskIdFromTaskOutput` (from `src/utils/task.ts`)
-  - plugin configuration (`maxSessionsPerAgent`) and runtime session filtering from
-    `src/index.ts` (`shouldManageSession`).
+- 在 `src/index.ts` 中连接：
+  - 在 `tool.execute.before` 中调用
+  - 在 `tool.execute.after` 中调用
+  - 注入到 `experimental.chat.system.transform`
+  - 在 `event` 的 `session.deleted` 中进行清理
+- 除钩子处理和 `SessionManager` 外无其他副作用。
+- 依赖：
+  - `SessionManager` 和 `deriveTaskSessionLabel`（来自 `src/utils/session-manager.ts`）
+  - `parseTaskIdFromTaskOutput`（来自 `src/utils/task.ts`）
+  - 插件配置（`maxSessionsPerAgent`）和来自 `src/index.ts` 的运行时会话过滤（`shouldManageSession`）

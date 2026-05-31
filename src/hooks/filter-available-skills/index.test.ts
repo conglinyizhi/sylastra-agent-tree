@@ -41,7 +41,7 @@ describe('filterAvailableSkillsText', () => {
       '*': 'deny',
     });
 
-    expect(result).toContain('No skills available.');
+    expect(result).toContain('当前没有可用的技能。');
     expect(result).not.toContain('<name>skill1</name>');
   });
 });
@@ -109,7 +109,7 @@ describe('createFilterAvailableSkillsHook', () => {
     await hook['experimental.chat.messages.transform']({}, output);
 
     const resultText = output.messages[0].parts[0].text;
-    expect(resultText).toContain('No skills available.');
+    expect(resultText).toContain('当前没有可用的技能。');
     expect(resultText).not.toContain('<name>skill1</name>');
   });
 
@@ -229,7 +229,7 @@ describe('createFilterAvailableSkillsHook', () => {
     expect(output.messages[0].parts[0].text).not.toContain(
       '<name>skill2</name>',
     );
-    expect(output.messages[1].parts[0].text).toContain('No skills available.');
+    expect(output.messages[1].parts[0].text).toContain('当前没有可用的技能。');
   });
 
   test('reuses permission rules without caching the final skills block text', async () => {

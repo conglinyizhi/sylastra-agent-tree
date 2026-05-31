@@ -1,30 +1,30 @@
 # src/hooks/json-error-recovery/
 
-## Responsibility
+## 职责
 
-- Detect likely JSON syntax/parse failures in tool outputs and append a strong, non-redundant recovery prompt so the model replays corrected JSON on retry.
+- 检测工具输出中可能的 JSON 语法/解析失败，并追加一个强有力且不冗余的恢复提示，使模型在重试时重新提交修正后的 JSON。
 
-## Design
+## 设计
 
-- `hook.ts` contains the implementation with exported constants:
+- `hook.ts` 包含实现，导出常量：
   - `JSON_ERROR_TOOL_EXCLUDE_LIST`
   - `JSON_ERROR_PATTERNS`
   - `JSON_ERROR_REMINDER`
-- `createJsonErrorRecoveryHook(_ctx)` returns a `tool.execute.after` handler that appends reminder text when parsing failed.
-- `JSON_ERROR_REMINDER_MARKER` prevents recursive duplicate injection.
-- Exclusion is by lowercase tool name (`bash`, `read`, `glob`, web tools) through a `Set`.
-- Matching uses regex literals in `JSON_ERROR_PATTERNS` and short-circuits for non-string output.
-- `index.ts` only re-exports hook/constant surface.
+- `createJsonErrorRecoveryHook(_ctx)` 返回一个 `tool.execute.after` 处理器，在解析失败时追加提醒文本。
+- `JSON_ERROR_REMINDER_MARKER` 防止递归的重复注入。
+- 通过 `Set` 以小写工具名称（`bash`、`read`、`glob`、网络工具）排除。
+- 匹配使用 `JSON_ERROR_PATTERNS` 中的正则表达式字面量，并对非字符串输出短路处理。
+- `index.ts` 仅重新导出钩子/常量的公共接口。
 
-## Flow
+## 流程
 
-1. In `tool.execute.after`, normalize `input.tool` to lowercase and skip excluded tools.
-2. Skip when `output.output` is not a string.
-3. Skip if output already contains `JSON_ERROR_REMINDER_MARKER`.
-4. Evaluate all `JSON_ERROR_PATTERNS`; on match, append `\n${JSON_ERROR_REMINDER}` to `output.output`.
+1. 在 `tool.execute.after` 中，将 `input.tool` 规范化为小写并跳过排除的工具。
+2. 当 `output.output` 不是字符串时跳过。
+3. 如果输出已包含 `JSON_ERROR_REMINDER_MARKER` 则跳过。
+4. 评估所有 `JSON_ERROR_PATTERNS`；匹配时，将 `\n${JSON_ERROR_REMINDER}` 追加到 `output.output`。
 
-## Integration
+## 集成
 
-- Exported from `src/hooks/index.ts` and attached to tool output lifecycle at plugin registration.
-- Only consumes hook payload contracts (`ToolExecuteAfterInput`, `ToolExecuteAfterOutput`) and standard string checks, making it generic across tools.
-- No direct dependency on tool internals; integrates by observing tool-call results before they are surfaced to the model.
+- 从 `src/hooks/index.ts` 导出，在插件注册时附加到工具输出生命周期。
+- 仅消费钩子负载契约（`ToolExecuteAfterInput`、`ToolExecuteAfterOutput`）和标准字符串检查，使其跨工具通用。
+- 无直接工具内部依赖；通过在结果返回模型之前观察工具调用来集成。

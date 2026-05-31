@@ -11,7 +11,7 @@ describe('delegate-task-retry hook', () => {
 
     await hook['tool.execute.after']({ tool: 'task' }, output);
 
-    expect(output.output).toContain('[delegate-task retry suggestion]');
+    expect(output.output).toContain('[delegate-task 重试建议]');
     expect(output.output).toContain('missing_category_or_agent');
   });
 

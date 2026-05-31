@@ -85,10 +85,10 @@ describe('subtask tool', () => {
       expect(promptCall.body.parts[0]).toMatchObject({
         type: 'text',
         text: expect.stringContaining(
-          'You are a subtask worker spawned by parent session ses_old',
+          '你是一个由父会话 ses_old 生成的子任务工作器',
         ),
       });
-      expect(workerPrompt).toContain('Your job is bounded');
+      expect(workerPrompt).toContain('你的工作是有边界的');
       expect(workerPrompt).toContain('TASK:');
       expect(workerPrompt).toContain('FILES PROVIDED:');
       expect(workerPrompt).toContain('<subtask_summary>');
@@ -238,7 +238,7 @@ describe('subtask tool', () => {
         sessionID: 'ses_old',
       } as any);
 
-      expect(nestedResult).toContain('Nested subtask is disabled');
+      expect(nestedResult).toContain('嵌套子任务已禁用');
     } finally {
       fs.rmSync(directory, { recursive: true, force: true });
     }
@@ -311,10 +311,10 @@ describe('read_session tool', () => {
       state,
     ).execute({ sessionID: 'ses_old' }, { sessionID: 'ses_worker' } as any);
 
-    expect(result).toContain('## User');
+    expect(result).toContain('## 用户');
     expect(result).toContain('Hi');
-    expect(result).toContain('## Assistant');
-    expect(result).toContain('[Tool: read] Read file');
+    expect(result).toContain('## 助手');
+    expect(result).toContain('[工具：read] Read file');
   });
 
   test('blocks reads outside the source session', async () => {
@@ -327,7 +327,7 @@ describe('read_session tool', () => {
       state,
     ).execute({ sessionID: 'ses_other' }, { sessionID: 'ses_worker' } as any);
 
-    expect(result).toContain('can only read the source session');
+    expect(result).toContain('read_session 只能读取此子任务工作器的源会话');
     expect(messages).not.toHaveBeenCalled();
   });
 });

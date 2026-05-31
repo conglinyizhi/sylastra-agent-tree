@@ -28,7 +28,7 @@ describe('createSessionGoalHook', () => {
       output,
     );
 
-    expect(output.parts[0].text).toContain('Set active goal:');
+    expect(output.parts[0].text).toContain('已设置活跃目标：');
     expect(hook.getGoal('ses_1')?.text).toBe(
       'Ship the goal feature. Done when tests pass.',
     );
@@ -39,8 +39,8 @@ describe('createSessionGoalHook', () => {
       showOutput,
     );
 
-    expect(showOutput.parts[0].text).toContain('Active goal:');
-    expect(showOutput.parts[0].text).toContain('Auto-continuation');
+    expect(showOutput.parts[0].text).toContain('当前目标：');
+    expect(showOutput.parts[0].text).toContain('自动继续');
   });
 
   test('injects active goal into orchestrator system prompt', async () => {
@@ -55,9 +55,7 @@ describe('createSessionGoalHook', () => {
 
     expect(output.system.join('\n')).toContain('<active_goal>');
     expect(output.system.join('\n')).toContain('Stay on target.');
-    expect(output.system.join('\n')).toContain(
-      'Use todos as the execution ledger',
-    );
+    expect(output.system.join('\n')).toContain('使用 todos 作为执行账本');
   });
 
   test('inherits parent goal for child sessions', async () => {
@@ -83,7 +81,7 @@ describe('createSessionGoalHook', () => {
 
     expect(output.system.join('\n')).toContain('<parent_goal>');
     expect(output.system.join('\n')).toContain('Parent objective.');
-    expect(output.system.join('\n')).toContain('bounded task');
+    expect(output.system.join('\n')).toContain('有边界的任务');
   });
 
   test('child sessions resolve updated parent goal live', async () => {
@@ -142,7 +140,7 @@ describe('createSessionGoalHook', () => {
 
     expect(output.system.join('\n')).toContain('<parent_goal>');
     expect(output.system.join('\n')).toContain('Root objective.');
-    expect(output.system.join('\n')).not.toContain('Objective: \n');
+    expect(output.system.join('\n')).not.toContain('目标： \n');
   });
 
   test('child sessions stop inheriting after parent goal is cleared', async () => {
@@ -201,7 +199,7 @@ describe('createSessionGoalHook', () => {
       output,
     );
 
-    expect(output.parts[0].text).toContain('Set active goal from interview');
+    expect(output.parts[0].text).toContain('已从面试中设置活跃目标：');
     expect(hook.getGoal('ses_1')?.text).toBe(
       'From interview: Feature Goal\n\nBuild the feature with minimal scope.',
     );

@@ -953,14 +953,15 @@ describe('interview service', () => {
 
       // Should send resume prompt (references existing document)
       const outputText = extractOutputText(output);
-      expect(outputText).toContain('Resume the interview');
+      expect(outputText).toContain('从这份已有的 Markdown 文档继续面试');
       expect(outputText).toContain('Existing Idea');
       expect(outputText).toContain('Existing spec content');
 
       // Should NOT send kickoff prompt
       expect(outputText).not.toContain(
-        'You are running an interview q&a session',
+        '你正在为用户在其仓库内运行一场面试问答会话',
       );
+      expect(outputText).not.toContain('初始想法：');
       expect(outputText).not.toContain('Initial idea:');
 
       // Cleanup
@@ -997,7 +998,7 @@ describe('interview service', () => {
 
       // Should send resume prompt
       const outputText = extractOutputText(output);
-      expect(outputText).toContain('Resume the interview');
+      expect(outputText).toContain('从这份已有的 Markdown 文档继续面试');
       expect(outputText).toContain('My Project');
 
       // Cleanup
@@ -1091,9 +1092,9 @@ describe('interview service', () => {
 
       // Kickoff prompt should reference the configured maxQuestions
       const outputText = extractOutputText(output);
-      expect(outputText).toContain('at most 5 questions');
-      expect(outputText).toContain('Return 0 to 5 questions');
-      expect(outputText).toContain('Do not ask more than 5 questions');
+      expect(outputText).toContain('通过每轮最多 5 个问题的简短轮次来澄清想法');
+      expect(outputText).toContain('返回 0 到 5 个问题');
+      expect(outputText).toContain('每轮不要超过 5 个问题');
 
       // Cleanup
       await fs.rm(tempDir, { recursive: true, force: true });
@@ -1132,7 +1133,7 @@ describe('interview service', () => {
 
       // Resume prompt should reference the configured maxQuestions
       const outputText = extractOutputText(output);
-      expect(outputText).toContain('up to 3 at a time');
+      expect(outputText).toContain('每轮最多 3 个');
 
       // Cleanup
       await fs.rm(tempDir, { recursive: true, force: true });
@@ -1256,7 +1257,7 @@ describe('interview service', () => {
       const lastPromptText = getPromptTexts(
         ctx.client.session.promptAsync,
       ).join('\n');
-      expect(lastPromptText).toContain('Return 0 to 4 questions');
+      expect(lastPromptText).toContain('返回 0 到 4 个问题');
 
       // Cleanup
       await fs.rm(tempDir, { recursive: true, force: true });
@@ -1649,7 +1650,7 @@ describe('interview service', () => {
       // Kickoff prompt should mention title field
       const outputText = extractOutputText(output);
       expect(outputText).toContain('"title":');
-      expect(outputText).toContain('concise-kebab-case-title-for-filename');
+      expect(outputText).toContain('简洁的-kebab-格式-文件名标题');
 
       // Cleanup
       await fs.rm(tempDir, { recursive: true, force: true });

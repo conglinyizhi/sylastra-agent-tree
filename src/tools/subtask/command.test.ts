@@ -21,8 +21,8 @@ describe('createSubtaskCommandManager', () => {
 
     const commands = config.command as Record<string, { template: string }>;
     expect(commands.subtask).toBeDefined();
-    expect(commands.subtask.template).toContain('focused subtask worker');
-    expect(commands.subtask.template).toContain('Do not broaden it');
+    expect(commands.subtask.template).toContain('启动一个聚焦的子任务工作器');
+    expect(commands.subtask.template).toContain('全部范围');
     expect(commands.subtask.template).toContain('$ARGUMENTS');
   });
 

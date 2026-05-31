@@ -26,4 +26,4 @@ export const BINARY_PREFIXES = [
 ];
 
 export const WEBFETCH_DESCRIPTION =
-  'Fetch a URL with better extraction for static/docs pages. Supports llms.txt probing, content-focused HTML extraction, metadata, redirects, and an optional prompt processed by a cheap secondary model.';
+  '获取 URL 内容，针对静态/文档页面优化。支持 llms.txt 探测、内容聚焦的 HTML 提取、元数据、重定向，以及由廉价辅助模型处理的可选提示。';

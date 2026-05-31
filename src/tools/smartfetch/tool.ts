@@ -82,22 +82,18 @@ export function createWebfetchTool(
         .positive()
         .max(MAX_TIMEOUT_SECONDS)
         .optional()
-        .describe('Timeout in seconds, max 120.'),
+        .describe('超时时间（秒），最大 120 秒。'),
       prompt: z
         .string()
         .optional()
-        .describe(
-          'Optional extraction task to run on the fetched content using a cheap secondary model.',
-        ),
+        .describe('对获取的内容运行的提取任务提示（由廉价辅助模型处理）。'),
       extract_main: z.boolean().default(true),
       prefer_llms_txt: z.enum(['auto', 'always', 'never']).default('auto'),
       include_metadata: z.boolean().default(true),
       save_binary: z
         .boolean()
         .default(false)
-        .describe(
-          'Save binary payload to disk when it fits within the active download limit.',
-        ),
+        .describe('将二进制载荷保存在磁盘上（仅当不超过当前下载限制时）。'),
     },
     async execute(args, ctx) {
       const secondaryModels = await readSecondaryModelFromConfig(
@@ -602,7 +598,7 @@ export function createWebfetchTool(
             return joinRenderedContent(
               metadata,
               renderMessageForFormat(
-                `${fetchResult.binaryKind.toUpperCase()} content fetched but not saved. Re-run with save_binary=true to persist it.`,
+                `${fetchResult.binaryKind.toUpperCase()} 内容已获取但未保存。重新运行并设置 save_binary=true 以持久化保存。`,
                 args.format,
               ),
               args.format,
@@ -808,8 +804,7 @@ export function createWebfetchTool(
               secondary_model: `${secondaryRun.model.providerID}/${secondaryRun.model.modelID}`,
             })
           : '';
-        const secondaryRaw =
-          secondaryRun.text || 'No response from secondary model.';
+        const secondaryRaw = secondaryRun.text || '辅助模型未返回响应。';
         const secondaryContent =
           args.format === 'html'
             ? withTruncationMarker(

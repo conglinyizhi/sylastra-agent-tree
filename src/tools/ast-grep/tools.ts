@@ -17,30 +17,25 @@ function showOutputToUser(context: unknown, output: string): void {
 
 export const ast_grep_search: ToolDefinition = tool({
   description:
-    'Search code patterns across filesystem using AST-aware matching. Supports 25 languages. ' +
-    'Use meta-variables: $VAR (single node), $$$ (multiple nodes). ' +
-    'IMPORTANT: Patterns must be complete AST nodes (valid code). ' +
-    "For functions, include params and body: 'export async function $NAME($$$) { $$$ }' not 'export async function $NAME'. " +
-    "Examples: 'console.log($MSG)', 'def $FUNC($$$):', 'async function $NAME($$$)'",
+    '使用 AST 感知的匹配方式在文件系统中搜索代码模式。支持 25 种编程语言。' +
+    '使用元变量：$VAR（单个节点）、$$$（多个节点）。' +
+    '重要提示：模式必须是完整的 AST 节点（有效代码）。' +
+    "对于函数，需要包含参数和函数体：'export async function $NAME($$$) { $$$ }'，而不是 'export async function $NAME'。" +
+    "示例：'console.log($MSG)'、'def $FUNC($$$):'、'async function $NAME($$$)'",
   args: {
     pattern: tool.schema
       .string()
-      .describe(
-        'AST pattern with meta-variables ($VAR, $$$). Must be complete AST node.',
-      ),
-    lang: tool.schema.enum(CLI_LANGUAGES).describe('Target language'),
+      .describe('包含元变量（$VAR、$$$）的 AST 模式。必须是完整的 AST 节点。'),
+    lang: tool.schema.enum(CLI_LANGUAGES).describe('目标语言'),
     paths: tool.schema
       .array(tool.schema.string())
       .optional()
-      .describe("Paths to search (default: ['.'])"),
+      .describe("要搜索的路径（默认：['.']）"),
     globs: tool.schema
       .array(tool.schema.string())
       .optional()
-      .describe('Include/exclude globs (prefix ! to exclude)'),
-    context: tool.schema
-      .number()
-      .optional()
-      .describe('Context lines around match'),
+      .describe('包含/排除的 glob 模式（以 ! 前缀排除）'),
+    context: tool.schema.number().optional().describe('匹配行周围的上下文行数'),
   },
   execute: async (args, context) => {
     try {
@@ -73,27 +68,25 @@ export const ast_grep_search: ToolDefinition = tool({
 
 export const ast_grep_replace: ToolDefinition = tool({
   description:
-    'Replace code patterns across filesystem with AST-aware rewriting. ' +
-    'Dry-run by default. Use meta-variables in rewrite to preserve matched content. ' +
-    "Example: pattern='console.log($MSG)' rewrite='logger.info($MSG)'",
+    '使用 AST 感知的重写方式替换文件系统中的代码模式。' +
+    '默认进行 Dry-run（预览）。在重写中使用元变量以保留匹配内容。' +
+    "示例：pattern='console.log($MSG)' rewrite='logger.info($MSG)'",
   args: {
-    pattern: tool.schema.string().describe('AST pattern to match'),
-    rewrite: tool.schema
-      .string()
-      .describe('Replacement pattern (can use $VAR from pattern)'),
-    lang: tool.schema.enum(CLI_LANGUAGES).describe('Target language'),
+    pattern: tool.schema.string().describe('要匹配的 AST 模式'),
+    rewrite: tool.schema.string().describe('替换模式（可使用模式中的 $VAR）'),
+    lang: tool.schema.enum(CLI_LANGUAGES).describe('目标语言'),
     paths: tool.schema
       .array(tool.schema.string())
       .optional()
-      .describe('Paths to search'),
+      .describe('要搜索的路径'),
     globs: tool.schema
       .array(tool.schema.string())
       .optional()
-      .describe('Include/exclude globs'),
+      .describe('包含/排除的 glob 模式'),
     dryRun: tool.schema
       .boolean()
       .optional()
-      .describe('Preview changes without applying (default: true)'),
+      .describe('预览更改但不实际应用（默认：true）'),
   },
   execute: async (args, context) => {
     try {

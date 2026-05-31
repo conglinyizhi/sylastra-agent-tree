@@ -35,18 +35,18 @@ export function createCouncilTool(
   councilManager: CouncilManager,
 ): Record<string, ToolDefinition> {
   const council_session = tool({
-    description: `Launch a multi-LLM council session for consensus-based analysis.
+    description: `启动一个多 LLM 委员会会话，进行基于共识的分析。
 
-Sends the prompt to multiple models (councillors) in parallel and returns their formatted responses for you to synthesize.
+将提示词并行发送给多个模型（ councillor ），并返回它们的格式化响应供你综合。
 
-Returns the councillor responses with a summary footer.`,
+返回 councillor 响应及摘要页脚。`,
     args: {
-      prompt: z.string().describe('The prompt to send to all councillors'),
+      prompt: z.string().describe('发送给所有 councillor 的提示词'),
       preset: z
         .string()
         .optional()
         .describe(
-          'Council preset to use (default: "default"). Must match a preset in the council config.',
+          '要使用的委员会预设（默认值："default"）。必须与委员会配置中的某个预设匹配。',
         ),
     },
     async execute(args, toolContext) {
@@ -55,7 +55,7 @@ Returns the councillor responses with a summary footer.`,
         typeof toolContext !== 'object' ||
         !('sessionID' in toolContext)
       ) {
-        throw new Error('Invalid toolContext: missing sessionID');
+        throw new Error('无效的 toolContext：缺少 sessionID');
       }
 
       // Guard: Only the council agent can invoke council sessions.
@@ -64,7 +64,7 @@ Returns the councillor responses with a summary footer.`,
       const callingAgent = (toolContext as { agent?: string }).agent;
       if (callingAgent && !allowedAgents.includes(callingAgent)) {
         throw new Error(
-          `Council sessions can only be invoked by the council agent. Current agent: ${callingAgent}`,
+          `委员会会话只能由委员会 agent 调用。当前 agent：${callingAgent}`,
         );
       }
 

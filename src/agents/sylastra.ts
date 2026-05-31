@@ -58,7 +58,7 @@ export function createSylastraAgent(
   return {
     name: 'sylastra',
     description:
-      'Primary interaction and implementation agent. Handles routine tasks, test updates, and bounded implementation work.',
+      '主要交互与实现代理。处理日常任务、测试更新和边界明确的实现工作。',
     config: {
       model,
       temperature: 0.2,

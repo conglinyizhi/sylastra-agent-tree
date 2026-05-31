@@ -72,8 +72,7 @@ export function createComposerAgent(
 
   const definition: AgentDefinition = {
     name: 'composer',
-    description:
-      'Multi-LLM composer agent that synthesizes responses from multiple models for higher-quality outputs',
+    description: '多 LLM 合成代理，综合多个模型的响应以生成更高质量的输出',
     config: {
       temperature: 0.1,
       prompt,

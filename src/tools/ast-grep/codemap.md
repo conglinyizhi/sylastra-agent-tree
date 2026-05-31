@@ -1,28 +1,28 @@
 # src/tools/ast-grep/
 
-## Responsibility
+## 职责
 
-- Wrap the external `ast-grep` CLI so the broader system can invoke AST-aware search and replace without caring about binary discovery or argument details (`cli.ts`, `tools.ts`).
-- Provide well-typed tooling primitives (`types.ts`) plus formatted user output hints/summary helpers (`utils.ts`) that can be re-used by CLI commands or plugin UI layers.
-- Manage the brittle parts of CLI usage: locating a binary from caches, npm packages, or homebrew, downloading platform-specific releases when needed, and surfacing environment status/limits (`constants.ts`, `downloader.ts`).
+- 封装外部的 `ast-grep` CLI，使更广泛的系统能够调用 AST 感知的搜索与替换，而无需关心二进制发现或参数细节（`cli.ts`、`tools.ts`）。
+- 提供类型完备的工具原语（`types.ts`）以及格式化的用户输出提示/摘要辅助函数（`utils.ts`），可供 CLI 命令或插件 UI 层复用。
+- 管理 CLI 使用中的脆弱部分：从缓存、npm 包或 Homebrew 中定位二进制文件，在需要时下载平台特定版本，并呈现环境状态/限制（`constants.ts`、`downloader.ts`）。
 
-## Design Patterns and Decisions
+## 设计模式与决策
 
-- **Singleton initialization with retries:** `getAstGrepPath` caches an init promise so concurrent requests share discovery/download work and fallback from local binaries to downloads (`cli.ts`).
-- **Tool definition as declarative metadata:** `tools.ts` exports `ast_grep_search` and `ast_grep_replace` via the OpenCode tool registry, which keeps descriptions, schemas, and execution logic centralized.
-- **Separation of concerns:** `cli.ts` focuses on process spawning and JSON parsing, `constants.ts` owns binary path resolution plus environment checks/formatting, `utils.ts` formats results while `downloader.ts` handles platform maps, cache directories, and fetch/extraction.
-- **Fail fast with hints:** Empty-match hints tailored per language (e.g., help removing trailing colons in Python) make search UX better while keeping AST requirements explicit.
+- **带重试的单例初始化：**`getAstGrepPath` 缓存了一个初始化 Promise，使并发请求共享发现/下载工作，并从本地二进制文件回退到下载（`cli.ts`）。
+- **作为声明式元数据的工具定义：**`tools.ts` 通过 OpenCode 工具注册表导出 `ast_grep_search` 和 `ast_grep_replace`，将描述、模式和执行逻辑集中在一处。
+- **关注点分离：**`cli.ts` 专注于进程启动和 JSON 解析，`constants.ts` 负责二进制路径解析以及环境检查/格式化，`utils.ts` 格式化结果，而 `downloader.ts` 处理平台映射、缓存目录和获取/解压。
+- **快速失败并给出提示：**针对每种语言定制的空匹配提示（例如，帮助移除 Python 中的尾随冒号）在保持 AST 要求明确的同时改善了搜索体验。
 
-## Data & Control Flow
+## 数据与控制流
 
-- Tools (`ast_grep_search`, `ast_grep_replace`) call `runSg`, populating CLI arguments (pattern, rewrite, globs, context) and routing output through `formatSearchResult`/`formatReplaceResult` before reporting via `showOutputToUser` (`tools.ts`).
-- `runSg` constructs the command, ensures the CLI binary exists (resetting via `getAstGrepPath` which may call `findSgCliPathSync` or trigger a download), spawns the process with timeout handling, and parses compact JSON while guarding against truncated output and CLI errors (`cli.ts`).
-- Binary resolution uses `constants.ts` helpers to detect cached binaries, installed packages, platform-specific packages, or Homebrew paths, and exposes environment checks/formatting to upstream callers (`constants.ts`).
-- `downloader.ts` is the fallback path: it infers the platform key, downloads the matching GitHub release, extracts `sg`, sets executable bits, and caches it under `~/.cache/sylastra-agent-tree/bin` (or Windows AppData) so subsequent commands reuse the binary.
+- 工具（`ast_grep_search`、`ast_grep_replace`）调用 `runSg`，填充 CLI 参数（pattern、rewrite、globs、context），并将输出通过 `formatSearchResult`/`formatReplaceResult` 处理后，再通过 `showOutputToUser` 报告（`tools.ts`）。
+- `runSg` 构造命令，确保 CLI 二进制文件存在（通过 `getAstGrepPath` 重置，该函数可能调用 `findSgCliPathSync` 或触发下载），启动进程并设置超时处理，解析紧凑 JSON，同时防范截断输出和 CLI 错误（`cli.ts`）。
+- 二进制解析使用 `constants.ts` 中的辅助函数检测缓存的二进制文件、已安装的包、平台特定的包或 Homebrew 路径，并向上游调用者暴露环境检查/格式化信息（`constants.ts`）。
+- `downloader.ts` 是回退路径：它推断平台标识，下载匹配的 GitHub 发布包，解压 `sg`，设置可执行权限，并将其缓存到 `~/.cache/sylastra-agent-tree/bin`（或 Windows AppData）下，以便后续命令复用该二进制文件。
 
-## Integration Points
+## 集成点
 
-- `index.ts` re-exports `ast_grep_search`, `ast_grep_replace`, runtime helpers (`ensureCliAvailable`, `checkEnvironment`, etc.), and downloader utilities so other modules can plug into the tooling layer while sharing diagnostics (`index.ts`).
-- The OpenCode plugin layer imports `builtinTools` from `src/tools/ast-grep/index.ts` to surface search/replace capabilities through the CLI tool registry.
-- `constants.ts` and `downloader.ts` are used by `cli.ts` to decide where to execute `sg`, while environment helpers inform onboarding UIs or setup scripts about missing binaries.
-- `types.ts` defines the shared `CliLanguage`, `CliMatch`, and `SgResult` shapes that drive type safety across CLI invocation, formatting utilities, and tooling schemas.
+- `index.ts` 重新导出 `ast_grep_search`、`ast_grep_replace`、运行时辅助函数（`ensureCliAvailable`、`checkEnvironment` 等）以及下载器工具，使其他模块在共享诊断信息的同时接入工具层（`index.ts`）。
+- OpenCode 插件层从 `src/tools/ast-grep/index.ts` 导入 `builtinTools`，以通过 CLI 工具注册表公开搜索/替换能力。
+- `constants.ts` 和 `downloader.ts` 被 `cli.ts` 用于决定在何处执行 `sg`，同时环境辅助函数为入门 UI 或设置脚本提供关于缺失二进制文件的信息。
+- `types.ts` 定义了共享的 `CliLanguage`、`CliMatch` 和 `SgResult` 类型形状，为 CLI 调用、格式化工具和工具模式提供类型安全。

@@ -90,7 +90,7 @@ export class CouncilManager {
         });
         return {
           success: false,
-          error: 'Subagent depth exceeded',
+          error: '子代理深度超出限制',
           councillorResults: [],
         };
       }
@@ -101,7 +101,7 @@ export class CouncilManager {
       log('[council-manager] Council configuration not found');
       return {
         success: false,
-        error: 'Council not configured',
+        error: '委员会未配置',
         councillorResults: [],
       };
     }
@@ -115,7 +115,7 @@ export class CouncilManager {
       log(`[council-manager] Preset "${resolvedPreset}" not found`);
       return {
         success: false,
-        error: `Preset "${resolvedPreset}" does not exist. Omit the preset parameter to use the default, or call again with one of: ${available}`,
+        error: `预设 "${resolvedPreset}" 不存在。省略 preset 参数以使用默认预设，或使用以下预设之一重新调用：${available}`,
         councillorResults: [],
       };
     }
@@ -124,7 +124,7 @@ export class CouncilManager {
       log(`[council-manager] Preset "${resolvedPreset}" has no councillors`);
       return {
         success: false,
-        error: `Preset "${resolvedPreset}" has no councillors configured. Note: the reserved key "master" is ignored — use councillor names as keys`,
+        error: `预设 "${resolvedPreset}" 未配置任何委员。注意：保留键 "master" 会被忽略——请使用委员名称作为键名`,
         councillorResults: [],
       };
     }
@@ -169,7 +169,7 @@ export class CouncilManager {
     if (completedCount === 0) {
       return {
         success: false,
-        error: 'All councillors failed or timed out',
+        error: '所有委员均失败或超时',
         councillorResults,
       };
     }
@@ -234,7 +234,7 @@ export class CouncilManager {
   }): Promise<string> {
     const modelRef = parseModelReference(options.model);
     if (!modelRef) {
-      throw new Error(`Invalid model format: ${options.model}`);
+      throw new Error(`无效的模型格式：${options.model}`);
     }
 
     let sessionId: string | undefined;
@@ -249,7 +249,7 @@ export class CouncilManager {
       });
 
       if (!session.data?.id) {
-        throw new Error('Failed to create session');
+        throw new Error('创建会话失败');
       }
 
       sessionId = session.data.id;
@@ -260,7 +260,7 @@ export class CouncilManager {
           sessionId,
         );
         if (!registered) {
-          throw new Error('Subagent depth exceeded');
+          throw new Error('子代理深度超出限制');
         }
       }
 
@@ -296,7 +296,7 @@ export class CouncilManager {
       if (extraction.empty) {
         const retryOnEmpty = this.config?.fallback?.retry_on_empty ?? true;
         if (retryOnEmpty) {
-          throw new Error('Empty response from provider');
+          throw new Error('提供者返回空响应');
         }
       }
 
@@ -445,7 +445,7 @@ export class CouncilManager {
         const msg = error instanceof Error ? error.message : String(error);
 
         // Only retry on empty responses (provider silently rate-limited)
-        const isEmptyResponse = msg.includes('Empty response from provider');
+        const isEmptyResponse = msg.includes('提供者返回空响应');
         const canRetry = attempt < totalAttempts && isEmptyResponse;
 
         if (!canRetry) {
@@ -455,7 +455,7 @@ export class CouncilManager {
             status: msg.includes('timed out')
               ? ('timed_out' as const)
               : ('failed' as const),
-            error: `Councillor "${name}": ${msg}`,
+            error: `委员 "${name}": ${msg}`,
           };
         }
       }
@@ -466,7 +466,7 @@ export class CouncilManager {
       name,
       model: config.model,
       status: 'failed' as const,
-      error: `Councillor "${name}": max retries exhausted`,
+      error: `委员 "${name}": 最大重试次数已耗尽`,
     };
   }
 }

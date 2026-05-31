@@ -184,7 +184,7 @@ export async function runWithScopedTimeout<T>(
   if (parentSignal.aborted) controller.abort(parentSignal.reason);
   else parentSignal.addEventListener('abort', abortHandler, { once: true });
   const timeout = setTimeout(
-    () => controller.abort(new Error(`timeout after ${timeoutMs}ms`)),
+    () => controller.abort(new Error(`${timeoutMs}ms 后超时`)),
     timeoutMs,
   );
   try {
@@ -263,9 +263,7 @@ export async function fetchWithRedirects(
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get('location');
       if (!location) {
-        throw new Error(
-          `Redirect response missing location header: ${response.status}`,
-        );
+        throw new Error(`重定向响应缺少 location 头：${response.status}`);
       }
       const next = new URL(location, current).toString();
       redirects.push({ from: current, to: next, status: response.status });
@@ -294,7 +292,7 @@ export async function fetchWithRedirects(
     return { response, finalUrl: current, redirectChain: redirects };
   }
 
-  throw new Error(`Too many redirects (exceeded ${MAX_REDIRECTS})`);
+  throw new Error(`重定向次数过多（超过 ${MAX_REDIRECTS} 次）`);
 }
 
 export async function fetchWithUpgradeFallback(

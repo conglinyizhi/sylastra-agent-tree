@@ -1,39 +1,39 @@
 # src/hooks/auto-update-checker/
 
-## Responsibility
+## 职责
 
-- Provide a startup hook that detects plugin update availability for `sylastra-agent-tree`, reports status through TUI toasts, and optionally performs a cache-safe `bun install` refresh.
-- Handle local dev mode and pinned plugin versions distinctly (`file://`, pinned tags, and `latest` channel semantics).
+- 提供一个启动钩子，检测 `sylastra-agent-tree` 的插件更新可用性，通过 TUI toast 报告状态，并可选择执行缓存安全的 `bun install` 刷新。
+- 区分处理本地开发模式和固定插件版本（`file://`、固定标签和 `latest` 通道语义）。
 
-## Design
+## 设计
 
-- `createAutoUpdateCheckerHook(ctx, options)` in `index.ts` registers an `event` handler for `session.created` and guards one-time startup execution (`hasChecked`).
-- `runBackgroundUpdateCheck` performs version resolution and branches into:
-  - local-dev no-op path,
-  - pinned plugin notification,
-  - manual notification when `autoUpdate=false`,
-  - or auto-update execution path.
-- `checker.ts` is the core discovery layer and exports:
-  - `findPluginEntry`, `extractChannel`, `getCachedVersion`, `getLocalDevVersion`, `getLatestVersion`, `updatePinnedVersion`.
-- `cache.ts` owns cache preparation with `resolveInstallContext` and `preparePackageUpdate`.
-- `constants.ts` centralizes install and config-path constants (`CACHE_DIR`, `PACKAGE_NAME`, `NPM_REGISTRY_URL`, `NPM_FETCH_TIMEOUT`, config path aliases).
-- `types.ts` declares `AutoUpdateCheckerOptions`, `PluginEntryInfo`, config/package typed envelopes.
+- `index.ts` 中的 `createAutoUpdateCheckerHook(ctx, options)` 为 `session.created` 注册一个 `event` 处理程序，并保护一次性启动执行（`hasChecked`）。
+- `runBackgroundUpdateCheck` 执行版本解析并分支到：
+  - 本地开发无操作路径，
+  - 固定插件通知，
+  - 当 `autoUpdate=false` 时的手动通知，
+  - 或自动更新执行路径。
+- `checker.ts` 是核心发现层，导出：
+  - `findPluginEntry`、`extractChannel`、`getCachedVersion`、`getLocalDevVersion`、`getLatestVersion`、`updatePinnedVersion`。
+- `cache.ts` 拥有缓存准备，包含 `resolveInstallContext` 和 `preparePackageUpdate`。
+- `constants.ts` 集中安装和配置路径常量（`CACHE_DIR`、`PACKAGE_NAME`、`NPM_REGISTRY_URL`、`NPM_FETCH_TIMEOUT`、配置路径别名）。
+- `types.ts` 声明 `AutoUpdateCheckerOptions`、`PluginEntryInfo`、配置/包类型信封。
 
-## Flow
+## 流程
 
-1. On first eligible `session.created` (root/no parent), schedule asynchronous update check.
-2. If local development plugin is detected (`getLocalDevVersion`), emit info toast and return.
-3. Resolve current version from `getCachedVersion` + plugin entry in config (`findPluginEntry`).
-4. Fetch channel metadata (`extractChannel` + `getLatestVersion`).
-5. If update is needed:
-   - pinned entry ⇒ notify only,
-   - unpinned and `autoUpdate=false` ⇒ notify only,
-   - unpinned and auto-update enabled ⇒ call `preparePackageUpdate`, then `runBunInstallSafe`.
-6. Surface success/failure via `ctx.client.tui.showToast` and `utils/logger`.
+1. 在第一个符合条件的 `session.created`（根/无父会话）时，安排异步更新检查。
+2. 如果检测到本地开发插件（`getLocalDevVersion`），发出信息 toast 并返回。
+3. 从 `getCachedVersion` + 配置中的插件条目（`findPluginEntry`）解析当前版本。
+4. 获取通道元数据（`extractChannel` + `getLatestVersion`）。
+5. 如果需要更新：
+   - 固定条目 ⇒ 仅通知，
+   - 未固定且 `autoUpdate=false` ⇒ 仅通知，
+   - 未固定且启用自动更新 ⇒ 调用 `preparePackageUpdate`，然后调用 `runBunInstallSafe`。
+6. 通过 `ctx.client.tui.showToast` 和 `utils/logger` 呈现成功/失败信息。
 
-## Integration
+## 集成
 
-- Wired through `src/hooks/index.ts` and plugin initialization (`src/index.ts`) as an `event` hook.
-- Consumes `PluginInput.client.tui.showToast`, `PluginInput.directory`, `ctx.client` context, and reads config paths through `cli/config-manager` (`stripJsonComments`, `getOpenCodeConfigPaths`).
-- Runtime interactions use `crossSpawn` for `bun install`, Node `fs/path`, and `fetch` against `NPM_REGISTRY_URL`.
-- Export surface includes `getAutoUpdateInstallDir` and `AutoUpdateCheckerOptions` for testability and host-side overrides.
+- 通过 `src/hooks/index.ts` 和插件初始化（`src/index.ts`）作为 `event` 钩子接入。
+- 消费 `PluginInput.client.tui.showToast`、`PluginInput.directory`、`ctx.client` 上下文，并通过 `cli/config-manager`（`stripJsonComments`、`getOpenCodeConfigPaths`）读取配置路径。
+- 运行时交互使用 `crossSpawn` 进行 `bun install`、Node `fs/path` 和针对 `NPM_REGISTRY_URL` 的 `fetch`。
+- 导出表面包括 `getAutoUpdateInstallDir` 和 `AutoUpdateCheckerOptions`，用于可测试性和宿主端覆盖。

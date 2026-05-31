@@ -1,37 +1,26 @@
 # src/hooks/
 
-This directory is the plugin-level hook composition surface. It exports factories
-and managers for all hook-based runtime behaviors used by
-`src/index.ts` (tool transforms, event listeners, and command hooks).
+此目录是插件级别的钩子组合表面。它导出供 `src/index.ts`（工具转换、事件监听器和命令钩子）使用的所有基于钩子的运行时行为的工厂和管理器。
 
-## Responsibility
+## 职责
 
-- Own the stable exports for hook modules so `src/index.ts` can register features
-  without depending on subfolder internals.
-- Describe lifecycle boundaries between OpenCode hook surfaces and internal state
-  machines that coordinate retries, timers, and session tracking.
-- Centralize all hook feature entry points used by orchestrator tooling,
-  delegation/task workflows, and session lifecycle handlers.
+- 拥有钩子模块的稳定导出，使 `src/index.ts` 能够注册功能而无需依赖子文件夹内部实现。
+- 描述 OpenCode 钩子表面与协调重试、定时器和会话跟踪的内部状态机之间的生命周期边界。
+- 集中编排器工具、委托/任务工作流和会话生命周期处理程序使用的所有钩子功能入口点。
 
-## Design
+## 设计
 
-- `src/hooks/index.ts` re-exports per-feature factories and managers.
-- Most features implement the `create*Hook(ctx, config?)` factory pattern and
-  return lifecycle callbacks.
-- Foreground fallback is provided as a manager class (`ForegroundFallbackManager`)
-  with an explicit `handleEvent` method.
-- `task-session-manager` persists resumable task sessions per parent session and
-  per agent, with bounded history and aliasing.
-- Side effects are limited to exported handlers and dedicated utility functions
-  to keep hook behavior deterministic.
-- Runtime integration depends on `PluginInput.client` for session APIs and shared
-  utilities (`log`, marker constants, prompt helpers).
+- `src/hooks/index.ts` 重新导出每个功能的工厂和管理器。
+- 大多数功能实现 `create*Hook(ctx, config?)` 工厂模式并返回生命周期回调。
+- 前台回退作为管理器类（`ForegroundFallbackManager`）提供，具有显式的 `handleEvent` 方法。
+- `task-session-manager` 持久化每个父会话和每个 agent 的可恢复任务会话，具有有限的历史和别名功能。
+- 副作用限制在导出的处理程序和专用工具函数内，以保持钩子行为的确定性。
+- 运行时集成依赖于 `PluginInput.client` 获取会话 API 和共享工具（`log`、标记常量、提示辅助函数）。
 
-## Flow
+## 流程
 
-1. `src/index.ts` imports each hook symbol from this folder.
-2. The plugin creates hook instances during startup and registers callbacks in
-   these surfaces:
+1. `src/index.ts` 从该文件夹导入每个钩子符号。
+2. 插件在启动时创建钩子实例，并在以下表面注册回调：
    - `tool.execute.before`
    - `tool.execute.after`
    - `experimental.chat.messages.transform`
@@ -40,44 +29,30 @@ and managers for all hook-based runtime behaviors used by
    - `chat.message`
    - `command.execute.before`
    - `event`
-3. Implementations either mutate OpenCode payloads (for in-band guidance or
-   prompt/system injection) or call session APIs (`todo`, `messages`, `prompt`,
-   `promptAsync`, `abort`, and event/status flows).
+3. 实现要么修改 OpenCode 有效载荷（用于带内指导或提示/系统注入），要么调用会话 API（`todo`、`messages`、`prompt`、`promptAsync`、`abort` 以及事件/状态流）。
 
-## Hook Points
+## 钩子点
 
-| Hook Point | Purpose | Implementations |
+| 钩子点 | 用途 | 实现 |
 |---|---|---|
-| `tool.execute.before` | Pre-process tool inputs | `apply-patch`, `task-session-manager` |
-| `tool.execute.after` | Post-process tool outputs | `delegate-task-retry`, `json-error-recovery`, `post-file-tool-nudge`, `task-session-manager` |
-| `experimental.chat.messages.transform` | Rewrite outbound user content | `filter-available-skills`, `phase-reminder` |
-| `experimental.chat.system.transform` | Inject system-level directives | `todo-continuation`, `post-file-tool-nudge`, `task-session-manager` |
-| `chat.headers` | Mutate request headers | `chat-headers` |
-| `chat.message` | Track runtime session/agent mapping | `todo-continuation` |
-| `command.execute.before` | Handle slash-command UX | `todo-continuation` (`auto-continue`) |
-| `event` | React to session lifecycle and runtime failures | `foreground-fallback`, `todo-continuation`, `post-file-tool-nudge`, `auto-update-checker`, multiplexer managers, `task-session-manager` |
+| `tool.execute.before` | 预处理工具输入 | `apply-patch`、`task-session-manager` |
+| `tool.execute.after` | 后处理工具输出 | `delegate-task-retry`、`json-error-recovery`、`post-file-tool-nudge`、`task-session-manager` |
+| `experimental.chat.messages.transform` | 重写出站用户内容 | `filter-available-skills`、`phase-reminder` |
+| `experimental.chat.system.transform` | 注入系统级指令 | `todo-continuation`、`post-file-tool-nudge`、`task-session-manager` |
+| `chat.headers` | 修改请求头 | `chat-headers` |
+| `chat.message` | 跟踪运行时会话/agent 映射 | `todo-continuation` |
+| `command.execute.before` | 处理斜杠命令 UX | `todo-continuation`（`auto-continue`） |
+| `event` | 响应会话生命周期和运行时故障 | `foreground-fallback`、`todo-continuation`、`post-file-tool-nudge`、`auto-update-checker`、复用器管理器、`task-session-manager` |
 
-## Implementation Notes
+## 实现说明
 
-- `createDelegateTaskRetryHook` (`tool.execute.after`) is a narrow guard around
-  `task` tool failure strings and appends structured retry guidance inline.
-- `ForegroundFallbackManager` listens to event traffic and remediates
-  foreground rate-limit failures by aborting the current prompt and re-queuing the
-  latest user message on the next model in a per-agent chain.
-- `createTodoContinuationHook` spans multiple surfaces: message transform,
-  system transform, command interception, tool-after, and events. It owns
-  auto-injection state, cooldown, suppress windows, and orchestration session
-  tracking.
-- `createTaskSessionManagerHook` tracks task sessions for resumability: generates
-  user-facing aliases, resolves alias/task IDs before delegation, remembers fresh
-  task IDs after completion, and drops stale entries on missing-session failure,
-  renamed task IDs, or session deletion.
+- `createDelegateTaskRetryHook`（`tool.execute.after`）是一个窄守卫，围绕 `task` 工具失败字符串，并内联附加结构化的重试指导。
+- `ForegroundFallbackManager` 监听事件流量，并通过中止当前提示并将最新用户消息重新排队到每个 agent 链中的下一个模型来修复前台速率限制失败。
+- `createTodoContinuationHook` 跨越多个表面：消息转换、系统转换、命令拦截、工具后处理和事件。它拥有自动注入状态、冷却期、抑制窗口和编排会话跟踪。
+- `createTaskSessionManagerHook` 跟踪任务会话以实现可恢复性：生成面向用户的别名、在委托前解析别名/任务 ID、在完成后记住新任务 ID，并在缺失会话失败、重命名任务 ID 或会话删除时丢弃过期条目。
 
-## Integration
+## 集成
 
-- `src/index.ts` is the sole runtime consumer and determines final registration
-  order so composed transforms (system joins, reminder insertion, hygiene) stay
-  deterministic.
-- `taskSessionManager` is registered in `tool.execute.before`, `tool.execute.after`,
-  `experimental.chat.system.transform`, and `event`, with parent/child cleanup.
-- The `src/hooks/*/codemap.md` files document each feature internals.
+- `src/index.ts` 是唯一的运行时消费者，并确定最终注册顺序，以便组合转换（系统连接、提醒插入、卫生处理）保持确定性。
+- `taskSessionManager` 在 `tool.execute.before`、`tool.execute.after`、`experimental.chat.system.transform` 和 `event` 中注册，带有父/子清理。
+- `src/hooks/*/codemap.md` 文件记录了每个功能的内部实现。

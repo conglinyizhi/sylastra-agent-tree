@@ -63,9 +63,7 @@ function parseHeader(lines: string[], index: number) {
 
 function unexpectedPatchLine(context: string, line: string): never {
   const rendered = line.length === 0 ? '<empty>' : line;
-  throw new Error(
-    `Invalid patch format: unexpected line ${context}: ${rendered}`,
-  );
+  throw new Error(`无效补丁格式：意外行 ${context}: ${rendered}`);
 }
 
 function parseChangeContext(line: string): string | undefined {
@@ -183,7 +181,7 @@ function parsePatchInternal(patchText: string, mode: ParseMode): ParsedPatch {
   );
 
   if (begin === -1 || end === -1 || begin >= end) {
-    throw new Error('Invalid patch format: missing Begin/End markers');
+    throw new Error('无效补丁格式：缺少 Begin/End 标记');
   }
 
   if (mode === 'strict') {
@@ -230,7 +228,7 @@ function parsePatchInternal(patchText: string, mode: ParseMode): ParsedPatch {
     const next = parseChunks(lines, header.next, mode);
     if (mode === 'strict' && next.chunks.length === 0) {
       throw new Error(
-        `Invalid patch format: Update File is missing @@ chunk body: ${header.file}`,
+        `无效补丁格式：Update File 缺少 @@ 块内容: ${header.file}`,
       );
     }
 

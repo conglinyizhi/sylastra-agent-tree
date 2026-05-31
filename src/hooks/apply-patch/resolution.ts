@@ -43,7 +43,7 @@ async function readFileLinesWithEol(file: string): Promise<FileLines> {
   try {
     text = await fs.readFile(file, 'utf-8');
   } catch (error) {
-    throw new Error(`Failed to read file ${file}: ${error}`);
+    throw new Error(`读取文件 ${file} 失败：${error}`);
   }
 
   return splitFileLines(text);
@@ -157,7 +157,7 @@ export function locateChunk(
 
     if (rescued.kind === 'ambiguous') {
       throw new Error(
-        `Prefix/suffix rescue was ambiguous in ${file}:\n${chunk.old_lines.join(
+        `文件 ${file} 中的前缀/后缀救助存在歧义：\n${chunk.old_lines.join(
           '\n',
         )}`,
       );
@@ -187,7 +187,7 @@ export function locateChunk(
 
     if (rescued.kind === 'ambiguous') {
       throw new Error(
-        `LCS rescue was ambiguous in ${file}:\n${chunk.old_lines.join('\n')}`,
+        `文件 ${file} 中的 LCS 救助存在歧义：\n${chunk.old_lines.join('\n')}`,
       );
     }
 
@@ -210,7 +210,7 @@ export function locateChunk(
   }
 
   throw new Error(
-    `Failed to find expected lines in ${file}:\n${chunk.old_lines.join('\n')}`,
+    `在文件 ${file} 中找不到预期的行：\n${chunk.old_lines.join('\n')}`,
   );
 }
 
@@ -274,7 +274,7 @@ function resolveUpdateChunksFromFileLines(
       }
 
       if (!chunk.change_context) {
-        throw new Error(`Missing insertion anchor in ${file}`);
+        throw new Error(`文件 ${file} 中缺少插入锚点`);
       }
 
       const anchorMatch = resolveUniqueAnchor(
@@ -284,13 +284,13 @@ function resolveUpdateChunksFromFileLines(
       );
       if (anchorMatch.kind === 'missing') {
         throw new Error(
-          `Failed to find insertion anchor in ${file}:\n${chunk.change_context}`,
+          `在文件 ${file} 中找不到插入锚点：\n${chunk.change_context}`,
         );
       }
 
       if (anchorMatch.kind === 'ambiguous') {
         throw new Error(
-          `Insertion anchor was ambiguous in ${file}:\n${chunk.change_context}`,
+          `文件 ${file} 中的插入锚点存在歧义：\n${chunk.change_context}`,
         );
       }
 
@@ -352,7 +352,7 @@ function resolveUpdateChunksFromFileLines(
     const previous = resolved[index - 1].hit;
     const current = resolved[index].hit;
     if (previous.start + previous.del > current.start) {
-      throw new Error(`Overlapping patch chunks in ${file}`);
+      throw new Error(`文件 ${file} 中的补丁块重叠`);
     }
   }
 

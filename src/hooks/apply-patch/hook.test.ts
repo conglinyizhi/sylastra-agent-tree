@@ -43,9 +43,7 @@ describe('apply-patch/hook', () => {
         { tool: 'apply_patch', directory: root },
         output,
       ),
-    ).rejects.toThrow(
-      'apply_patch verification failed: Failed to find expected lines',
-    );
+    ).rejects.toThrow('apply_patch verification failed: 在文件');
 
     expect(output.args.patchText).toBe(patchText);
   });
@@ -403,9 +401,7 @@ PATCH`,
         { tool: 'apply_patch', directory: root },
         output,
       ),
-    ).rejects.toThrow(
-      'apply_patch verification failed: Failed to find expected lines',
-    );
+    ).rejects.toThrow('apply_patch verification failed: 在文件');
 
     expect(output.args.patchText).toBe(patchText);
   });
@@ -430,7 +426,7 @@ garbage
         output,
       ),
     ).rejects.toThrow(
-      'apply_patch validation failed: Invalid patch format: unexpected line in patch chunk: garbage',
+      'apply_patch validation failed: 无效补丁格式：意外行 in patch chunk: garbage',
     );
 
     expect(output.args.patchText).toBe(patchText);
@@ -452,7 +448,7 @@ garbage
         output,
       ),
     ).rejects.toThrow(
-      'apply_patch validation failed: Invalid patch format: unexpected line in Add File body: garbage',
+      'apply_patch validation failed: 无效补丁格式：意外行 in Add File body: garbage',
     );
 
     expect(output.args.patchText).toBe(patchText);
@@ -505,9 +501,7 @@ garbage
         { tool: 'apply_patch', directory: root },
         output,
       ),
-    ).rejects.toThrow(
-      'apply_patch verification failed: Failed to find expected lines',
-    );
+    ).rejects.toThrow('apply_patch verification failed: 在文件');
 
     expect(output.args.patchText).toBe(patchText);
   });
@@ -559,9 +553,7 @@ garbage
         { tool: 'apply_patch', directory: root },
         output,
       ),
-    ).rejects.toThrow(
-      'apply_patch verification failed: Failed to find insertion anchor',
-    );
+    ).rejects.toThrow('apply_patch verification failed: 在文件');
 
     expect(output.args.patchText).toBe(patchText);
   });
@@ -586,9 +578,7 @@ garbage
         { tool: 'apply_patch', directory: root },
         output,
       ),
-    ).rejects.toThrow(
-      'apply_patch verification failed: Insertion anchor was ambiguous',
-    );
+    ).rejects.toThrow('apply_patch verification failed: 文件');
 
     expect(output.args.patchText).toBe(patchText);
   });

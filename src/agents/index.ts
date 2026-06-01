@@ -1,6 +1,7 @@
 import type { AgentConfig as SDKAgentConfig } from '@opencode-ai/sdk/v2';
 import { getSkillPermissionsForAgent } from '../cli/skills';
 import {
+  AGENT_ALIASES,
   type AgentOverrideConfig,
   ALL_AGENT_NAMES,
   DEFAULT_DISABLED_AGENTS,
@@ -228,7 +229,7 @@ const SUBAGENT_FACTORIES: Record<SubagentName, AgentFactory> = {
  */
 export function createAgents(config?: PluginConfig): AgentDefinition[] {
   const disabled = getDisabledAgents(config);
-  if (!config?.composer) {
+  if (!config?.council) {
     disabled.add('composer');
   }
 
@@ -312,7 +313,7 @@ export function createAgents(config?: PluginConfig): AgentDefinition[] {
   // 2b. Backward compat: if composer has no preset override and still uses the
   // hardcoded default model, fall back to the deprecated composer.master.model.
   // See https://github.com/conglinyizhi/sylastra-agent-tree/issues/369
-  const legacyMasterModel = config?.composer?._legacyMasterModel;
+  const legacyMasterModel = config?.council?._legacyMasterModel;
   if (legacyMasterModel) {
     const composerAgent = builtInSubAgents.find((a) => a.name === 'composer');
     if (
@@ -374,6 +375,35 @@ export function createAgents(config?: PluginConfig): AgentDefinition[] {
 
   // Validate display names
   const usedDisplayNames = new Set<string>();
+  const overrideDisplayNames = new Map<string, string>();
+  for (const rawName of Object.keys(config?.agents ?? {})) {
+    const normalizedAgentName = AGENT_ALIASES[rawName] ?? rawName;
+    const displayName = getAgentOverride(
+      config,
+      normalizedAgentName,
+    )?.displayName;
+    if (!displayName) {
+      continue;
+    }
+    overrideDisplayNames.set(rawName, displayName);
+  }
+
+  for (const [, displayName] of overrideDisplayNames) {
+    const normalizedDisplayName = normalizeDisplayName(displayName);
+    if (!isSafeDisplayName(normalizedDisplayName)) {
+      throw new Error(
+        `displayName '${normalizedDisplayName}' must match /^[a-z][a-z0-9_-]*$/i`,
+      );
+    }
+    if (usedDisplayNames.has(normalizedDisplayName)) {
+      throw new Error(
+        `Duplicate displayName '${normalizedDisplayName}' assigned to multiple agents`,
+      );
+    }
+    usedDisplayNames.add(normalizedDisplayName);
+  }
+
+  usedDisplayNames.clear();
   for (const [, displayName] of displayNameMap) {
     const normalizedDisplayName = normalizeDisplayName(displayName);
     if (!isSafeDisplayName(normalizedDisplayName)) {
@@ -505,8 +535,9 @@ export function getDisabledAgents(config?: PluginConfig): Set<string> {
     userDisabled !== undefined ? userDisabled : DEFAULT_DISABLED_AGENTS;
   const disabled = new Set<string>();
   for (const name of disabledSource) {
-    if (!PROTECTED_AGENTS.has(name)) {
-      disabled.add(name);
+    const normalizedName = AGENT_ALIASES[name] ?? name;
+    if (!PROTECTED_AGENTS.has(normalizedName)) {
+      disabled.add(normalizedName);
     }
   }
   return disabled;
@@ -517,7 +548,7 @@ export function getDisabledAgents(config?: PluginConfig): Set<string> {
  */
 export function getEnabledAgentNames(config?: PluginConfig): string[] {
   const disabled = getDisabledAgents(config);
-  if (!config?.composer) {
+  if (!config?.council) {
     disabled.add('composer');
   }
   const customAgentNames = getCustomAgentNames(config).filter(

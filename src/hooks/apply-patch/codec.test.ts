@@ -116,7 +116,7 @@ PATCH`);
 garbage
 +beta
 *** End Patch`),
-    ).toThrow('unexpected line in patch chunk');
+    ).toThrow('意外行 in patch chunk');
   });
 
   test('parsePatchStrict fails on garbage inside Add File', () => {
@@ -126,7 +126,7 @@ garbage
 +alpha
 garbage
 *** End Patch`),
-    ).toThrow('unexpected line in Add File body');
+    ).toThrow('意外行 in Add File body');
   });
 
   test('parsePatchStrict fails on malformed Delete File', () => {
@@ -135,7 +135,7 @@ garbage
 *** Delete File: sample.txt
 +ghost
 *** End Patch`),
-    ).toThrow('unexpected line between hunks');
+    ).toThrow('意外行 between hunks');
   });
 
   test('parsePatchStrict fails on garbage after End Patch', () => {
@@ -144,7 +144,7 @@ garbage
 *** Delete File: sample.txt
 *** End Patch
 garbage`),
-    ).toThrow('unexpected line after End Patch');
+    ).toThrow('意外行 after End Patch');
   });
 
   test('parsePatchStrict fails when Update File has no @@ chunks', () => {
@@ -152,7 +152,7 @@ garbage`),
       parsePatchStrict(`*** Begin Patch
 *** Update File: sample.txt
 *** End Patch`),
-    ).toThrow('missing @@ chunk body');
+    ).toThrow('缺少 @@ 块内容');
   });
 
   test('formatPatch allows stable parse -> format -> parse roundtrips', () => {

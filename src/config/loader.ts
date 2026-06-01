@@ -4,6 +4,13 @@ import { stripJsonComments } from '../cli/config-io';
 import { getConfigSearchDirs } from '../cli/paths';
 import { type PluginConfig, PluginConfigSchema } from './schema';
 
+function normalizeCouncilConfig(config: PluginConfig): PluginConfig {
+  return {
+    ...config,
+    council: config.council ?? config.composer,
+  };
+}
+
 /**
  * Warning kinds produced during config loading.
  */
@@ -98,7 +105,7 @@ function loadConfigFromPath(
       return null;
     }
 
-    return result.data;
+    return normalizeCouncilConfig(result.data);
   } catch (error) {
     // File doesn't exist or isn't readable - this is expected and fine
     if (
@@ -193,18 +200,30 @@ export function mergePluginConfigs(
   base: PluginConfig,
   override: PluginConfig,
 ): PluginConfig {
+  const normalizedBase = normalizeCouncilConfig(base);
+  const normalizedOverride = normalizeCouncilConfig(override);
+
   return {
-    ...base,
-    ...override,
-    agents: deepMerge(base.agents, override.agents),
-    tmux: deepMerge(base.tmux, override.tmux),
-    multiplexer: deepMerge(base.multiplexer, override.multiplexer),
-    interview: deepMerge(base.interview, override.interview),
-    sessionManager: deepMerge(base.sessionManager, override.sessionManager),
-    divoom: deepMerge(base.divoom, override.divoom),
-    fallback: deepMerge(base.fallback, override.fallback),
-    composer: deepMerge(base.composer, override.composer),
-    subtask: deepMerge(base.subtask, override.subtask),
+    ...normalizedBase,
+    ...normalizedOverride,
+    agents: deepMerge(normalizedBase.agents, normalizedOverride.agents),
+    tmux: deepMerge(normalizedBase.tmux, normalizedOverride.tmux),
+    multiplexer: deepMerge(
+      normalizedBase.multiplexer,
+      normalizedOverride.multiplexer,
+    ),
+    interview: deepMerge(
+      normalizedBase.interview,
+      normalizedOverride.interview,
+    ),
+    sessionManager: deepMerge(
+      normalizedBase.sessionManager,
+      normalizedOverride.sessionManager,
+    ),
+    divoom: deepMerge(normalizedBase.divoom, normalizedOverride.divoom),
+    fallback: deepMerge(normalizedBase.fallback, normalizedOverride.fallback),
+    council: deepMerge(normalizedBase.council, normalizedOverride.council),
+    subtask: deepMerge(normalizedBase.subtask, normalizedOverride.subtask),
   };
 }
 

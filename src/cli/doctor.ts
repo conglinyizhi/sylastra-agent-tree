@@ -52,6 +52,13 @@ export type DoctorResult = {
   presetCheck?: PresetCheckResult;
 };
 
+function normalizeCouncilConfig(config: PluginConfig): PluginConfig {
+  return {
+    ...config,
+    council: config.council ?? config.composer,
+  };
+}
+
 function checkConfigFile(
   scope: 'user' | 'project',
   configPath: string | null,
@@ -99,7 +106,7 @@ function checkConfigFile(
       path: configPath,
       exists: true,
       ok: true,
-      config: parseResult.data,
+      config: normalizeCouncilConfig(parseResult.data),
     };
   } catch (err) {
     if (err instanceof SyntaxError) {

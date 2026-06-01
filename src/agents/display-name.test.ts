@@ -11,13 +11,13 @@ describe('displayName', () => {
     };
 
     const agents = createAgents(config);
-    const explorer = agents.find((a) => a.name === 'explorer');
-    expect(explorer?.displayName).toBe('researcher');
+    const librarian = agents.find((a) => a.name === 'librarian');
+    expect(librarian?.displayName).toBe('researcher');
 
     const sdkConfigs = getAgentConfigs(config);
-    expect((sdkConfigs.explorer as { displayName?: string }).displayName).toBe(
-      'researcher',
-    );
+    expect(
+      (sdkConfigs.researcher as { displayName?: string }).displayName,
+    ).toBe('researcher');
   });
 
   test('injects configured displayName into orchestrator prompt mentions', () => {
@@ -32,7 +32,7 @@ describe('displayName', () => {
     const prompt = orchestrator?.config.prompt ?? '';
 
     expect(prompt).toContain('@researcher');
-    expect(prompt).not.toMatch(/@explorer\b/);
+    expect(prompt).not.toMatch(/@librarian\b/);
   });
 
   test('normalizes @-prefixed displayName in prompt injection', () => {
@@ -48,7 +48,7 @@ describe('displayName', () => {
 
     expect(prompt).toContain('@researcher');
     expect(prompt).not.toContain('@@researcher');
-    expect(prompt).not.toMatch(/@explorer\b/);
+    expect(prompt).not.toMatch(/@librarian\b/);
   });
 
   test('normalizes whitespace-padded displayName in prompt injection', () => {
@@ -64,7 +64,7 @@ describe('displayName', () => {
 
     expect(prompt).toContain('@researcher');
     expect(prompt).not.toContain('@ researcher ');
-    expect(prompt).not.toMatch(/@explorer\b/);
+    expect(prompt).not.toMatch(/@librarian\b/);
   });
 
   test('throws when duplicate displayName is assigned', () => {
@@ -149,9 +149,9 @@ describe('displayName', () => {
     };
 
     const agents = createAgents(config);
-    const explorer = agents.find((a) => a.name === 'explorer');
+    const librarian = agents.find((a) => a.name === 'librarian');
 
-    expect(explorer?.displayName).toBe('researcher');
+    expect(librarian?.displayName).toBe('researcher');
   });
 
   test('uses displayName as host-facing registry key with hidden internal alias', () => {

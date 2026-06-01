@@ -24,55 +24,57 @@ function councilConfig() {
 }
 
 describe('agent alias backward compatibility', () => {
-  test("applies 'explore' config to 'explorer' agent", () => {
+  test("applies 'explore' config to 'librarian' agent", () => {
     const config: PluginConfig = {
       agents: {
         explore: { model: 'test/old-explore-model' },
       },
     };
     const agents = createAgents(config);
-    const explorer = agents.find((a) => a.name === 'explorer');
-    expect(explorer).toBeDefined();
-    expect(explorer?.config.model).toBe('test/old-explore-model');
+    const librarian = agents.find((a) => a.name === 'librarian');
+    expect(librarian).toBeDefined();
+    expect(librarian?.config.model).toBe('test/old-explore-model');
   });
 
-  test("applies 'frontend-ui-ux-engineer' config to 'designer' agent", () => {
+  test("applies 'frontend-ui-ux-engineer' config to 'observer' agent", () => {
     const config: PluginConfig = {
+      disabled_agents: [],
       agents: {
         'frontend-ui-ux-engineer': { model: 'test/old-frontend-model' },
       },
     };
     const agents = createAgents(config);
-    const designer = agents.find((a) => a.name === 'designer');
-    expect(designer).toBeDefined();
-    expect(designer?.config.model).toBe('test/old-frontend-model');
+    const observer = agents.find((a) => a.name === 'observer');
+    expect(observer).toBeDefined();
+    expect(observer?.config.model).toBe('test/old-frontend-model');
   });
 
   test('new name takes priority over old alias', () => {
     const config: PluginConfig = {
       agents: {
         explore: { model: 'old-model' },
-        explorer: { model: 'new-model' },
+        librarian: { model: 'new-model' },
       },
     };
     const agents = createAgents(config);
-    const explorer = agents.find((a) => a.name === 'explorer');
-    expect(explorer?.config.model).toBe('new-model');
+    const librarian = agents.find((a) => a.name === 'librarian');
+    expect(librarian?.config.model).toBe('new-model');
   });
 
   test('new agent names work directly', () => {
     const config: PluginConfig = {
       agents: {
-        explorer: { model: 'direct-explorer' },
-        designer: { model: 'direct-designer' },
+        librarian: { model: 'direct-librarian' },
+        observer: { model: 'direct-observer' },
       },
+      disabled_agents: [],
     };
     const agents = createAgents(config);
-    expect(agents.find((a) => a.name === 'explorer')?.config.model).toBe(
-      'direct-explorer',
+    expect(agents.find((a) => a.name === 'librarian')?.config.model).toBe(
+      'direct-librarian',
     );
-    expect(agents.find((a) => a.name === 'designer')?.config.model).toBe(
-      'direct-designer',
+    expect(agents.find((a) => a.name === 'observer')?.config.model).toBe(
+      'direct-observer',
     );
   });
 
@@ -83,8 +85,8 @@ describe('agent alias backward compatibility', () => {
       },
     };
     const agents = createAgents(config);
-    const explorer = agents.find((a) => a.name === 'explorer');
-    expect(explorer?.config.temperature).toBe(0.5);
+    const librarian = agents.find((a) => a.name === 'librarian');
+    expect(librarian?.config.temperature).toBe(0.5);
   });
 
   test('variant override via old alias', () => {
@@ -94,8 +96,8 @@ describe('agent alias backward compatibility', () => {
       },
     };
     const agents = createAgents(config);
-    const explorer = agents.find((a) => a.name === 'explorer');
-    expect(explorer?.config.variant).toBe('low');
+    const librarian = agents.find((a) => a.name === 'librarian');
+    expect(librarian?.config.variant).toBe('low');
   });
 });
 
@@ -196,7 +198,7 @@ describe('per-model variant in array config', () => {
   test('subagent stores model array with per-model variants', () => {
     const config: PluginConfig = {
       agents: {
-        explorer: {
+        librarian: {
           model: [
             { id: 'google/gemini-3-flash', variant: 'low' },
             'openai/gpt-4o-mini',
@@ -205,12 +207,12 @@ describe('per-model variant in array config', () => {
       },
     };
     const agents = createAgents(config);
-    const explorer = agents.find((a) => a.name === 'explorer');
-    expect(explorer?._modelArray).toEqual([
+    const librarian = agents.find((a) => a.name === 'librarian');
+    expect(librarian?._modelArray).toEqual([
       { id: 'google/gemini-3-flash', variant: 'low' },
       { id: 'openai/gpt-4o-mini' },
     ]);
-    expect(explorer?.config.model).toBeUndefined();
+    expect(librarian?.config.model).toBeUndefined();
   });
 
   test('top-level variant preserved alongside per-model variants', () => {
@@ -294,10 +296,10 @@ describe('tool permissions', () => {
     expect((oracle?.config.permission as any).council_session).toBe('deny');
   });
 
-  test('explorer is denied access to council_session', () => {
+  test('librarian is denied access to council_session', () => {
     const agents = createAgents();
-    const explorer = agents.find((a) => a.name === 'explorer');
-    expect((explorer?.config.permission as any).council_session).toBe('deny');
+    const librarian = agents.find((a) => a.name === 'librarian');
+    expect((librarian?.config.permission as any).council_session).toBe('deny');
   });
 
   test('councillor is denied access to council_session', () => {
@@ -309,10 +311,9 @@ describe('tool permissions', () => {
 
 describe('isSubagent type guard', () => {
   test('returns true for valid subagent names', () => {
-    expect(isSubagent('explorer')).toBe(true);
     expect(isSubagent('librarian')).toBe(true);
     expect(isSubagent('oracle')).toBe(true);
-    expect(isSubagent('designer')).toBe(true);
+    expect(isSubagent('observer')).toBe(true);
     expect(isSubagent('sylastra')).toBe(true);
   });
 
@@ -330,7 +331,7 @@ describe('isSubagent type guard', () => {
 describe('agent classification', () => {
   test('SUBAGENT_NAMES excludes orchestrator', () => {
     expect(SUBAGENT_NAMES).not.toContain('orchestrator');
-    expect(SUBAGENT_NAMES).toContain('explorer');
+    expect(SUBAGENT_NAMES).toContain('librarian');
     expect(SUBAGENT_NAMES).toContain('sylastra');
   });
 
@@ -358,11 +359,10 @@ describe('createAgents', () => {
     const agents = createAgents();
     const names = agents.map((a) => a.name);
     expect(names).toContain('orchestrator');
-    expect(names).toContain('explorer');
-    expect(names).toContain('designer');
-    expect(names).toContain('oracle');
     expect(names).toContain('librarian');
+    expect(names).toContain('oracle');
     expect(names).toContain('sylastra');
+    expect(names).toContain('councillor');
   });
 
   test('creates exactly 5 agents by default (observer disabled, composer unconfigured)', () => {
@@ -395,16 +395,16 @@ describe('getAgentConfigs', () => {
   test('returns config record keyed by agent name', () => {
     const configs = getAgentConfigs();
     expect(configs.orchestrator).toBeDefined();
-    expect(configs.explorer).toBeDefined();
+    expect(configs.librarian).toBeDefined();
     // orchestrator has no hardcoded default model; resolved at runtime via
     // chat.message hook when _modelArray is configured, or left to the user
-    expect(configs.explorer.model).toBeDefined();
+    expect(configs.librarian.model).toBeDefined();
   });
 
   test('includes description in SDK config', () => {
     const configs = getAgentConfigs();
     expect(configs.orchestrator.description).toBeDefined();
-    expect(configs.explorer.description).toBeDefined();
+    expect(configs.librarian.description).toBeDefined();
   });
 });
 
@@ -765,12 +765,11 @@ describe('disabled_agents', () => {
     };
     const agents = createAgents(config);
     const names = agents.map((a) => a.name);
-    expect(names).not.toContain('designer');
+    expect(names).not.toContain('observer');
     expect(names).not.toContain('sylastra');
     expect(names).toContain('orchestrator');
-    expect(names).toContain('explorer');
-    expect(names).toContain('oracle');
     expect(names).toContain('librarian');
+    expect(names).toContain('oracle');
   });
 
   test('protected agents cannot be disabled', () => {
@@ -799,7 +798,7 @@ describe('disabled_agents', () => {
     expect(agents.length).toBe(5); // observer disabled, composer unconfigured
 
     const disabledConfig: PluginConfig = {
-      disabled_agents: ['observer', 'designer'],
+      disabled_agents: ['oracle', 'librarian'],
     };
     const disabledAgents = createAgents(disabledConfig);
     expect(disabledAgents.length).toBe(4);
@@ -810,7 +809,7 @@ describe('disabled_agents', () => {
       disabled_agents: ['orchestrator', 'designer', 'councillor'],
     };
     const disabled = getDisabledAgents(config);
-    expect(disabled.has('designer')).toBe(true);
+    expect(disabled.has('observer')).toBe(true);
     expect(disabled.has('orchestrator')).toBe(false);
     expect(disabled.has('councillor')).toBe(false);
   });
@@ -820,10 +819,10 @@ describe('disabled_agents', () => {
       disabled_agents: ['designer', 'sylastra'],
     };
     const enabled = getEnabledAgentNames(config);
-    expect(enabled).not.toContain('designer');
+    expect(enabled).not.toContain('observer');
     expect(enabled).not.toContain('sylastra');
     expect(enabled).toContain('orchestrator');
-    expect(enabled).toContain('explorer');
+    expect(enabled).toContain('librarian');
   });
 
   test('getEnabledAgentNames includes enabled custom agents', () => {
@@ -879,12 +878,12 @@ describe('observer agent', () => {
 
   test('observer can be enabled alongside other disabled agents', () => {
     const config: PluginConfig = {
-      disabled_agents: ['designer'],
+      disabled_agents: [],
     };
     const agents = createAgents(config);
     const names = agents.map((a) => a.name);
     expect(names).toContain('observer');
-    expect(names).not.toContain('designer');
+    expect(names).toContain('librarian');
   });
 
   test('DEFAULT_DISABLED_AGENTS contains observer', () => {

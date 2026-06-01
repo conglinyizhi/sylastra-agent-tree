@@ -4,18 +4,19 @@ import { fileURLToPath } from 'node:url';
 import { stripJsonComments } from '../../cli/config-manager';
 import { log } from '../../utils/logger';
 import {
+  DEFAULT_MANIFEST_URL,
   INSTALLED_PACKAGE_JSON,
-  NPM_FETCH_TIMEOUT,
-  NPM_REGISTRY_URL,
+  MANIFEST_FETCH_TIMEOUT,
   PACKAGE_NAME,
   USER_OPENCODE_CONFIG,
   USER_OPENCODE_CONFIG_JSONC,
 } from './constants';
 import type {
-  NpmDistTags,
   OpencodeConfig,
   PackageJson,
   PluginEntryInfo,
+  ReleaseManifest,
+  ResolvedAutoUpdateConfig,
 } from './types';
 
 function isString(value: unknown): value is string {
@@ -24,6 +25,47 @@ function isString(value: unknown): value is string {
 
 function getPluginEntries(config: OpencodeConfig): string[] {
   return Array.isArray(config.plugin) ? config.plugin.filter(isString) : [];
+}
+
+function getFileEntryPath(entry: string): string | null {
+  if (!entry.startsWith('file://')) {
+    return null;
+  }
+
+  try {
+    return fileURLToPath(entry);
+  } catch {
+    return entry.slice('file://'.length);
+  }
+}
+
+function isPluginPackageRoot(dirPath: string): boolean {
+  const packageJsonPath = path.join(dirPath, 'package.json');
+  if (!fs.existsSync(packageJsonPath)) {
+    return false;
+  }
+
+  try {
+    const pkg = JSON.parse(
+      fs.readFileSync(packageJsonPath, 'utf8'),
+    ) as PackageJson;
+    return pkg.name === PACKAGE_NAME;
+  } catch {
+    return false;
+  }
+}
+
+function isPluginFileEntry(entry: string): boolean {
+  const filePath = getFileEntryPath(entry);
+  if (!filePath) {
+    return false;
+  }
+
+  if (entry.includes(PACKAGE_NAME)) {
+    return true;
+  }
+
+  return isPluginPackageRoot(filePath);
 }
 
 /**
@@ -59,6 +101,43 @@ export function extractChannel(version: string | null): string {
   }
 
   return 'latest';
+}
+
+export function normalizeAutoUpdateConfig(
+  autoUpdate: boolean | import('./types').AutoUpdateConfig | undefined,
+): ResolvedAutoUpdateConfig {
+  if (autoUpdate === false) {
+    return {
+      enabled: false,
+      policy: 'notify',
+      channel: 'stable',
+      cohort: 'default',
+      manifestUrl: DEFAULT_MANIFEST_URL,
+      allowPrerelease: false,
+    };
+  }
+
+  if (autoUpdate === true || autoUpdate === undefined) {
+    return {
+      enabled: true,
+      policy: 'prepare',
+      channel: 'stable',
+      cohort: 'default',
+      manifestUrl: DEFAULT_MANIFEST_URL,
+      allowPrerelease: false,
+    };
+  }
+
+  return {
+    enabled: autoUpdate.enabled ?? true,
+    policy: autoUpdate.policy ?? 'prepare',
+    channel: autoUpdate.channel ?? 'stable',
+    cohort: autoUpdate.cohort ?? 'default',
+    manifestUrl: autoUpdate.manifestUrl ?? DEFAULT_MANIFEST_URL,
+    allowPrerelease: autoUpdate.allowPrerelease ?? false,
+    healthcheck: autoUpdate.healthcheck,
+    rollback: autoUpdate.rollback,
+  };
 }
 
 /**
@@ -186,6 +265,14 @@ export function findPluginEntry(directory: string): PluginEntryInfo | null {
             configPath,
           };
         }
+        if (isPluginFileEntry(entry)) {
+          return {
+            entry,
+            isPinned: false,
+            pinnedVersion: null,
+            configPath,
+          };
+        }
       }
     } catch {}
   }
@@ -285,21 +372,25 @@ export function updatePinnedVersion(
  * Fetches the latest version for a specific channel from the NPM registry.
  */
 export async function getLatestVersion(
-  channel: string = 'latest',
+  autoUpdate: ResolvedAutoUpdateConfig,
 ): Promise<string | null> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), NPM_FETCH_TIMEOUT);
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    MANIFEST_FETCH_TIMEOUT,
+  );
 
   try {
-    const response = await fetch(NPM_REGISTRY_URL, {
+    const response = await fetch(autoUpdate.manifestUrl, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     });
 
     if (!response.ok) return null;
 
-    const data = (await response.json()) as NpmDistTags;
-    return data[channel] ?? data.latest ?? null;
+    const data = (await response.json()) as ReleaseManifest;
+    const channelEntry = data[autoUpdate.channel];
+    return channelEntry?.version ?? null;
   } catch {
     return null;
   } finally {

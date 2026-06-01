@@ -9,35 +9,31 @@ const checkerMocks = {
   getLatestVersion: mock(async () => null),
   getLocalDevVersion: mock(() => null),
   getCurrentRuntimePackageJsonPath: mock(() => null),
+  normalizeAutoUpdateConfig: mock((value?: unknown) => ({
+    enabled: value !== false,
+    policy: value === false ? 'notify' : 'prepare',
+    channel: 'stable',
+    cohort: 'default',
+    manifestUrl: 'https://example.com/manifest.json',
+    allowPrerelease: false,
+  })),
 };
 
-const cacheMocks = {
-  preparePackageUpdate: mock(() => '/tmp/opencode'),
-  resolveInstallContext: mock(() => ({ installDir: '/tmp/opencode' })),
+const updaterMocks = {
+  getUpdaterRoot: mock(() => '/tmp/opencode/sylastra-agent-tree'),
+  readUpdaterState: mock(() => null),
+  prepareArtifactUpdate: mock(async () => ({ ok: true })),
+  activatePreparedUpdate: mock(async () => ({ ok: true })),
+  runPreparedHealthcheck: mock(async () => ({ ok: true })),
+  rollbackPreparedUpdate: mock(async () => ({ ok: true })),
 };
-
-const crossSpawnMock = mock((_command: string[]) => ({
-  exited: Promise.resolve(0),
-  exitCode: 0,
-  kill: mock(() => true),
-  stdout: () => Promise.resolve(''),
-  stderr: () => Promise.resolve(''),
-  proc: {} as never,
-}));
 
 mock.module('../../utils/logger', () => ({
   log: logMock,
 }));
 
 mock.module('./checker', () => checkerMocks);
-
-mock.module('./cache', () => cacheMocks);
-
-mock.module('../../utils/compat', () => ({
-  crossSpawn: crossSpawnMock,
-  crossWrite: mock(() => Promise.resolve()),
-  isBun: false,
-}));
+mock.module('./updater', () => updaterMocks);
 
 let importCounter = 0;
 
@@ -86,22 +82,38 @@ describe('auto-update-checker/index', () => {
     checkerMocks.getLatestVersion.mockImplementation(async () => null);
     checkerMocks.getLocalDevVersion.mockReset();
     checkerMocks.getLocalDevVersion.mockImplementation(() => null);
-
-    cacheMocks.preparePackageUpdate.mockReset();
-    cacheMocks.preparePackageUpdate.mockImplementation(() => '/tmp/opencode');
-    cacheMocks.resolveInstallContext.mockReset();
-    cacheMocks.resolveInstallContext.mockImplementation(() => ({
-      installDir: '/tmp/opencode',
+    checkerMocks.normalizeAutoUpdateConfig.mockReset();
+    checkerMocks.normalizeAutoUpdateConfig.mockImplementation(
+      (value?: unknown) => ({
+        enabled: value !== false,
+        policy: value === false ? 'notify' : 'prepare',
+        channel: 'stable',
+        cohort: 'default',
+        manifestUrl: 'https://example.com/manifest.json',
+        allowPrerelease: false,
+      }),
+    );
+    updaterMocks.getUpdaterRoot.mockReset();
+    updaterMocks.getUpdaterRoot.mockImplementation(
+      () => '/tmp/opencode/sylastra-agent-tree',
+    );
+    updaterMocks.readUpdaterState.mockReset();
+    updaterMocks.readUpdaterState.mockImplementation(() => null);
+    updaterMocks.prepareArtifactUpdate.mockReset();
+    updaterMocks.prepareArtifactUpdate.mockImplementation(async () => ({
+      ok: true,
     }));
-
-    crossSpawnMock.mockReset();
-    crossSpawnMock.mockImplementation(() => ({
-      exited: Promise.resolve(0),
-      exitCode: 0,
-      kill: mock(() => true),
-      stdout: () => Promise.resolve(''),
-      stderr: () => Promise.resolve(''),
-      proc: {} as never,
+    updaterMocks.activatePreparedUpdate.mockReset();
+    updaterMocks.activatePreparedUpdate.mockImplementation(async () => ({
+      ok: true,
+    }));
+    updaterMocks.runPreparedHealthcheck.mockReset();
+    updaterMocks.runPreparedHealthcheck.mockImplementation(async () => ({
+      ok: true,
+    }));
+    updaterMocks.rollbackPreparedUpdate.mockReset();
+    updaterMocks.rollbackPreparedUpdate.mockImplementation(async () => ({
+      ok: true,
     }));
   });
 
@@ -109,12 +121,12 @@ describe('auto-update-checker/index', () => {
     // Mocks are automatically cleared by Bun's test runner between tests
   });
 
-  test('uses resolved install root for auto-update installs', async () => {
+  test('returns artifact updater root', async () => {
     const { getAutoUpdateInstallDir } = await import(
       `./index?test=${importCounter++}`
     );
 
-    expect(getAutoUpdateInstallDir()).toBe('/tmp/opencode');
+    expect(getAutoUpdateInstallDir()).toBe('/tmp/opencode/sylastra-agent-tree');
   });
 
   test('skips background update for local dev installs without startup toast', async () => {
@@ -134,21 +146,10 @@ describe('auto-update-checker/index', () => {
     expect(checkerMocks.getLatestVersion).not.toHaveBeenCalled();
   });
 
-  test('shows success toast after updating the active install root', async () => {
-    checkerMocks.findPluginEntry.mockImplementation(() => ({
-      pinnedVersion: null,
-      isPinned: false,
-    }));
-    checkerMocks.getCachedVersion.mockImplementation(() => '0.9.1');
-    checkerMocks.getLatestVersion.mockImplementation(async () => '0.9.11');
-
-    crossSpawnMock.mockImplementation(() => ({
-      exited: Promise.resolve(0),
-      exitCode: 0,
-      kill: mock(() => true),
-      stdout: () => Promise.resolve(''),
-      stderr: () => Promise.resolve(''),
-      proc: {} as never,
+  test('activates prepared update on startup when updater state is prepared', async () => {
+    updaterMocks.readUpdaterState.mockImplementation(() => ({
+      status: 'prepared',
+      preparedVersion: '0.9.11',
     }));
 
     const { createAutoUpdateCheckerHook } = await import(
@@ -158,20 +159,95 @@ describe('auto-update-checker/index', () => {
 
     const hook = createAutoUpdateCheckerHook(ctx as never);
     hook.event({ event: { type: 'session.created', properties: {} } });
-    await waitForCalls(showToast);
+    await waitForCalls(showToast, 2);
 
-    expect(cacheMocks.preparePackageUpdate).toHaveBeenCalledWith(
-      '0.9.11',
-      'sylastra-agent-tree',
-    );
-    expect(crossSpawnMock).toHaveBeenCalledWith(
-      ['bun', 'install'],
-      expect.objectContaining({ cwd: '/tmp/opencode' }),
-    );
-    expect(showToast).toHaveBeenCalledWith({
+    expect(updaterMocks.activatePreparedUpdate).toHaveBeenCalled();
+    expect(updaterMocks.runPreparedHealthcheck).toHaveBeenCalled();
+    expect(showToast.mock.calls[0]?.[0]).toEqual({
       body: {
-        title: 'OMO-Slim Updated!',
-        message: 'v0.9.1 → v0.9.11\nRestart OpenCode to apply.',
+        title: 'OMO-Slim Update',
+        message: '检测到已准备更新 0.9.11，正在激活。',
+        variant: 'info',
+        duration: 8000,
+      },
+    });
+    expect(showToast.mock.calls[1]?.[0]).toEqual({
+      body: {
+        title: 'OMO-Slim Update Activated',
+        message: '已激活更新 0.9.11。',
+        variant: 'success',
+        duration: 8000,
+      },
+    });
+  });
+
+  test('rolls back prepared update when healthcheck fails', async () => {
+    updaterMocks.readUpdaterState.mockImplementation(() => ({
+      status: 'prepared',
+      preparedVersion: '0.9.11',
+    }));
+    updaterMocks.runPreparedHealthcheck.mockImplementation(async () => ({
+      ok: false,
+      reason: 'module load failed',
+    }));
+
+    const { createAutoUpdateCheckerHook } = await import(
+      `./index?test=${importCounter++}`
+    );
+    const { ctx, showToast } = createCtx();
+
+    const hook = createAutoUpdateCheckerHook(ctx as never);
+    hook.event({ event: { type: 'session.created', properties: {} } });
+    await waitForCalls(showToast, 2);
+
+    expect(updaterMocks.rollbackPreparedUpdate).toHaveBeenCalled();
+    expect(showToast.mock.calls[1]?.[0]).toEqual({
+      body: {
+        title: 'OMO-Slim Update',
+        message: '更新健康检查失败，已回滚：module load failed',
+        variant: 'error',
+        duration: 8000,
+      },
+    });
+  });
+
+  test('prepares artifact update and shows success toast when an update is available', async () => {
+    checkerMocks.findPluginEntry.mockImplementation(() => ({
+      pinnedVersion: null,
+      isPinned: false,
+    }));
+    checkerMocks.getCachedVersion.mockImplementation(() => '0.9.1');
+    checkerMocks.getLatestVersion.mockImplementation(async () => '0.9.11');
+
+    const { createAutoUpdateCheckerHook } = await import(
+      `./index?test=${importCounter++}`
+    );
+    const { ctx, showToast } = createCtx();
+
+    const hook = createAutoUpdateCheckerHook(ctx as never);
+    hook.event({ event: { type: 'session.created', properties: {} } });
+    await waitForCalls(showToast, 2);
+
+    expect(updaterMocks.prepareArtifactUpdate).toHaveBeenCalledWith('0.9.11', {
+      enabled: true,
+      policy: 'prepare',
+      channel: 'stable',
+      cohort: 'default',
+      manifestUrl: 'https://example.com/manifest.json',
+      allowPrerelease: false,
+    });
+    expect(showToast.mock.calls[0]?.[0]).toEqual({
+      body: {
+        title: 'OMO-Slim 0.9.11',
+        message: 'v0.9.11 available. 正在准备下次启动激活的 artifact 更新。',
+        variant: 'info',
+        duration: 8000,
+      },
+    });
+    expect(showToast.mock.calls[1]?.[0]).toEqual({
+      body: {
+        title: 'OMO-Slim Update Prepared',
+        message: 'v0.9.1 → v0.9.11\n更新已准备，等待下次启动激活。',
         variant: 'success',
         duration: 8000,
       },
@@ -200,60 +276,27 @@ describe('auto-update-checker/index', () => {
     expect(showToast).toHaveBeenCalledWith({
       body: {
         title: 'OMO-Slim 0.9.11',
-        message: 'v0.9.11 available. Auto-update is disabled.',
-        variant: 'info',
-        duration: 8000,
-      },
-    });
-    expect(cacheMocks.preparePackageUpdate).not.toHaveBeenCalled();
-    expect(crossSpawnMock).not.toHaveBeenCalled();
-  });
-
-  test('shows prepare failure toast and skips installation when active install cannot be resolved', async () => {
-    checkerMocks.findPluginEntry.mockImplementation(() => ({
-      pinnedVersion: null,
-      isPinned: false,
-    }));
-    checkerMocks.getCachedVersion.mockImplementation(() => '0.9.1');
-    checkerMocks.getLatestVersion.mockImplementation(async () => '0.9.11');
-    cacheMocks.preparePackageUpdate.mockImplementation(() => null);
-
-    const { createAutoUpdateCheckerHook } = await import(
-      `./index?test=${importCounter++}`
-    );
-    const { ctx, showToast } = createCtx();
-
-    const hook = createAutoUpdateCheckerHook(ctx as never);
-    hook.event({ event: { type: 'session.created', properties: {} } });
-    await waitForCalls(showToast);
-
-    expect(crossSpawnMock).not.toHaveBeenCalled();
-    expect(showToast).toHaveBeenCalledWith({
-      body: {
-        title: 'OMO-Slim 0.9.11',
-        message:
-          'v0.9.11 available. Auto-update could not prepare the active install.',
+        message: 'v0.9.11 available. 当前为通知模式。',
         variant: 'info',
         duration: 8000,
       },
     });
   });
 
-  test('shows install failure toast without telling users to restart', async () => {
+  test('uses notification mode when policy is notify', async () => {
     checkerMocks.findPluginEntry.mockImplementation(() => ({
       pinnedVersion: null,
       isPinned: false,
     }));
     checkerMocks.getCachedVersion.mockImplementation(() => '0.9.1');
     checkerMocks.getLatestVersion.mockImplementation(async () => '0.9.11');
-
-    crossSpawnMock.mockImplementation(() => ({
-      exited: Promise.resolve(1),
-      exitCode: 1,
-      kill: mock(() => true),
-      stdout: () => Promise.resolve(''),
-      stderr: () => Promise.resolve(''),
-      proc: {} as never,
+    checkerMocks.normalizeAutoUpdateConfig.mockImplementation(() => ({
+      enabled: true,
+      policy: 'notify',
+      channel: 'stable',
+      cohort: 'default',
+      manifestUrl: 'https://example.com/manifest.json',
+      allowPrerelease: false,
     }));
 
     const { createAutoUpdateCheckerHook } = await import(
@@ -265,15 +308,70 @@ describe('auto-update-checker/index', () => {
     hook.event({ event: { type: 'session.created', properties: {} } });
     await waitForCalls(showToast);
 
-    expect(crossSpawnMock).toHaveBeenCalledWith(
-      ['bun', 'install'],
-      expect.objectContaining({ cwd: '/tmp/opencode' }),
+    expect(showToast).toHaveBeenCalledWith({
+      body: {
+        title: 'OMO-Slim 0.9.11',
+        message: 'v0.9.11 available. 当前为通知模式。',
+        variant: 'info',
+        duration: 8000,
+      },
+    });
+  });
+
+  test('shows pinned-version toast and skips updater path', async () => {
+    checkerMocks.findPluginEntry.mockImplementation(() => ({
+      pinnedVersion: '0.9.1',
+      isPinned: true,
+    }));
+    checkerMocks.getCachedVersion.mockImplementation(() => '0.9.1');
+    checkerMocks.getLatestVersion.mockImplementation(async () => '0.9.11');
+
+    const { createAutoUpdateCheckerHook } = await import(
+      `./index?test=${importCounter++}`
     );
+    const { ctx, showToast } = createCtx();
+
+    const hook = createAutoUpdateCheckerHook(ctx as never);
+    hook.event({ event: { type: 'session.created', properties: {} } });
+    await waitForCalls(showToast);
+
     expect(showToast).toHaveBeenCalledWith({
       body: {
         title: 'OMO-Slim 0.9.11',
         message:
-          'v0.9.11 available, but auto-update failed to install it. Check logs or retry manually.',
+          'v0.9.11 available.\nVersion is pinned. Update your plugin config to apply.',
+        variant: 'info',
+        duration: 8000,
+      },
+    });
+  });
+
+  test('shows updater failure toast when prepare step fails', async () => {
+    checkerMocks.findPluginEntry.mockImplementation(() => ({
+      pinnedVersion: null,
+      isPinned: false,
+    }));
+    checkerMocks.getCachedVersion.mockImplementation(() => '0.9.1');
+    checkerMocks.getLatestVersion.mockImplementation(async () => '0.9.11');
+    updaterMocks.prepareArtifactUpdate.mockImplementation(async () => ({
+      ok: false,
+      reason: 'updater binary not found',
+    }));
+
+    const { createAutoUpdateCheckerHook } = await import(
+      `./index?test=${importCounter++}`
+    );
+    const { ctx, showToast } = createCtx();
+
+    const hook = createAutoUpdateCheckerHook(ctx as never);
+    hook.event({ event: { type: 'session.created', properties: {} } });
+    await waitForCalls(showToast, 2);
+
+    expect(showToast.mock.calls[1]?.[0]).toEqual({
+      body: {
+        title: 'OMO-Slim 0.9.11',
+        message:
+          'v0.9.11 available，但 updater 准备失败：updater binary not found',
         variant: 'error',
         duration: 8000,
       },

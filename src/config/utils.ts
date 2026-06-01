@@ -14,12 +14,20 @@ export function getAgentOverride(
   name: string,
 ): AgentOverrideConfig | undefined {
   const overrides = config?.agents ?? {};
-  return (
-    overrides[name] ??
-    overrides[
-      Object.keys(AGENT_ALIASES).find((k) => AGENT_ALIASES[k] === name) ?? ''
-    ]
-  );
+  if (overrides[name] !== undefined) {
+    return overrides[name];
+  }
+
+  for (const [alias, canonicalName] of Object.entries(AGENT_ALIASES)) {
+    if (canonicalName !== name) {
+      continue;
+    }
+    if (overrides[alias] !== undefined) {
+      return overrides[alias];
+    }
+  }
+
+  return undefined;
 }
 
 /**

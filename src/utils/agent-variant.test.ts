@@ -151,7 +151,7 @@ describe('resolveRuntimeAgentName', () => {
       },
     } as PluginConfig;
 
-    expect(resolveRuntimeAgentName(config, 'researcher')).toBe('explorer');
+    expect(resolveRuntimeAgentName(config, 'researcher')).toBe('librarian');
   });
 
   test('returns normalized name when no displayName match exists', () => {

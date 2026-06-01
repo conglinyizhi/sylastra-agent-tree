@@ -1,6 +1,7 @@
 import path from 'node:path';
 import type { PluginInput } from '@opencode-ai/plugin';
 import type { AgentName } from '../../config';
+import { AGENT_ALIASES } from '../../config';
 import {
   type ContextFile,
   deriveTaskSessionLabel,
@@ -61,7 +62,11 @@ const RESUMABLE_SESSIONS_START = '<resumable_sessions>';
 const RESUMABLE_SESSIONS_END = '</resumable_sessions>';
 
 function isAgentName(value: unknown): value is AgentName {
-  return typeof value === 'string' && AGENT_NAME_SET.has(value as AgentName);
+  if (typeof value !== 'string') {
+    return false;
+  }
+  const normalized = AGENT_ALIASES[value] ?? value;
+  return AGENT_NAME_SET.has(normalized as AgentName);
 }
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {

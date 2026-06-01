@@ -283,9 +283,7 @@ PATCH`;
 
     await expect(
       rewritePatchText(root, patchText, DEFAULT_OPTIONS),
-    ).rejects.toThrow(
-      'apply_patch verification failed: Failed to find expected lines',
-    );
+    ).rejects.toThrow('apply_patch verification failed: 在文件');
   });
 
   test('rewritePatchText no longer canonicalizes a dangerous indented case', async () => {
@@ -304,9 +302,7 @@ PATCH`;
 
     await expect(
       rewritePatchText(root, patchText, DEFAULT_OPTIONS),
-    ).rejects.toThrow(
-      'apply_patch verification failed: Failed to find expected lines',
-    );
+    ).rejects.toThrow('apply_patch verification failed: 在文件');
   });
 
   test('rewritePatchText rejects malformed @@ instead of silently sanitizing it', async () => {
@@ -327,7 +323,7 @@ garbage
         DEFAULT_OPTIONS,
       ),
     ).rejects.toThrow(
-      'apply_patch validation failed: Invalid patch format: unexpected line in patch chunk: garbage',
+      'apply_patch validation failed: 无效补丁格式：意外行 in patch chunk: garbage',
     );
   });
 
@@ -345,7 +341,7 @@ garbage
         DEFAULT_OPTIONS,
       ),
     ).rejects.toThrow(
-      'apply_patch validation failed: Invalid patch format: unexpected line in Add File body: garbage',
+      'apply_patch validation failed: 无效补丁格式：意外行 in Add File body: garbage',
     );
   });
 

@@ -1,4 +1,4 @@
-import type { AgentName } from '../config';
+import { AGENT_ALIASES } from '../config';
 
 export interface ContextFile {
   path: string;
@@ -10,14 +10,14 @@ export interface ContextFile {
 export interface RememberedTaskSession {
   alias: string;
   taskId: string;
-  agentType: AgentName;
+  agentType: string;
   label: string;
   contextFiles: ContextFile[];
   createdAt: number;
   lastUsedAt: number;
 }
 
-type SessionGroupMap = Map<AgentName, RememberedTaskSession[]>;
+type SessionGroupMap = Map<string, RememberedTaskSession[]>;
 
 const MIN_CONTEXT_FILE_LINES = 10;
 const MAX_CONTEXT_FILES_PER_SESSION = 8;
@@ -27,8 +27,12 @@ interface SessionManagerOptions {
   readContextMaxFiles?: number;
 }
 
-function aliasPrefix(agentType: AgentName): string {
-  switch (agentType) {
+function normalizeAgentType(agentType: string): string {
+  return AGENT_ALIASES[agentType] ?? agentType;
+}
+
+function aliasPrefix(agentType: string): string {
+  switch (normalizeAgentType(agentType)) {
     case 'librarian':
       return 'lib';
     case 'oracle':
@@ -43,6 +47,8 @@ function aliasPrefix(agentType: AgentName): string {
       return 'clr';
     case 'orchestrator':
       return 'orc';
+    default:
+      return 'agt';
   }
 }
 
@@ -53,7 +59,7 @@ function normalizeWhitespace(value: string): string {
 export function deriveTaskSessionLabel(input: {
   description?: string;
   prompt?: string;
-  agentType: AgentName;
+  agentType: string;
 }): string {
   const preferred = normalizeWhitespace(input.description ?? '');
   if (preferred) {
@@ -79,7 +85,7 @@ export class SessionManager {
   private readonly sessionsByParent = new Map<string, SessionGroupMap>();
   private readonly nextAliasIndexByParent = new Map<
     string,
-    Map<AgentName, number>
+    Map<string, number>
   >();
   private orderCounter = 0;
 
@@ -97,15 +103,12 @@ export class SessionManager {
   remember(input: {
     parentSessionId: string;
     taskId: string;
-    agentType: AgentName;
+    agentType: string;
     label: string;
   }): RememberedTaskSession {
     const now = this.nextOrder();
-    const group = this.getAgentGroup(
-      input.parentSessionId,
-      input.agentType,
-      true,
-    );
+    const agentType = normalizeAgentType(input.agentType);
+    const group = this.getAgentGroup(input.parentSessionId, agentType, true);
     if (!group) {
       throw new Error('Failed to initialize session group');
     }
@@ -118,9 +121,9 @@ export class SessionManager {
     }
 
     const remembered: RememberedTaskSession = {
-      alias: this.nextAlias(input.parentSessionId, input.agentType),
+      alias: this.nextAlias(input.parentSessionId, agentType),
       taskId: input.taskId,
-      agentType: input.agentType,
+      agentType,
       label: input.label,
       contextFiles: [],
       createdAt: now,
@@ -132,8 +135,12 @@ export class SessionManager {
     return remembered;
   }
 
-  markUsed(parentSessionId: string, agentType: AgentName, key: string): void {
-    const group = this.getAgentGroup(parentSessionId, agentType, false);
+  markUsed(parentSessionId: string, agentType: string, key: string): void {
+    const group = this.getAgentGroup(
+      parentSessionId,
+      normalizeAgentType(agentType),
+      false,
+    );
     const match = group?.find(
       (entry) => entry.alias === key || entry.taskId === key,
     );
@@ -143,19 +150,28 @@ export class SessionManager {
     }
   }
 
-  resolve(parentSessionId: string, agentType: AgentName, key: string) {
-    const group = this.getAgentGroup(parentSessionId, agentType, false);
+  resolve(parentSessionId: string, agentType: string, key: string) {
+    const group = this.getAgentGroup(
+      parentSessionId,
+      normalizeAgentType(agentType),
+      false,
+    );
     return group?.find((entry) => entry.alias === key || entry.taskId === key);
   }
 
-  drop(parentSessionId: string, agentType: AgentName, key: string): void {
-    const group = this.getAgentGroup(parentSessionId, agentType, false);
+  drop(parentSessionId: string, agentType: string, key: string): void {
+    const normalizedAgentType = normalizeAgentType(agentType);
+    const group = this.getAgentGroup(
+      parentSessionId,
+      normalizedAgentType,
+      false,
+    );
     if (!group) return;
 
     const next = group.filter(
       (entry) => entry.alias !== key && entry.taskId !== key,
     );
-    this.setAgentGroup(parentSessionId, agentType, next);
+    this.setAgentGroup(parentSessionId, normalizedAgentType, next);
   }
 
   dropTask(taskId: string): void {
@@ -262,7 +278,7 @@ export class SessionManager {
 
   private getAgentGroup(
     parentSessionId: string,
-    agentType: AgentName,
+    agentType: string,
     create: boolean,
   ): RememberedTaskSession[] | undefined {
     let groups = this.sessionsByParent.get(parentSessionId);
@@ -282,7 +298,7 @@ export class SessionManager {
 
   private setAgentGroup(
     parentSessionId: string,
-    agentType: AgentName,
+    agentType: string,
     entries: RememberedTaskSession[],
   ): void {
     const groups = this.sessionsByParent.get(parentSessionId);
@@ -300,16 +316,17 @@ export class SessionManager {
     groups.set(agentType, entries);
   }
 
-  private nextAlias(parentSessionId: string, agentType: AgentName): string {
+  private nextAlias(parentSessionId: string, agentType: string): string {
     let counters = this.nextAliasIndexByParent.get(parentSessionId);
     if (!counters) {
       counters = new Map();
       this.nextAliasIndexByParent.set(parentSessionId, counters);
     }
 
-    const next = (counters.get(agentType) ?? 0) + 1;
-    counters.set(agentType, next);
-    return `${aliasPrefix(agentType)}-${next}`;
+    const normalizedAgentType = normalizeAgentType(agentType);
+    const next = (counters.get(normalizedAgentType) ?? 0) + 1;
+    counters.set(normalizedAgentType, next);
+    return `${aliasPrefix(normalizedAgentType)}-${next}`;
   }
 
   private trimGroup(group: RememberedTaskSession[]): void {

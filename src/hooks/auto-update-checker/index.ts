@@ -1,16 +1,22 @@
 import type { PluginInput } from '@opencode-ai/plugin';
-import { crossSpawn } from '../../utils/compat';
 import { log } from '../../utils/logger';
-import { preparePackageUpdate, resolveInstallContext } from './cache';
 import {
-  extractChannel,
   findPluginEntry,
   getCachedVersion,
   getLatestVersion,
   getLocalDevVersion,
+  normalizeAutoUpdateConfig,
 } from './checker';
-import { CACHE_DIR, PACKAGE_NAME } from './constants';
+import { CACHE_DIR } from './constants';
 import type { AutoUpdateCheckerOptions } from './types';
+import {
+  activatePreparedUpdate,
+  getUpdaterRoot,
+  prepareArtifactUpdate,
+  readUpdaterState,
+  rollbackPreparedUpdate,
+  runPreparedHealthcheck,
+} from './updater';
 
 /**
  * Creates an OpenCode hook that checks for plugin updates when a new session is created.
@@ -22,7 +28,7 @@ export function createAutoUpdateCheckerHook(
   ctx: PluginInput,
   options: AutoUpdateCheckerOptions = {},
 ) {
-  const { autoUpdate = true } = options;
+  const resolvedAutoUpdate = normalizeAutoUpdateConfig(options.autoUpdate);
 
   let hasChecked = false;
 
@@ -39,6 +45,8 @@ export function createAutoUpdateCheckerHook(
       hasChecked = true;
 
       setTimeout(async () => {
+        await reconcilePreparedUpdate(ctx);
+
         const localDevVersion = getLocalDevVersion(ctx.directory);
 
         if (localDevVersion) {
@@ -46,12 +54,60 @@ export function createAutoUpdateCheckerHook(
           return;
         }
 
-        runBackgroundUpdateCheck(ctx, autoUpdate).catch((err) => {
+        runBackgroundUpdateCheck(ctx, resolvedAutoUpdate).catch((err) => {
           log('[auto-update-checker] Background update check failed:', err);
         });
       }, 0);
     },
   };
+}
+
+async function reconcilePreparedUpdate(ctx: PluginInput): Promise<void> {
+  const updaterState = readUpdaterState();
+  if (!updaterState || updaterState.status !== 'prepared') {
+    return;
+  }
+
+  showToast(
+    ctx,
+    'OMO-Slim Update',
+    `检测到已准备更新 ${updaterState.preparedVersion ?? ''}，正在激活。`,
+    'info',
+    8000,
+  );
+
+  const activated = await activatePreparedUpdate();
+  if (!activated.ok) {
+    showToast(
+      ctx,
+      'OMO-Slim Update',
+      `更新激活失败：${activated.reason ?? 'unknown error'}`,
+      'error',
+      8000,
+    );
+    return;
+  }
+
+  const healthy = await runPreparedHealthcheck();
+  if (!healthy.ok) {
+    await rollbackPreparedUpdate();
+    showToast(
+      ctx,
+      'OMO-Slim Update',
+      `更新健康检查失败，已回滚：${healthy.reason ?? 'unknown error'}`,
+      'error',
+      8000,
+    );
+    return;
+  }
+
+  showToast(
+    ctx,
+    'OMO-Slim Update Activated',
+    `已激活更新 ${updaterState.preparedVersion ?? ''}。`,
+    'success',
+    8000,
+  );
 }
 
 /**
@@ -61,7 +117,7 @@ export function createAutoUpdateCheckerHook(
  */
 async function runBackgroundUpdateCheck(
   ctx: PluginInput,
-  autoUpdate: boolean,
+  autoUpdate: ReturnType<typeof normalizeAutoUpdateConfig>,
 ): Promise<void> {
   const pluginInfo = findPluginEntry(ctx.directory);
   if (!pluginInfo) {
@@ -76,8 +132,8 @@ async function runBackgroundUpdateCheck(
     return;
   }
 
-  const channel = extractChannel(pluginInfo.pinnedVersion ?? currentVersion);
-  const latestVersion = await getLatestVersion(channel);
+  const channel = autoUpdate.channel;
+  const latestVersion = await getLatestVersion(autoUpdate);
   if (!latestVersion) {
     log(
       '[auto-update-checker] Failed to fetch latest version for channel:',
@@ -110,94 +166,51 @@ async function runBackgroundUpdateCheck(
     return;
   }
 
-  if (!autoUpdate) {
+  if (!autoUpdate.enabled || autoUpdate.policy === 'notify') {
     showToast(
       ctx,
       `OMO-Slim ${latestVersion}`,
-      `v${latestVersion} available. Auto-update is disabled.`,
+      `v${latestVersion} available. 当前为通知模式。`,
       'info',
       8000,
     );
-    log('[auto-update-checker] Auto-update disabled, notification only');
+    log('[auto-update-checker] Notification-only mode');
     return;
   }
 
-  const installDir = preparePackageUpdate(latestVersion, PACKAGE_NAME);
-  if (!installDir) {
+  showToast(
+    ctx,
+    `OMO-Slim ${latestVersion}`,
+    `v${latestVersion} available. 正在准备下次启动激活的 artifact 更新。`,
+    'info',
+    8000,
+  );
+
+  const prepared = await prepareArtifactUpdate(latestVersion, autoUpdate);
+  if (!prepared.ok) {
     showToast(
       ctx,
       `OMO-Slim ${latestVersion}`,
-      `v${latestVersion} available. Auto-update could not prepare the active install.`,
-      'info',
-      8000,
-    );
-    log('[auto-update-checker] Failed to prepare install root for auto-update');
-    return;
-  }
-
-  const installSuccess = await runBunInstallSafe(installDir);
-
-  if (installSuccess) {
-    showToast(
-      ctx,
-      'OMO-Slim Updated!',
-      `v${currentVersion} → v${latestVersion}\nRestart OpenCode to apply.`,
-      'success',
-      8000,
-    );
-    log(
-      `[auto-update-checker] Update installed: ${currentVersion} → ${latestVersion}`,
-    );
-  } else {
-    showToast(
-      ctx,
-      `OMO-Slim ${latestVersion}`,
-      `v${latestVersion} available, but auto-update failed to install it. Check logs or retry manually.`,
+      `v${latestVersion} available，但 updater 准备失败：${prepared.reason ?? 'unknown error'}`,
       'error',
       8000,
     );
-    log('[auto-update-checker] bun install failed; update not installed');
+    log('[auto-update-checker] updater prepare failed:', prepared.reason);
+    return;
   }
+
+  showToast(
+    ctx,
+    'OMO-Slim Update Prepared',
+    `v${currentVersion} → v${latestVersion}\n更新已准备，等待下次启动激活。`,
+    'success',
+    8000,
+  );
+  log('[auto-update-checker] artifact update prepared');
 }
 
 export function getAutoUpdateInstallDir(): string {
-  return resolveInstallContext()?.installDir ?? CACHE_DIR;
-}
-
-/**
- * Spawns a background process to run 'bun install'.
- * Includes a 60-second timeout to prevent stalling OpenCode.
- * @param installDir The directory whose package manager context should be refreshed.
- * @returns True if the installation succeeded within the timeout.
- */
-async function runBunInstallSafe(installDir: string): Promise<boolean> {
-  try {
-    const proc = crossSpawn(['bun', 'install'], {
-      cwd: installDir,
-      stdout: 'pipe',
-      stderr: 'pipe',
-    });
-
-    const timeoutPromise = new Promise<'timeout'>((resolve) =>
-      setTimeout(() => resolve('timeout'), 60_000),
-    );
-    const exitPromise = proc.exited.then(() => 'completed' as const);
-    const result = await Promise.race([exitPromise, timeoutPromise]);
-
-    if (result === 'timeout') {
-      try {
-        proc.kill();
-      } catch {
-        /* empty */
-      }
-      return false;
-    }
-
-    return proc.exitCode === 0;
-  } catch (err) {
-    log('[auto-update-checker] bun install error:', err);
-    return false;
-  }
+  return getUpdaterRoot() || CACHE_DIR;
 }
 
 /**

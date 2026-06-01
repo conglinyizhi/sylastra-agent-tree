@@ -37,8 +37,9 @@ describe('tui sidebar agents', () => {
   test('uses default-enabled fallback before models are persisted', () => {
     const agentNames = getSidebarAgentNames(createSnapshot({}));
 
-    expect(agentNames).toContain('explorer');
-    expect(agentNames).toContain('fixer');
+    expect(agentNames).toContain('librarian');
+    expect(agentNames).toContain('oracle');
+    expect(agentNames).toContain('sylastra');
     expect(agentNames).not.toContain('observer');
     expect(agentNames).not.toContain('council');
     expect(agentNames).not.toContain('councillor');

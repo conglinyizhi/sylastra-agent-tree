@@ -23,7 +23,7 @@ describe('getAgentOverride', () => {
       },
     } as PluginConfig;
 
-    const override = getAgentOverride(config, 'explorer');
+    const override = getAgentOverride(config, 'librarian');
 
     expect(override).toBeDefined();
     expect(override?.model).toBe('openai/gpt-5.4-mini');

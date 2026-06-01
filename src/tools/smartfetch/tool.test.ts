@@ -50,8 +50,8 @@ describe('smartfetch/tool', () => {
       ctx,
     );
 
-    expect(result).toContain('Required llms.txt content was unavailable.');
-    expect(result).toContain('Original URL: https://docs.example.com/page');
+    expect(result).toContain('所需的 llms.txt 内容不可用。');
+    expect(result).toContain('原始 URL：https://docs.example.com/page');
     expect(result).toContain('prefer_llms_txt: "always"');
     expect(result).toContain('used_llms_txt: false');
     expect(ctx.ask).toHaveBeenCalledTimes(1);

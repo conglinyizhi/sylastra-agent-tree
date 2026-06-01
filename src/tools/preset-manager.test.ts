@@ -155,13 +155,13 @@ describe('createPresetManager', () => {
       expect(text).toContain('Switched to preset "cheap"');
       expect(text).toContain('orchestrator');
       expect(text).toContain('anthropic/claude-3.5-haiku');
-      expect(text).toContain('explorer');
+      expect(text).toContain('librarian');
       expect(ctx.client.config.update).toHaveBeenCalledTimes(1);
       expect(ctx.client.config.update).toHaveBeenCalledWith({
         body: {
           agent: {
             orchestrator: { model: 'anthropic/claude-3.5-haiku' },
-            explorer: { model: 'openai/gpt-5.4-mini' },
+            librarian: { model: 'openai/gpt-5.4-mini' },
           },
         },
       });
@@ -170,8 +170,8 @@ describe('createPresetManager', () => {
     test('updates the TUI snapshot after a successful preset switch', async () => {
       recordTuiAgentModels({
         agentModels: {
-          explorer: 'openai/gpt-5.4-mini',
-          fixer: 'openai/gpt-5.4-mini',
+          librarian: 'openai/gpt-5.4-mini',
+          sylastra: 'openai/gpt-5.4-mini',
         },
       });
 
@@ -193,9 +193,9 @@ describe('createPresetManager', () => {
       );
 
       expect(readTuiSnapshot().agentModels).toEqual({
-        explorer: 'openai/gpt-5.5',
-        fixer: 'openai/gpt-5.4-mini',
+        librarian: 'openai/gpt-5.5',
         orchestrator: 'anthropic/claude-3.5-haiku',
+        sylastra: 'openai/gpt-5.4-mini',
       });
     });
 
@@ -297,7 +297,7 @@ describe('createPresetManager', () => {
     test('handles config.update error gracefully', async () => {
       recordTuiAgentModels({
         agentModels: {
-          explorer: 'openai/gpt-5.4-mini',
+          librarian: 'openai/gpt-5.4-mini',
         },
       });
 
@@ -322,7 +322,7 @@ describe('createPresetManager', () => {
       expect(text).toContain('Failed to switch preset');
       expect(text).toContain('Server unavailable');
       expect(readTuiSnapshot().agentModels).toEqual({
-        explorer: 'openai/gpt-5.4-mini',
+        librarian: 'openai/gpt-5.4-mini',
       });
     });
 

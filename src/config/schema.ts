@@ -186,6 +186,25 @@ export const InterviewConfigSchema = z.object({
 
 export type InterviewConfig = z.infer<typeof InterviewConfigSchema>;
 
+export const AutoUpdateConfigSchema = z.object({
+  enabled: z.boolean().optional(),
+  policy: z.enum(['notify', 'prepare']).optional(),
+  channel: z.enum(['stable', 'beta']).optional(),
+  cohort: z.string().min(1).optional(),
+  manifestUrl: z.string().url().optional(),
+  allowPrerelease: z.boolean().optional(),
+  healthcheck: z
+    .object({
+      enabled: z.boolean().optional(),
+    })
+    .optional(),
+  rollback: z
+    .object({
+      enabled: z.boolean().optional(),
+    })
+    .optional(),
+});
+
 export const SessionManagerConfigSchema = z.object({
   maxSessionsPerAgent: z.number().int().min(1).max(10).default(2),
   readContextMinLines: z.number().int().min(0).max(1000).default(10),
@@ -322,9 +341,11 @@ export const PluginConfigSchema = z
     scoringEngineVersion: z.enum(['v1', 'v2-shadow', 'v2']).optional(),
     balanceProviderUsage: z.boolean().optional(),
     autoUpdate: z
-      .boolean()
+      .union([z.boolean(), AutoUpdateConfigSchema])
       .optional()
-      .describe('为 false 时禁用插件更新的自动安装。默认为 true。'),
+      .describe(
+        '自动更新配置。可设为 false 关闭自动准备，也可设为对象以控制 channel、policy 和 manifest。',
+      ),
     manualPlan: ManualPlanSchema.optional(),
     presets: z.record(z.string(), PresetSchema).optional(),
     agents: z.record(z.string(), AgentOverrideConfigSchema).optional(),
@@ -350,7 +371,10 @@ export const PluginConfigSchema = z
     todoContinuation: TodoContinuationConfigSchema.optional(),
     subtask: SubtaskConfigSchema.optional(),
     fallback: FailoverConfigSchema.optional(),
-    composer: CouncilConfigSchema.optional(),
+    council: CouncilConfigSchema.optional(),
+    composer: CouncilConfigSchema.optional().describe(
+      '已弃用。请改用 "council" 配置块。',
+    ),
   })
   .superRefine((value, ctx) => {
     if (value.agents) {

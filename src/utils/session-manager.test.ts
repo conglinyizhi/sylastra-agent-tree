@@ -26,9 +26,9 @@ describe('SessionManager', () => {
     });
 
     const prompt = manager.formatForPrompt('parent-1');
-    expect(prompt).toContain('exp-1 first thread');
-    expect(prompt).toContain('exp-3 third thread');
-    expect(prompt).not.toContain('exp-2 second thread');
+    expect(prompt).toContain('lib-1 first thread');
+    expect(prompt).toContain('lib-3 third thread');
+    expect(prompt).not.toContain('lib-2 second thread');
   });
 
   test('clears parent-scoped sessions', () => {
@@ -65,9 +65,9 @@ describe('SessionManager', () => {
     ]);
 
     const prompt = manager.formatForPrompt('parent-1');
-    expect(prompt).toContain('exp-1 session manager');
+    expect(prompt).toContain('lib-1 session manager');
     expect(prompt).toContain(
-      'Context read by exp-1: src/multiplexer/session-manager.ts (24 lines), src/index.ts (42 lines)',
+      'Context read by lib-1: src/multiplexer/session-manager.ts (24 lines), src/index.ts (42 lines)',
     );
   });
 

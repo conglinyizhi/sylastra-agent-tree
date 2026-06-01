@@ -112,7 +112,7 @@ describe('apply-patch/resolution', () => {
 
     expect(() =>
       locateChunk([' alpha  '], 'sample.txt', chunk, 0, DEFAULT_OPTIONS),
-    ).toThrow('Failed to find expected lines');
+    ).toThrow('找不到预期的行');
   });
 
   test('locateChunk no longer canonicalizes a dangerous indented case', () => {
@@ -129,7 +129,7 @@ describe('apply-patch/resolution', () => {
         0,
         DEFAULT_OPTIONS,
       ),
-    ).toThrow('Failed to find expected lines');
+    ).toThrow('找不到预期的行');
   });
 
   test('locateChunk preserves a real final blank line when it exists in the file', () => {
@@ -158,7 +158,7 @@ describe('apply-patch/resolution', () => {
 
     expect(() =>
       locateChunk(['alpha'], 'sample.txt', chunk, 0, DEFAULT_OPTIONS),
-    ).toThrow('Failed to find expected lines');
+    ).toThrow('找不到预期的行');
   });
 
   test('deriveNewContent resolves EOF updates', async () => {
@@ -307,7 +307,7 @@ describe('apply-patch/resolution', () => {
         ],
         DEFAULT_OPTIONS,
       ),
-    ).rejects.toThrow('Failed to find insertion anchor');
+    ).rejects.toThrow('找不到插入锚点');
   });
 
   test('deriveNewContent fails if a pure insertion has an ambiguous anchor', async () => {
@@ -331,7 +331,7 @@ describe('apply-patch/resolution', () => {
         ],
         DEFAULT_OPTIONS,
       ),
-    ).rejects.toThrow('Insertion anchor was ambiguous');
+    ).rejects.toThrow('插入锚点存在歧义');
   });
 
   test('deriveNewContent fails if a tolerant insertion anchor is ambiguous', async () => {
@@ -351,7 +351,7 @@ describe('apply-patch/resolution', () => {
         ],
         DEFAULT_OPTIONS,
       ),
-    ).rejects.toThrow('Insertion anchor was ambiguous');
+    ).rejects.toThrow('插入锚点存在歧义');
   });
 
   test('deriveNewContent fails if a later chunk remains ambiguous', async () => {
@@ -378,7 +378,7 @@ describe('apply-patch/resolution', () => {
         ],
         DEFAULT_OPTIONS,
       ),
-    ).rejects.toThrow('ambiguous');
+    ).rejects.toThrow('存在歧义');
   });
 
   test('deriveNewContent rescues a stale EOF and preserves the final update', async () => {

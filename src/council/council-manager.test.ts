@@ -121,7 +121,7 @@ describe('CouncilManager', () => {
       );
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('All councillors failed or timed out');
+      expect(result.error).toBe('所有委员均失败或超时');
       expect(result.councillorResults).toHaveLength(2);
       expect(result.councillorResults.every((r) => r.status === 'failed')).toBe(
         true,
@@ -396,12 +396,10 @@ describe('CouncilManager', () => {
       );
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('All councillors failed or timed out');
+      expect(result.error).toBe('所有委员均失败或超时');
       expect(result.councillorResults).toHaveLength(1);
       expect(result.councillorResults[0].status).toBe('failed');
-      expect(result.councillorResults[0].error).toContain(
-        'Invalid model format',
-      );
+      expect(result.councillorResults[0].error).toContain('无效的模型格式');
     });
 
     test('extracts text and reasoning content from councillor responses', async () => {
@@ -495,9 +493,7 @@ describe('CouncilManager', () => {
       );
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain(
-        'Preset "empty" has no councillors configured',
-      );
+      expect(result.error).toContain('预设 "empty" 未配置任何委员');
       expect(result.councillorResults).toHaveLength(0);
     });
 
@@ -522,8 +518,8 @@ describe('CouncilManager', () => {
       );
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Preset "architect" does not exist');
-      expect(result.error).toContain('Omit the preset parameter');
+      expect(result.error).toContain('预设 "architect" 不存在');
+      expect(result.error).toContain('省略 preset 参数');
       expect(result.error).toContain('default, roled');
       expect(result.councillorResults).toHaveLength(0);
     });
@@ -547,7 +543,7 @@ describe('CouncilManager', () => {
       );
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Subagent depth exceeded');
+      expect(result.error).toBe('子代理深度超出限制');
       expect(result.councillorResults).toHaveLength(0);
     });
 
@@ -839,12 +835,10 @@ describe('CouncilManager', () => {
       );
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('All councillors failed or timed out');
+      expect(result.error).toBe('所有委员均失败或超时');
       expect(result.councillorResults).toHaveLength(1);
       expect(result.councillorResults[0].status).toBe('failed');
-      expect(result.councillorResults[0].error).toContain(
-        'Empty response from provider',
-      );
+      expect(result.councillorResults[0].error).toContain('提供者返回空响应');
     });
 
     test('returns empty councillor result when retry_on_empty is false', async () => {
@@ -890,9 +884,7 @@ describe('CouncilManager', () => {
       // Council succeeds because empty is accepted as valid response
       // The formatted result contains the message about all councillors failing
       expect(result.success).toBe(true);
-      expect(result.result).toContain(
-        'All councillors failed to produce output',
-      );
+      expect(result.result).toContain('所有评审员均未产生输出');
       expect(result.result).toContain('test prompt');
     });
   });

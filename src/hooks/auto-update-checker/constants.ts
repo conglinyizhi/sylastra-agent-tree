@@ -3,8 +3,10 @@ import * as path from 'node:path';
 import { getOpenCodeConfigPaths } from '../../cli/config-manager';
 
 export const PACKAGE_NAME = 'sylastra-agent-tree';
-export const NPM_REGISTRY_URL = `https://registry.npmjs.org/-/package/${PACKAGE_NAME}/dist-tags`;
-export const NPM_FETCH_TIMEOUT = 5000;
+export const DEFAULT_MANIFEST_URL =
+  'https://github.com/conglinyizhi/sylastra-agent-tree/releases/latest/download/manifest.json';
+export const MANIFEST_FETCH_TIMEOUT = 5000;
+export const UPDATER_BINARY_NAME = 'sylastra-updater';
 
 function getCacheDir(): string {
   if (process.platform === 'win32') {
@@ -15,6 +17,7 @@ function getCacheDir(): string {
 
 /** The directory used by OpenCode to cache node_modules for plugins. */
 export const CACHE_DIR = getCacheDir();
+export const ARTIFACT_UPDATE_ROOT = path.join(CACHE_DIR, PACKAGE_NAME);
 
 /** Path to this plugin's package.json within the OpenCode cache. */
 export const INSTALLED_PACKAGE_JSON = path.join(

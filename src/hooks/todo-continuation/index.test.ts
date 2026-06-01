@@ -101,8 +101,8 @@ describe('createTodoContinuationHook', () => {
 
       const result = await hook.tool.auto_continue.execute({ enabled: true });
 
-      expect(result).toContain('Auto-continue enabled');
-      expect(result).toContain('up to 5');
+      expect(result).toContain('已启用自动继续');
+      expect(result).toContain('最多 5 次');
     });
 
     test('calling auto_continue execute with { enabled: false } disables', async () => {
@@ -111,7 +111,7 @@ describe('createTodoContinuationHook', () => {
 
       const result = await hook.tool.auto_continue.execute({ enabled: false });
 
-      expect(result).toBe('Auto-continue disabled.');
+      expect(result).toBe('已禁用自动继续。');
     });
   });
 
@@ -1726,7 +1726,7 @@ describe('createTodoContinuationHook', () => {
 
       const result = await hook.tool.auto_continue.execute({ enabled: true });
 
-      expect(result).toContain('up to 5');
+      expect(result).toContain('最多 5 次');
 
       // Test default cooldown - we'll just verify it waits before calling
       await hook.handleEvent({

@@ -15,10 +15,11 @@ describe('createBuiltinMcps', () => {
     const mcps = createBuiltinMcps([]);
     const names = Object.keys(mcps);
 
-    expect(names.length).toBe(3);
+    expect(names.length).toBe(4);
     expect(names).toContain('websearch');
     expect(names).toContain('context7');
     expect(names).toContain('grep_app');
+    expect(names).toContain('better-edit-tools');
   });
 
   test('excludes single disabled MCP', () => {
@@ -37,11 +38,17 @@ describe('createBuiltinMcps', () => {
     expect(names).not.toContain('websearch');
     expect(names).not.toContain('grep_app');
     expect(names).toContain('context7');
-    expect(names.length).toBe(1);
+    expect(names).toContain('better-edit-tools');
+    expect(names.length).toBe(2);
   });
 
   test('excludes all MCPs when all disabled', () => {
-    const mcps = createBuiltinMcps(['websearch', 'context7', 'grep_app']);
+    const mcps = createBuiltinMcps([
+      'websearch',
+      'context7',
+      'grep_app',
+      'better-edit-tools',
+    ]);
     const names = Object.keys(mcps);
 
     expect(names.length).toBe(0);
@@ -52,10 +59,11 @@ describe('createBuiltinMcps', () => {
     const names = Object.keys(mcps);
 
     // All valid MCPs should still be present
-    expect(names.length).toBe(3);
+    expect(names.length).toBe(4);
     expect(names).toContain('websearch');
     expect(names).toContain('context7');
     expect(names).toContain('grep_app');
+    expect(names).toContain('better-edit-tools');
   });
 
   test('MCP configs have required properties', () => {

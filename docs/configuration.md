@@ -103,7 +103,7 @@ Presets can also be switched at runtime without restarting using the `/preset` c
 | `agents.<customAgent>.orchestratorPrompt` | string | — | Exact `@agent` block injected into the orchestrator prompt; must start with `@<agent-name>` |
 | `agents.<agent>.displayName` | string | — | Custom user-facing alias for the agent in the active config |
 | `disabled_agents` | string[] | `["observer"]` | Agent names to disable globally. Set to `[]` to enable Observer; this is global, not per-preset |
-| `autoUpdate` | boolean | `true` | Automatically install plugin updates in the background; set to `false` for notification-only mode |
+| `autoUpdate` | boolean\|object | `true` | Artifact-based update config. `false` = notification-only; object mode controls channel/policy/manifest |
 | `multiplexer.type` | string | `"none"` | Multiplexer mode: `auto`, `tmux`, `zellij`, or `none` |
 | `multiplexer.layout` | string | `"main-vertical"` | Layout preset: `main-vertical`, `main-horizontal`, `tiled`, `even-horizontal`, `even-vertical` |
 | `multiplexer.main_pane_size` | number | `60` | Main pane size as percentage (20–80) |
@@ -155,10 +155,12 @@ Presets can also be switched at runtime without restarting using the `/preset` c
   `council.presets.<name>.<councillor>.model`.
 - Deprecated `council.master*` fields should not be used in new configs.
 
-### Manual Update Mode
+### Auto Update
+
+`autoUpdate` now targets the artifact updater flow rather than `bun install`.
 
 Set `autoUpdate` to `false` if you want update notifications without automatic
-`bun install` runs.
+prepare steps.
 
 ```jsonc
 {
@@ -169,6 +171,34 @@ Set `autoUpdate` to `false` if you want update notifications without automatic
 With `autoUpdate` set to `false`, this becomes notification-only mode: you'll
 see that a new version is available, but the plugin won't install it
 automatically.
+
+You can also use object mode:
+
+```jsonc
+{
+  "autoUpdate": {
+    "enabled": true,
+    "policy": "prepare",
+    "channel": "stable",
+    "manifestUrl": "https://github.com/conglinyizhi/sylastra-agent-tree/releases/latest/download/manifest.json",
+    "cohort": "default"
+  }
+}
+```
+
+Supported fields:
+
+- `enabled`: master switch
+- `policy`: `notify` or `prepare`
+- `channel`: `stable` or `beta`
+- `manifestUrl`: release manifest URL
+- `cohort`: cohort label reserved for rollout grouping
+- `allowPrerelease`: reserved compatibility flag
+
+Current behavior:
+
+- `notify`: 仅提示新版本
+- `prepare`: 调用 `sylastra-updater prepare`，为下次启动激活准备状态目录
 
 > Pinned plugin entries in `opencode.json` (for example
 > `"sylastra-agent-tree@1.0.1"`) are the true version lock. Those stay pinned

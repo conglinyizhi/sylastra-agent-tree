@@ -14,10 +14,9 @@
   - 当 `autoUpdate=false` 时的手动通知，
   - 或自动更新执行路径。
 - `checker.ts` 是核心发现层，导出：
-  - `findPluginEntry`、`extractChannel`、`getCachedVersion`、`getLocalDevVersion`、`getLatestVersion`、`updatePinnedVersion`。
+  - `findPluginEntry`、`extractChannel`、`getCachedVersion`、`getLocalDevVersion`、`getLatestVersion`。
 - `updater.ts` 拥有 TypeScript 侧 updater bridge，负责定位二进制、读取 state、调用 `prepare|activate|healthcheck|rollback`。
-- `cache.ts` 仍保留为旧包管理器安装语义的兼容遗留模块，不再参与主更新路径。
-- `constants.ts` 集中安装和配置路径常量（`CACHE_DIR`、`PACKAGE_NAME`、`NPM_REGISTRY_URL`、`NPM_FETCH_TIMEOUT`、配置路径别名）。
+- `constants.ts` 集中安装和配置路径常量（`CACHE_DIR`、`ARTIFACT_UPDATE_ROOT`、`PACKAGE_NAME`、manifest 相关常量、配置路径别名）。
 - `types.ts` 声明 `AutoUpdateCheckerOptions`、`PluginEntryInfo`、配置/包类型信封。
 
 ## 流程

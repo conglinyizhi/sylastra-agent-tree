@@ -19,14 +19,6 @@ function getCacheDir(): string {
 export const CACHE_DIR = getCacheDir();
 export const ARTIFACT_UPDATE_ROOT = path.join(CACHE_DIR, PACKAGE_NAME);
 
-/** Path to this plugin's package.json within the OpenCode cache. */
-export const INSTALLED_PACKAGE_JSON = path.join(
-  CACHE_DIR,
-  'node_modules',
-  PACKAGE_NAME,
-  'package.json',
-);
-
 const configPaths = getOpenCodeConfigPaths();
 
 /** Primary OpenCode configuration file path (standard JSON). */

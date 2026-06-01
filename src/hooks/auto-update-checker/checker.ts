@@ -5,7 +5,6 @@ import { stripJsonComments } from '../../cli/config-manager';
 import { log } from '../../utils/logger';
 import {
   DEFAULT_MANIFEST_URL,
-  INSTALLED_PACKAGE_JSON,
   MANIFEST_FETCH_TIMEOUT,
   PACKAGE_NAME,
   USER_OPENCODE_CONFIG,
@@ -279,11 +278,10 @@ export function findPluginEntry(directory: string): PluginEntryInfo | null {
   return null;
 }
 
-const _cachedLocalVersion: string | null = null;
 let cachedPackageVersion: string | null = null;
 
 /**
- * Resolves the installed version from node_modules, with memoization.
+ * Resolves the active runtime version with memoization.
  */
 export function getCachedVersion(): string | null {
   if (cachedPackageVersion) return cachedPackageVersion;
@@ -302,70 +300,7 @@ export function getCachedVersion(): string | null {
     /* empty */
   }
 
-  try {
-    if (fs.existsSync(INSTALLED_PACKAGE_JSON)) {
-      const content = fs.readFileSync(INSTALLED_PACKAGE_JSON, 'utf-8');
-      const pkg = JSON.parse(content) as PackageJson;
-      if (pkg.version) {
-        cachedPackageVersion = pkg.version;
-        return pkg.version;
-      }
-    }
-  } catch (err) {
-    log(
-      '[auto-update-checker] Failed to resolve version from current directory:',
-      err,
-    );
-  }
-
   return null;
-}
-
-/**
- * Safely updates a pinned version in the configuration file.
- * It attempts to replace the exact plugin string to preserve comments and formatting.
- */
-export function updatePinnedVersion(
-  configPath: string,
-  oldEntry: string,
-  newVersion: string,
-): boolean {
-  try {
-    if (!fs.existsSync(configPath)) return false;
-
-    const content = fs.readFileSync(configPath, 'utf-8');
-    const newEntry = `${PACKAGE_NAME}@${newVersion}`;
-
-    // Check if the old entry actually exists as a quoted string
-    const escapedOldEntry = oldEntry.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const entryRegex = new RegExp(`(["'])${escapedOldEntry}\\1`, 'g');
-
-    if (!entryRegex.test(content)) {
-      log(
-        `[auto-update-checker] Entry "${oldEntry}" not found in ${configPath}`,
-      );
-      return false;
-    }
-
-    // Perform the replacement
-    const updatedContent = content.replace(entryRegex, `$1${newEntry}$1`);
-
-    if (updatedContent === content) {
-      return false;
-    }
-
-    fs.writeFileSync(configPath, updatedContent, 'utf-8');
-    log(
-      `[auto-update-checker] Updated ${configPath}: ${oldEntry} → ${newEntry}`,
-    );
-    return true;
-  } catch (err) {
-    log(
-      `[auto-update-checker] Failed to update config file ${configPath}:`,
-      err,
-    );
-    return false;
-  }
 }
 
 /**

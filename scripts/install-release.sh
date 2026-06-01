@@ -1,28 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ──────────────────────────────────────────────
-# sylastra-agent-tree  release installer
-#
-# Usage:
-#   Run from the extracted release directory:
-#     ./install.sh
-#
-#   Or from anywhere with the release tarball extracted:
-#     bash /path/to/sylastra-agent-tree-<version>/install.sh
-#
-# What it does:
-#   1. Detects OS and architecture
-#   2. Installs the plugin into ~/.local/share/sylastra-agent-tree/
-#   3. Symlinks better-edit-tools binary into the plugin's bin directory
-#   4. Registers the plugin in OpenCode config
-# ──────────────────────────────────────────────
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_DIR="${HOME}/.local/share/sylastra-agent-tree"
 BIN_DIR="${INSTALL_DIR}/bin"
 OPENCODE_CONFIG="${HOME}/.config/opencode/opencode.jsonc"
-PLUGIN_NAME="sylastra-agent-tree"
+PLUGIN_FILE_URL="file://${INSTALL_DIR}"
 
 # ── Utils ────────────────────────────────────
 GREEN='\033[32m'
@@ -35,11 +18,11 @@ NC='\033[0m'
 info()  { echo -e "${BLUE}[i]${NC} $1"; }
 ok()    { echo -e "${GREEN}[ok]${NC} $1"; }
 warn()  { echo -e "${YELLOW}[!]${NC} $1"; }
-step()  { echo -e "${DIM}[$1/5]${NC} $2"; }
+step()  { echo -e "${DIM}[$1/4]${NC} $2"; }
 
 # ── Platform detection ───────────────────────
 detect_platform() {
-  local os arch suffix
+  local os arch
 
   case "$(uname -s)" in
     Linux)  os="linux"  ;;
@@ -53,17 +36,33 @@ detect_platform() {
     *)            echo "Unsupported arch: $(uname -m)"; exit 1 ;;
   esac
 
-  if [ "$os" = "linux" ] && [ "$arch" = "amd64" ]; then
-    suffix="${os}-${arch}"
-  elif [ "$os" = "linux" ] && [ "$arch" = "arm64" ]; then
-    suffix="${os}-${arch}"
-  elif [ "$os" = "darwin" ] && [ "$arch" = "amd64" ]; then
-    suffix="${os}-${arch}"
-  elif [ "$os" = "darwin" ] && [ "$arch" = "arm64" ]; then
-    suffix="${os}-${arch}"
+  echo "${os}-${arch}"
+}
+
+register_without_jq() {
+  mkdir -p "$(dirname "${OPENCODE_CONFIG}")"
+
+  if [ ! -f "${OPENCODE_CONFIG}" ]; then
+    cat > "${OPENCODE_CONFIG}" <<EOF
+{
+  "plugin": [
+    "${PLUGIN_FILE_URL}"
+  ]
+}
+EOF
+    ok "Created ${OPENCODE_CONFIG} with plugin entry"
+    return 0
   fi
 
-  echo "$suffix"
+  if grep -q "${INSTALL_DIR}" "${OPENCODE_CONFIG}" 2>/dev/null || grep -q "${PLUGIN_FILE_URL}" "${OPENCODE_CONFIG}" 2>/dev/null; then
+    info "Plugin already registered in ${OPENCODE_CONFIG}"
+    return 0
+  fi
+
+  warn "Plugin files were installed, but jq is not available to modify existing OpenCode config."
+  warn "Please add this plugin entry manually:"
+  echo "  ${BLUE}${PLUGIN_FILE_URL}${NC}"
+  return 0
 }
 
 # ── Main ─────────────────────────────────────
@@ -97,7 +96,7 @@ main() {
 
   ok "Plugin files installed"
 
-  step 4 "Installing better-edit-tools..."
+  step 3 "Installing better-edit-tools..."
   if [ -f "${SCRIPT_DIR}/bin/${BET_BINARY}" ]; then
     cp "${SCRIPT_DIR}/bin/${BET_BINARY}" "${BIN_DIR}/better-edit-tools"
     chmod +x "${BIN_DIR}/better-edit-tools"
@@ -111,41 +110,15 @@ main() {
     warn "You can install it manually from: https://github.com/conglinyizhi/better-edit-tools-mcp"
   fi
 
-  step 5 "Registering plugin in OpenCode..."
-  mkdir -p "$(dirname "${OPENCODE_CONFIG}")"
-
-  local plugin_path="${INSTALL_DIR}"
-
-  if [ -f "${OPENCODE_CONFIG}" ]; then
-    # Check if already registered
-    if grep -q "${plugin_path}" "${OPENCODE_CONFIG}" 2>/dev/null; then
-      info "Plugin already registered in ${OPENCODE_CONFIG}"
+  step 4 "Registering plugin in OpenCode..."
+  if [ -x "${INSTALL_DIR}/dist/cli/index.js" ]; then
+    if command -v bun >/dev/null 2>&1; then
+      bun "${INSTALL_DIR}/dist/cli/index.js" install --no-tui --skills=no || register_without_jq
     else
-      # Try to add plugin to existing config using jq if available
-      if command -v jq &>/dev/null; then
-        local tmp
-        tmp="$(mktemp)"
-        jq --arg plugin "${plugin_path}" \
-          '.plugin += [$plugin]' \
-          "${OPENCODE_CONFIG}" > "${tmp}" \
-          && mv "${tmp}" "${OPENCODE_CONFIG}"
-        ok "Plugin added to ${OPENCODE_CONFIG}"
-      else
-        echo ""
-        warn "Please add this to your ${OPENCODE_CONFIG}:"
-        echo "  ${BLUE}\"plugin\": [\"file://${plugin_path}\"]${NC}"
-        echo ""
-      fi
+      node "${INSTALL_DIR}/dist/cli/index.js" install --no-tui --skills=no || register_without_jq
     fi
   else
-    echo '{}' > "${OPENCODE_CONFIG}"
-    local tmp
-    tmp="$(mktemp)"
-    jq --arg plugin "${plugin_path}" \
-      '.plugin += [$plugin]' \
-      "${OPENCODE_CONFIG}" > "${tmp}" \
-      && mv "${tmp}" "${OPENCODE_CONFIG}"
-    ok "Created ${OPENCODE_CONFIG} with plugin entry"
+    register_without_jq
   fi
 
   echo ""

@@ -1,7 +1,11 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, test } from 'bun:test';
-import { generateLiteConfig, MODEL_MAPPINGS } from './providers';
+import {
+  generateLiteConfig,
+  MODEL_MAPPINGS,
+  SINGLE_MODEL_PRESET,
+} from './providers';
 
 describe('providers', () => {
   test('MODEL_MAPPINGS includes supported providers', () => {
@@ -84,6 +88,22 @@ describe('providers', () => {
     expect(agents.fixer.model).toBe('opencode-go/deepseek-v4-flash');
     expect(agents.fixer.variant).toBe('high');
     expect(agents.observer.model).toBe('opencode-go/kimi-k2.6');
+  });
+
+  test('generateLiteConfig can generate a single-model preset', () => {
+    const config = generateLiteConfig({
+      hasTmux: false,
+      installCustomSkills: false,
+      model: 'openai/gpt-5.5',
+      reset: false,
+    });
+
+    expect(config.preset).toBe(SINGLE_MODEL_PRESET);
+    const agents = (config.presets as any)[SINGLE_MODEL_PRESET];
+    expect(agents.orchestrator.model).toBe('openai/gpt-5.5');
+    expect(agents.oracle.model).toBe('openai/gpt-5.5');
+    expect(agents.observer.model).toBe('openai/gpt-5.5');
+    expect(agents.council.model).toBe('openai/gpt-5.5');
   });
 
   test('generateLiteConfig rejects unsupported preset', () => {

@@ -15,6 +15,7 @@ import {
 } from './config-manager';
 import { CUSTOM_SKILLS, installCustomSkill } from './custom-skills';
 import { getExistingLiteConfigPath } from './paths';
+import { SINGLE_MODEL_PRESET } from './providers';
 import type { ConfigMergeResult, InstallArgs, InstallConfig } from './types';
 
 // Colors
@@ -150,7 +151,9 @@ async function runInstall(config: InstallConfig): Promise<number> {
 
   printHeader(isUpdate);
 
-  let totalSteps = 6;
+  let totalSteps = 4;
+  if (!config.skipPluginRegister) totalSteps += 1;
+  if (!config.skipConfig) totalSteps += 3;
   if (config.installCustomSkills) totalSteps += 1;
   totalSteps += 1;
 
@@ -163,12 +166,17 @@ async function runInstall(config: InstallConfig): Promise<number> {
     const { ok } = await checkOpenCodeInstalled();
     if (!ok) return 1;
   }
-  printStep(step++, totalSteps, 'Adding sylastra-agent-tree plugin...');
-  if (config.dryRun) {
-    printInfo('Dry run mode - skipping plugin installation');
-  } else {
-    const pluginResult = await addPluginToOpenCodeConfig();
-    if (!handleStepResult(pluginResult, 'Plugin added')) return 1;
+  let pluginRegisterResult: ConfigMergeResult | null = null;
+
+  if (!config.skipPluginRegister) {
+    printStep(step++, totalSteps, 'Registering sylastra-agent-tree plugin...');
+    if (config.dryRun) {
+      printInfo('Dry run mode - skipping plugin registration');
+    } else {
+      pluginRegisterResult = await addPluginToOpenCodeConfig();
+      if (!handleStepResult(pluginRegisterResult, 'Plugin registered'))
+        return 1;
+    }
   }
 
   printStep(step++, totalSteps, 'Adding TUI version badge...');
@@ -183,62 +191,68 @@ async function runInstall(config: InstallConfig): Promise<number> {
     }
   }
 
-  printStep(step++, totalSteps, 'Warming OpenCode plugin cache...');
-  if (config.dryRun) {
-    printInfo('Dry run mode - skipping cache warm-up');
-  } else {
-    const cacheResult = await warmOpenCodePluginCache();
-    if (cacheResult === null) {
-      printInfo('Local development install - cache warm-up not required');
-    } else if (!cacheResult.success) {
-      printInfo(`Skipped cache warm-up: ${cacheResult.error}`);
+  if (!config.skipConfig) {
+    printStep(step++, totalSteps, 'Warming OpenCode plugin cache...');
+    if (config.dryRun) {
+      printInfo('Dry run mode - skipping cache warm-up');
     } else {
-      handleStepResult(cacheResult, 'OpenCode cache warmed');
+      const cacheResult = await warmOpenCodePluginCache();
+      if (cacheResult === null) {
+        printInfo('Local development install - cache warm-up not required');
+      } else if (!cacheResult.success) {
+        printInfo(`Skipped cache warm-up: ${cacheResult.error}`);
+      } else {
+        handleStepResult(cacheResult, 'OpenCode cache warmed');
+      }
     }
-  }
 
-  printStep(step++, totalSteps, 'Disabling OpenCode default agents...');
-  if (config.dryRun) {
-    printInfo('Dry run mode - skipping agent disabling');
-  } else {
-    const agentResult = disableDefaultAgents();
-    if (!handleStepResult(agentResult, 'Default agents disabled')) return 1;
-  }
-
-  printStep(step++, totalSteps, 'Enabling OpenCode LSP integration...');
-  if (config.dryRun) {
-    printInfo('Dry run mode - skipping LSP configuration');
-  } else {
-    const lspResult = enableLspByDefault();
-    if (!handleStepResult(lspResult, 'LSP enabled')) return 1;
-  }
-
-  printStep(step++, totalSteps, 'Writing sylastra-agent-tree configuration...');
-  if (config.dryRun) {
-    const liteConfig = generateLiteConfig(config);
-    printInfo('Dry run mode - configuration that would be written:');
-    console.log(`\n${JSON.stringify(liteConfig, null, 2)}\n`);
-  } else {
-    const configPath = getExistingLiteConfigPath();
-    const configExists = existsSync(configPath);
-
-    if (configExists && !config.reset) {
-      printInfo(
-        `Configuration already exists at ${configPath}. ` +
-          'Use --reset to overwrite.',
-      );
+    printStep(step++, totalSteps, 'Disabling OpenCode default agents...');
+    if (config.dryRun) {
+      printInfo('Dry run mode - skipping agent disabling');
     } else {
-      const liteResult = writeLiteConfig(
-        config,
-        configExists ? configPath : undefined,
-      );
-      if (
-        !handleStepResult(
-          liteResult,
-          configExists ? 'Config reset' : 'Config written',
+      const agentResult = disableDefaultAgents();
+      if (!handleStepResult(agentResult, 'Default agents disabled')) return 1;
+    }
+
+    printStep(step++, totalSteps, 'Enabling OpenCode LSP integration...');
+    if (config.dryRun) {
+      printInfo('Dry run mode - skipping LSP configuration');
+    } else {
+      const lspResult = enableLspByDefault();
+      if (!handleStepResult(lspResult, 'LSP enabled')) return 1;
+    }
+
+    printStep(
+      step++,
+      totalSteps,
+      'Writing sylastra-agent-tree configuration...',
+    );
+    if (config.dryRun) {
+      const liteConfig = generateLiteConfig(config);
+      printInfo('Dry run mode - configuration that would be written:');
+      console.log(`\n${JSON.stringify(liteConfig, null, 2)}\n`);
+    } else {
+      const configPath = getExistingLiteConfigPath();
+      const configExists = existsSync(configPath);
+
+      if (configExists && !config.reset) {
+        printInfo(
+          `Configuration already exists at ${configPath}. ` +
+            'Use --reset to overwrite.',
+        );
+      } else {
+        const liteResult = writeLiteConfig(
+          config,
+          configExists ? configPath : undefined,
+        );
+        if (
+          !handleStepResult(
+            liteResult,
+            configExists ? 'Config reset' : 'Config written',
+          )
         )
-      )
-        return 1;
+          return 1;
+      }
     }
   }
 
@@ -277,6 +291,11 @@ async function runInstall(config: InstallConfig): Promise<number> {
   console.log();
 
   const configPath = getExistingLiteConfigPath();
+  const activePreset = config.model
+    ? SINGLE_MODEL_PRESET
+    : (config.preset ?? 'openai');
+  const modelSummary = config.model ?? null;
+  const opencodeConfigPath = pluginRegisterResult?.configPath ?? '未修改';
 
   console.log('  1. Log in to the provider(s) you want to use:');
   console.log(`     ${BLUE}$ opencode auth login${RESET}`);
@@ -284,18 +303,32 @@ async function runInstall(config: InstallConfig): Promise<number> {
   console.log('  2. Refresh the models OpenCode can see:');
   console.log(`     ${BLUE}$ opencode models --refresh${RESET}`);
   console.log();
-  console.log('  3. Review your generated config:');
+  console.log(`  3. 当前激活 preset: ${BLUE}${activePreset}${RESET}`);
+  console.log();
+  if (modelSummary) {
+    console.log(`  4. 统一模型 ID: ${BLUE}${modelSummary}${RESET}`);
+    console.log();
+  }
+  console.log('  5. Review your generated config:');
   console.log(`     ${BLUE}${configPath}${RESET}`);
   console.log();
-  console.log('  4. Start OpenCode:');
+  console.log('  6. OpenCode config path:');
+  console.log(`     ${BLUE}${opencodeConfigPath}${RESET}`);
+  console.log();
+  console.log(
+    `  7. Plugin registration: ${BLUE}${config.skipPluginRegister ? 'skipped' : 'written'}${RESET}`,
+  );
+  console.log();
+  console.log('  8. Start OpenCode:');
   console.log(`     ${BLUE}$ opencode${RESET}`);
   console.log();
-  console.log('  5. Verify the agents are responding:');
+  console.log('  9. Verify the agents are responding:');
   console.log(`     ${BLUE}> ping all agents${RESET}`);
   console.log();
 
-  const modelsInfo =
-    config.preset && config.preset !== 'openai'
+  const modelsInfo = config.model
+    ? `Generated bundled presets plus ${SINGLE_MODEL_PRESET}; ${SINGLE_MODEL_PRESET} is active.`
+    : config.preset && config.preset !== 'openai'
       ? `Generated OpenAI and OpenCode Go presets; ${config.preset} is active.`
       : 'Generated OpenAI and OpenCode Go presets; OpenAI is active by default.';
   console.log(`${modelsInfo}`);
@@ -317,9 +350,12 @@ export async function install(args: InstallArgs): Promise<number> {
     hasTmux: false,
     installCustomSkills: args.skills === 'yes',
     preset: args.preset,
+    model: args.model,
     promptForStar: args.tui,
     dryRun: args.dryRun,
     reset: args.reset ?? false,
+    skipConfig: args.skipConfig ?? false,
+    skipPluginRegister: args.skipPluginRegister ?? false,
   };
 
   return runInstall(config);

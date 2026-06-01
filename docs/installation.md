@@ -35,9 +35,14 @@ The installer supports the following options:
 |--------|-------------|
 | `--skills=yes|no` | Install bundled skills (default: yes) |
 | `--preset=<name>` | Active generated config preset: `openai` or `opencode-go` (default: `openai`) |
+| `--model=<id>` | Generate and activate a `single-model` preset for all agents |
+| `--skip-config` | Install/register plugin without writing `sylastra-agent-tree.json` |
+| `--skip-plugin-register` | Generate plugin config only, without writing OpenCode `plugin` array |
 | `--no-tui` | Non-interactive mode |
 | `--dry-run` | Simulate install without writing files |
 | `--reset` | Force overwrite of existing configuration |
+
+`--preset` and `--model` are mutually exclusive.
 
 ### Non-Destructive Behavior
 
@@ -57,7 +62,15 @@ bunx sylastra-agent-tree@latest install --reset
 
 ### After Installation
 
-The installer generates both OpenAI and OpenCode Go presets, with OpenAI active by default (using `gpt-5.5` and `gpt-5.4-mini` models). To make OpenCode Go active during install, run `bunx sylastra-agent-tree@latest install --preset=opencode-go`. That preset uses GLM-5.1 for Orchestrator, so the installer also enables Observer with `opencode-go/kimi-k2.6` for visual analysis. To switch providers later or build a mixed setup, use **[Configuration Reference](configuration.md)** for the full option reference and the preset docs for copyable examples.
+The installer generates both OpenAI and OpenCode Go presets, with OpenAI active by default (using `gpt-5.5` and `gpt-5.4-mini` models). To make OpenCode Go active during install, run `bunx sylastra-agent-tree@latest install --preset=opencode-go`.
+
+If you want a first-run config that is immediately consistent across all agents, install with:
+
+```bash
+bunx sylastra-agent-tree@latest install --model=openai/gpt-5.5
+```
+
+That creates and activates a `single-model` preset covering all default agents, including `observer` and `council` when present.
 
 Then:
 
@@ -71,7 +84,27 @@ opencode models --refresh
 ```
 
 Open your generated config at `~/.config/opencode/sylastra-agent-tree.json`
-and adjust models if needed.
+and adjust models if needed. Plugin registration is written to OpenCode config
+using the `file://` path format for local installs.
+
+### Release Artifact Layout
+
+`bun run build:release` now assembles a self-contained `release-artifact/`
+directory. It contains:
+
+- `package.json`
+- `VERSION`
+- `artifact-manifest.json`
+- `dist/`
+- `src/skills/`
+- `sylastra-agent-tree.schema.json`
+- runtime `node_modules/`
+
+Validate it with:
+
+```bash
+bun run verify:release
+```
 
 Then run OpenCode and verify the agents:
 
@@ -123,18 +156,28 @@ bunx sylastra-agent-tree@latest install --no-tui --skills=yes
 # Make the generated OpenCode Go preset active
 bunx sylastra-agent-tree@latest install --preset=opencode-go
 
+# Generate a single-model preset for all agents
+bunx sylastra-agent-tree@latest install --model=openai/gpt-5.5
+
 # Non-interactive without skills
 bunx sylastra-agent-tree@latest install --no-tui --skills=no
+
+# Install plugin but keep existing sylastra-agent-tree config untouched
+bunx sylastra-agent-tree@latest install --skip-config
+
+# Generate plugin config without modifying OpenCode plugin array
+bunx sylastra-agent-tree@latest install --skip-plugin-register
 
 # Force overwrite existing configuration
 bunx sylastra-agent-tree@latest install --reset
 ```
 
 The installer automatically:
-- Adds the plugin to `~/.config/opencode/opencode.json`
+- Adds the plugin to `~/.config/opencode/opencode.json` or `.jsonc`
 - Disables default OpenCode agents
 - Enables OpenCode LSP integration when no explicit `lsp` setting exists
 - Generates agent model mappings in `~/.config/opencode/sylastra-agent-tree.json` (or `.jsonc`)
+- Uses `file://` for local plugin registration entries
 
 ### Step 3: Authenticate with Providers
 

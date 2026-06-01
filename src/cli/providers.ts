@@ -6,6 +6,7 @@ const SCHEMA_URL =
   'https://unpkg.com/sylastra-agent-tree@latest/sylastra-agent-tree.schema.json';
 
 export const GENERATED_PRESETS = ['openai', 'opencode-go'] as const;
+export const SINGLE_MODEL_PRESET = 'single-model';
 
 // Model mappings by provider/preset.
 export const MODEL_MAPPINGS = {
@@ -59,6 +60,13 @@ export const MODEL_MAPPINGS = {
 export type PresetName = keyof typeof MODEL_MAPPINGS;
 export type GeneratedPresetName = (typeof GENERATED_PRESETS)[number];
 
+type AgentModelConfig = {
+  model: string;
+  variant?: string;
+};
+
+type AgentPresetMapping = Record<string, AgentModelConfig>;
+
 export function isPresetName(value: string): value is PresetName {
   return Object.hasOwn(MODEL_MAPPINGS, value);
 }
@@ -80,8 +88,10 @@ export function getGeneratedPresetNames(): GeneratedPresetName[] {
 export function generateLiteConfig(
   installConfig: InstallConfig,
 ): Record<string, unknown> {
-  const preset = installConfig.preset ?? 'openai';
-  if (!isGeneratedPresetName(preset)) {
+  const preset = installConfig.model
+    ? SINGLE_MODEL_PRESET
+    : (installConfig.preset ?? 'openai');
+  if (!installConfig.model && !isGeneratedPresetName(preset)) {
     throw new Error(
       `Unsupported preset "${preset}". Available generated presets: ${getGeneratedPresetNames().join(', ')}`,
     );
@@ -99,7 +109,7 @@ export function generateLiteConfig(
 
   const createAgentConfig = (
     agentName: string,
-    modelInfo: { model: string; variant?: string },
+    modelInfo: AgentModelConfig,
   ) => {
     const isOrchestrator = agentName === 'orchestrator';
 
@@ -132,9 +142,32 @@ export function generateLiteConfig(
     );
   };
 
+  const buildSingleModelPreset = (model: string) => {
+    const baseAgents = new Set<string>();
+    for (const mapping of Object.values(MODEL_MAPPINGS)) {
+      for (const agentName of Object.keys(mapping)) {
+        baseAgents.add(agentName);
+      }
+    }
+
+    const presetMapping = Object.fromEntries(
+      [...baseAgents]
+        .sort()
+        .map((agentName) => [
+          agentName,
+          createAgentConfig(agentName, { model }),
+        ]),
+    ) as AgentPresetMapping;
+
+    return presetMapping;
+  };
+
   const presets = config.presets as Record<string, unknown>;
   for (const presetName of GENERATED_PRESETS) {
     presets[presetName] = buildPreset(presetName);
+  }
+  if (installConfig.model) {
+    presets[SINGLE_MODEL_PRESET] = buildSingleModelPreset(installConfig.model);
   }
 
   if (installConfig.hasTmux) {

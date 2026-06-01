@@ -1,7 +1,11 @@
 #!/usr/bin/env bun
 import { doctor, parseDoctorArgs } from './doctor';
 import { install } from './install';
-import { getGeneratedPresetNames, isGeneratedPresetName } from './providers';
+import {
+  getGeneratedPresetNames,
+  isGeneratedPresetName,
+  SINGLE_MODEL_PRESET,
+} from './providers';
 import type { BooleanArg, InstallArgs } from './types';
 
 function parseArgs(args: string[]): InstallArgs {
@@ -24,6 +28,12 @@ function parseArgs(args: string[]): InstallArgs {
         process.exit(1);
       }
       result.preset = preset;
+    } else if (arg.startsWith('--model=')) {
+      result.model = arg.slice('--model='.length).trim();
+    } else if (arg === '--skip-config') {
+      result.skipConfig = true;
+    } else if (arg === '--skip-plugin-register') {
+      result.skipPluginRegister = true;
     } else if (arg === '--dry-run') {
       result.dryRun = true;
     } else if (arg === '--reset') {
@@ -48,6 +58,9 @@ Usage:
 Options:
   --skills=yes|no        Install bundled skills (default: yes)
   --preset=<name>        Active generated config preset (default: openai)
+  --model=<id>           Generate and activate the fixed ${SINGLE_MODEL_PRESET} preset
+  --skip-config          Skip writing sylastra-agent-tree config
+  --skip-plugin-register Skip writing OpenCode plugin array
   --no-tui               Non-interactive mode
   --dry-run              Simulate install without writing files
   --reset                Force overwrite of existing configuration
@@ -60,12 +73,14 @@ Available presets: ${getGeneratedPresetNames().join(', ')}
 
 The installer generates OpenAI and OpenCode Go presets by default.
 OpenAI is active unless --preset selects another generated preset.
+Use --model to create a fully runnable single-model config during install.
 For the full config reference, see docs/configuration.md.
 
 Examples:
   bunx sylastra-agent-tree install
   bunx sylastra-agent-tree install --no-tui --skills=yes
   bunx sylastra-agent-tree install --preset=opencode-go
+  bunx sylastra-agent-tree install --model=openai/gpt-5.5
   bunx sylastra-agent-tree install --reset
   bunx sylastra-agent-tree doctor
 `);
@@ -77,6 +92,14 @@ async function main(): Promise<void> {
   if (args.length === 0 || args[0] === 'install') {
     const hasSubcommand = args[0] === 'install';
     const installArgs = parseArgs(args.slice(hasSubcommand ? 1 : 0));
+    if (installArgs.preset && installArgs.model) {
+      console.error('--preset and --model cannot be used together');
+      process.exit(1);
+    }
+    if (installArgs.model === '') {
+      console.error('--model requires a non-empty model id');
+      process.exit(1);
+    }
     const exitCode = await install(installArgs);
     process.exit(exitCode);
   } else if (args[0] === 'doctor') {

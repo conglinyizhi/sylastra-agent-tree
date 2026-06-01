@@ -168,7 +168,7 @@ describe('config-io', () => {
 
     expect(result.success).toBe(true);
     const saved = JSON.parse(readFileSync(configPath, 'utf-8'));
-    expect(saved.plugin).toEqual([packageRoot]);
+    expect(saved.plugin).toEqual([`file://${packageRoot}`]);
   });
 
   test('addPluginToOpenCodeConfig stores local repo path for local paths containing bunx-', async () => {
@@ -184,7 +184,7 @@ describe('config-io', () => {
 
     expect(result.success).toBe(true);
     const saved = JSON.parse(readFileSync(configPath, 'utf-8'));
-    expect(saved.plugin).toEqual([packageRoot]);
+    expect(saved.plugin).toEqual([`file://${packageRoot}`]);
   });
 
   test('addPluginToOpenCodeConfig deduplicates existing local repo path entries', async () => {
@@ -203,7 +203,7 @@ describe('config-io', () => {
 
     expect(result.success).toBe(true);
     const saved = JSON.parse(readFileSync(configPath, 'utf-8'));
-    expect(saved.plugin).toEqual(['other', packageRoot]);
+    expect(saved.plugin).toEqual(['other', `file://${packageRoot}`]);
   });
 
   test('addPluginToOpenCodeConfig preserves non-string plugin entries when refreshing', async () => {
@@ -349,7 +349,7 @@ describe('config-io', () => {
 
     expect(result.success).toBe(true);
     const saved = JSON.parse(readFileSync(tuiPath, 'utf-8'));
-    expect(saved.plugin).toEqual([packageRoot]);
+    expect(saved.plugin).toEqual([`file://${packageRoot}`]);
   });
 
   test('addPluginToOpenCodeTuiConfig deduplicates existing local repo path entries', async () => {
@@ -358,14 +358,17 @@ describe('config-io', () => {
     const localCliPath = join(packageRoot, 'dist', 'cli', 'index.js');
     paths.ensureConfigDir();
     writePackageJson(packageRoot);
-    writeFileSync(tuiPath, JSON.stringify({ plugin: ['other', packageRoot] }));
+    writeFileSync(
+      tuiPath,
+      JSON.stringify({ plugin: ['other', `file://${packageRoot}`] }),
+    );
     process.argv[1] = localCliPath;
 
     const result = await addPluginToOpenCodeTuiConfig();
 
     expect(result.success).toBe(true);
     const saved = JSON.parse(readFileSync(tuiPath, 'utf-8'));
-    expect(saved.plugin).toEqual(['other', packageRoot]);
+    expect(saved.plugin).toEqual(['other', `file://${packageRoot}`]);
   });
 
   test('addPluginToOpenCodeTuiConfig preserves non-string plugin entries when refreshing', async () => {
@@ -436,6 +439,26 @@ describe('config-io', () => {
     expect(saved.presets['opencode-go'].observer.model).toBe(
       'opencode-go/kimi-k2.6',
     );
+  });
+
+  test('writeLiteConfig writes single-model preset', () => {
+    const litePath = join(tmpDir, 'opencode', 'sylastra-agent-tree.json');
+    paths.ensureConfigDir();
+
+    const result = writeLiteConfig({
+      hasTmux: false,
+      installCustomSkills: false,
+      model: 'openai/gpt-5.5',
+      reset: false,
+    });
+    expect(result.success).toBe(true);
+
+    const saved = JSON.parse(readFileSync(litePath, 'utf-8'));
+    expect(saved.preset).toBe('single-model');
+    expect(saved.presets['single-model'].orchestrator.model).toBe(
+      'openai/gpt-5.5',
+    );
+    expect(saved.presets['single-model'].observer.model).toBe('openai/gpt-5.5');
   });
 
   test('disableDefaultAgents disables explore and general agents', () => {

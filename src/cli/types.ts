@@ -4,8 +4,11 @@ export interface InstallArgs {
   tui: boolean;
   skills?: BooleanArg;
   preset?: string;
+  model?: string;
   dryRun?: boolean;
   reset?: boolean;
+  skipConfig?: boolean;
+  skipPluginRegister?: boolean;
 }
 
 export interface OpenCodeConfig {
@@ -19,9 +22,12 @@ export interface InstallConfig {
   hasTmux: boolean;
   installCustomSkills: boolean;
   preset?: string;
+  model?: string;
   promptForStar?: boolean;
   dryRun?: boolean;
   reset: boolean;
+  skipConfig?: boolean;
+  skipPluginRegister?: boolean;
 }
 
 export interface ConfigMergeResult {

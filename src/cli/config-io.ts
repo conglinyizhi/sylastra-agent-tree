@@ -9,6 +9,7 @@ import {
 } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { crossSpawn } from '../utils/compat';
 import {
   ensureConfigDir,
@@ -27,6 +28,10 @@ import type {
 } from './types';
 
 const PACKAGE_NAME = 'sylastra-agent-tree';
+
+function toFileUrl(path: string): string {
+  return `file://${path}`;
+}
 
 function isString(value: unknown): value is string {
   return typeof value === 'string';
@@ -107,18 +112,76 @@ function isPackageManagerInstall(path: string): boolean {
   return normalizedPath.includes(`/node_modules/${PACKAGE_NAME}`);
 }
 
+function isFilePluginEntry(entry: string): boolean {
+  if (!entry.startsWith('file://')) {
+    return false;
+  }
+
+  try {
+    return isLocalPackageRootEntry(fileURLToPath(entry));
+  } catch {
+    return entry.includes(PACKAGE_NAME);
+  }
+}
+
+function normalizePluginEntryForMatch(entry: string): string {
+  if (entry.startsWith('file://')) {
+    return entry;
+  }
+  if (isLocalPackageRootEntry(entry)) {
+    return toFileUrl(entry);
+  }
+  return entry;
+}
+
+function normalizePluginValue(entry: unknown): unknown {
+  const spec = getPluginSpec(entry);
+  if (!spec) {
+    return entry;
+  }
+
+  const normalizedSpec = normalizePluginEntryForMatch(spec);
+  if (Array.isArray(entry)) {
+    return [normalizedSpec, ...entry.slice(1)];
+  }
+
+  return normalizedSpec;
+}
+
+function dedupePluginEntries(entries: unknown[]): unknown[] {
+  const seen = new Set<string>();
+  const deduped: unknown[] = [];
+
+  for (const entry of entries) {
+    const spec = getPluginSpec(entry);
+    if (!spec) {
+      deduped.push(entry);
+      continue;
+    }
+
+    const key = normalizePluginEntryForMatch(spec);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    deduped.push(entry);
+  }
+
+  return deduped;
+}
+
 function isPluginEntry(entry: string): boolean {
   return (
     entry === PACKAGE_NAME ||
     entry.startsWith(`${PACKAGE_NAME}@`) ||
-    (entry.startsWith('file://') && entry.includes(PACKAGE_NAME)) ||
+    isFilePluginEntry(entry) ||
     isLocalPackageRootEntry(entry)
   );
 }
 
 function isMatchingPluginEntry(entry: unknown): boolean {
   const spec = getPluginSpec(entry);
-  return spec ? isPluginEntry(spec) : false;
+  return spec ? isPluginEntry(normalizePluginEntryForMatch(spec)) : false;
 }
 
 function getPluginEntry(): string {
@@ -135,7 +198,7 @@ function getPluginEntry(): string {
       return PACKAGE_NAME;
     }
 
-    return packageRoot;
+    return toFileUrl(packageRoot);
   } catch {
     return PACKAGE_NAME;
   }
@@ -370,8 +433,10 @@ export async function addPluginToOpenCodeConfig(): Promise<ConfigMergeResult> {
     const pluginEntry = getPluginEntry();
 
     // Remove existing sylastra-agent-tree entries
-    const filteredPlugins = plugins.filter(
-      (plugin) => !isMatchingPluginEntry(plugin),
+    const filteredPlugins = dedupePluginEntries(
+      plugins
+        .map((plugin) => normalizePluginValue(plugin))
+        .filter((plugin) => !isMatchingPluginEntry(plugin)),
     );
 
     // Add fresh entry
@@ -414,8 +479,10 @@ export async function addPluginToOpenCodeTuiConfig(): Promise<ConfigMergeResult>
     const config = parsedConfig ?? {};
     const plugins = getPlugins(config);
     const pluginEntry = getPluginEntry();
-    const filteredPlugins = plugins.filter(
-      (plugin) => !isMatchingPluginEntry(plugin),
+    const filteredPlugins = dedupePluginEntries(
+      plugins
+        .map((plugin) => normalizePluginValue(plugin))
+        .filter((plugin) => !isMatchingPluginEntry(plugin)),
     );
 
     filteredPlugins.push(pluginEntry);

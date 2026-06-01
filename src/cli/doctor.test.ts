@@ -59,7 +59,7 @@ describe('runDoctorCheck', () => {
     originalCwd = process.cwd();
     originalEnv = { ...process.env };
     delete process.env.OPENCODE_CONFIG_DIR;
-    delete process.env.OH_MY_OPENCODE_SLIM_PRESET;
+    delete process.env.SYLASTRA_AGENT_TREE_PRESET;
     process.env.XDG_CONFIG_HOME = path.join(tempDir, 'user-config');
   });
 
@@ -282,7 +282,7 @@ describe('runDoctorCheck', () => {
       }),
     );
 
-    process.env.OH_MY_OPENCODE_SLIM_PRESET = 'env-preset';
+    process.env.SYLASTRA_AGENT_TREE_PRESET = 'env-preset';
 
     const result = runDoctorCheck(projectDir);
 
@@ -421,7 +421,7 @@ describe('doctor CLI wrapper', () => {
     originalCwd = process.cwd();
     originalEnv = { ...process.env };
     delete process.env.OPENCODE_CONFIG_DIR;
-    delete process.env.OH_MY_OPENCODE_SLIM_PRESET;
+    delete process.env.SYLASTRA_AGENT_TREE_PRESET;
     process.env.XDG_CONFIG_HOME = path.join(tempDir, 'user-config');
   });
 

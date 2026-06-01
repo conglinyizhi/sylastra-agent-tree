@@ -28,7 +28,7 @@
    对 `agents`、`tmux`、`multiplexer`、`interview`、`sessionManager`、`fallback`、`council` 进行嵌套合并。
    顶层数组/值被覆盖。
 5. 如果启用了 `tmux` 且未配置显式的 `multiplexer`，则迁移到 `multiplexer`（`tmux` 兼容路径）。
-6. 应用环境变量 `OH_MY_OPENCODE_SLIM_PRESET` 覆盖配置文件中的 preset。
+6. 应用环境变量 `SYLASTRA_AGENT_TREE_PRESET` 覆盖配置文件中的 preset。
 7. 如果存在 preset，将 preset 中的 agent 合并到 `agents` 中，使得显式根级 agent 仍然优先（`deepMerge(preset, config.agents)`）。
 8. 返回合并后的配置对象。
 

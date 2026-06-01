@@ -15,7 +15,9 @@ Complete reference for all configuration files and options in sylastra-agent-tre
 
 > **💡 JSONC recommended:** Use the `.jsonc` extension to add comments and trailing commas. If both `.jsonc` and `.json` exist, `.jsonc` takes precedence.
 
-If OmO-slim detects an invalid plugin config for the current project, the TUI sidebar shows a warning. Run `sylastra-agent-tree doctor` from your project root for full diagnostics.
+If the plugin detects an invalid config for the current project, the TUI
+sidebar shows a warning. Run `sylastra-agent-tree doctor` from your project
+root for full diagnostics.
 
 ---
 
@@ -233,7 +235,7 @@ CLI:
 For a one-off run without editing config:
 
 ```bash
-OH_MY_OPENCODE_SLIM_DIVOOM=1 opencode
+SYLASTRA_AGENT_TREE_DIVOOM=1 opencode
 ```
 
 If `divoom.enabled` is explicitly set in config, the config value wins over the

@@ -5,9 +5,8 @@
 `sylastra-agent-tree` 是一个面向 OpenCode 的多智能体编排插件。它内置了
 编排者和一组专家智能体，用于代码库侦察、文档查询、实现、审查和 UI 工作。
 
-本项目 fork 自
-[oh-my-opencode-slim](https://github.com/alvinunreal/oh-my-opencode-slim)，当前只通过
-GitHub Releases 发布。安装与更新都围绕自包含 release artifact 工作流进行。
+本项目当前只通过 GitHub Releases 发布。安装与更新都围绕自包含 release
+artifact 工作流进行。
 
 ## 项目能力
 

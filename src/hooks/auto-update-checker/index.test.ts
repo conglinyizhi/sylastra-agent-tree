@@ -165,7 +165,7 @@ describe('auto-update-checker/index', () => {
     expect(updaterMocks.runPreparedHealthcheck).toHaveBeenCalled();
     expect(showToast.mock.calls[0]?.[0]).toEqual({
       body: {
-        title: 'OMO-Slim Update',
+        title: 'sylastra-agent-tree Update',
         message: '检测到已准备更新 0.9.11，正在激活。',
         variant: 'info',
         duration: 8000,
@@ -173,7 +173,7 @@ describe('auto-update-checker/index', () => {
     });
     expect(showToast.mock.calls[1]?.[0]).toEqual({
       body: {
-        title: 'OMO-Slim Update Activated',
+        title: 'sylastra-agent-tree Update Activated',
         message: '已激活更新 0.9.11。',
         variant: 'success',
         duration: 8000,
@@ -203,7 +203,7 @@ describe('auto-update-checker/index', () => {
     expect(updaterMocks.rollbackPreparedUpdate).toHaveBeenCalled();
     expect(showToast.mock.calls[1]?.[0]).toEqual({
       body: {
-        title: 'OMO-Slim Update',
+        title: 'sylastra-agent-tree Update',
         message: '更新健康检查失败，已回滚：module load failed',
         variant: 'error',
         duration: 8000,
@@ -238,7 +238,7 @@ describe('auto-update-checker/index', () => {
     });
     expect(showToast.mock.calls[0]?.[0]).toEqual({
       body: {
-        title: 'OMO-Slim 0.9.11',
+        title: 'sylastra-agent-tree 0.9.11',
         message: 'v0.9.11 available. 正在准备下次启动激活的 artifact 更新。',
         variant: 'info',
         duration: 8000,
@@ -246,7 +246,7 @@ describe('auto-update-checker/index', () => {
     });
     expect(showToast.mock.calls[1]?.[0]).toEqual({
       body: {
-        title: 'OMO-Slim Update Prepared',
+        title: 'sylastra-agent-tree Update Prepared',
         message: 'v0.9.1 → v0.9.11\n更新已准备，等待下次启动激活。',
         variant: 'success',
         duration: 8000,
@@ -275,7 +275,7 @@ describe('auto-update-checker/index', () => {
 
     expect(showToast).toHaveBeenCalledWith({
       body: {
-        title: 'OMO-Slim 0.9.11',
+        title: 'sylastra-agent-tree 0.9.11',
         message: 'v0.9.11 available. 当前为通知模式。',
         variant: 'info',
         duration: 8000,
@@ -310,7 +310,7 @@ describe('auto-update-checker/index', () => {
 
     expect(showToast).toHaveBeenCalledWith({
       body: {
-        title: 'OMO-Slim 0.9.11',
+        title: 'sylastra-agent-tree 0.9.11',
         message: 'v0.9.11 available. 当前为通知模式。',
         variant: 'info',
         duration: 8000,
@@ -337,7 +337,7 @@ describe('auto-update-checker/index', () => {
 
     expect(showToast).toHaveBeenCalledWith({
       body: {
-        title: 'OMO-Slim 0.9.11',
+        title: 'sylastra-agent-tree 0.9.11',
         message:
           'v0.9.11 available.\nVersion is pinned. Update your plugin config to apply.',
         variant: 'info',
@@ -369,7 +369,7 @@ describe('auto-update-checker/index', () => {
 
     expect(showToast.mock.calls[1]?.[0]).toEqual({
       body: {
-        title: 'OMO-Slim 0.9.11',
+        title: 'sylastra-agent-tree 0.9.11',
         message:
           'v0.9.11 available，但 updater 准备失败：updater binary not found',
         variant: 'error',

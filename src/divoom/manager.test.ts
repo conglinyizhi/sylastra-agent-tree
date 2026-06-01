@@ -23,9 +23,9 @@ describe('DivoomManager', () => {
   let originalXdgDataHome: string | undefined;
 
   beforeEach(() => {
-    originalDivoomEnv = process.env.OH_MY_OPENCODE_SLIM_DIVOOM;
+    originalDivoomEnv = process.env.SYLASTRA_AGENT_TREE_DIVOOM;
     originalXdgDataHome = process.env.XDG_DATA_HOME;
-    delete process.env.OH_MY_OPENCODE_SLIM_DIVOOM;
+    delete process.env.SYLASTRA_AGENT_TREE_DIVOOM;
     tempDir = mkdtempSync(path.join(tmpdir(), 'divoom-test-'));
     // Set XDG_DATA_HOME to a temp path to avoid writing to real user data directory
     process.env.XDG_DATA_HOME = path.join(tempDir, 'xdg-data');
@@ -46,9 +46,9 @@ describe('DivoomManager', () => {
 
   afterEach(() => {
     if (originalDivoomEnv === undefined) {
-      delete process.env.OH_MY_OPENCODE_SLIM_DIVOOM;
+      delete process.env.SYLASTRA_AGENT_TREE_DIVOOM;
     } else {
-      process.env.OH_MY_OPENCODE_SLIM_DIVOOM = originalDivoomEnv;
+      process.env.SYLASTRA_AGENT_TREE_DIVOOM = originalDivoomEnv;
     }
     if (originalXdgDataHome === undefined) {
       delete process.env.XDG_DATA_HOME;
@@ -98,7 +98,7 @@ describe('DivoomManager', () => {
   });
 
   test('can be enabled for one run with env var', async () => {
-    process.env.OH_MY_OPENCODE_SLIM_DIVOOM = '1';
+    process.env.SYLASTRA_AGENT_TREE_DIVOOM = '1';
     const manager = new DivoomManager(
       {
         python: pythonPath,
@@ -119,7 +119,7 @@ describe('DivoomManager', () => {
   });
 
   test('env var force-enables even when config disables', async () => {
-    process.env.OH_MY_OPENCODE_SLIM_DIVOOM = 'true';
+    process.env.SYLASTRA_AGENT_TREE_DIVOOM = 'true';
     const manager = createManager({ enabled: false });
 
     manager.onPluginLoad();

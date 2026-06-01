@@ -272,7 +272,7 @@ Add a `$schema` reference to your config for autocomplete and inline validation:
 
 ```jsonc
 {
-  "$schema": "https://unpkg.com/sylastra-agent-tree@latest/sylastra-agent-tree.schema.json",
+  "$schema": "https://raw.githubusercontent.com/conglinyizhi/sylastra-agent-tree/main/sylastra-agent-tree.schema.json",
   // your config...
 }
 ```

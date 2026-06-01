@@ -1021,7 +1021,7 @@ describe('environment variable preset override', () => {
       }),
     );
 
-    process.env.OH_MY_OPENCODE_SLIM_PRESET = 'env-preset';
+    process.env.SYLASTRA_AGENT_TREE_PRESET = 'env-preset';
     const config = loadPluginConfig(projectDir);
     expect(config.preset).toBe('env-preset');
     expect(config.agents?.oracle?.model).toBe('env-model');
@@ -1040,7 +1040,7 @@ describe('environment variable preset override', () => {
       }),
     );
 
-    process.env.OH_MY_OPENCODE_SLIM_PRESET = 'env-preset';
+    process.env.SYLASTRA_AGENT_TREE_PRESET = 'env-preset';
     const config = loadPluginConfig(projectDir);
     expect(config.preset).toBe('env-preset');
     expect(config.agents?.oracle?.model).toBe('env-model');
@@ -1060,7 +1060,7 @@ describe('environment variable preset override', () => {
       }),
     );
 
-    process.env.OH_MY_OPENCODE_SLIM_PRESET = '';
+    process.env.SYLASTRA_AGENT_TREE_PRESET = '';
     const config = loadPluginConfig(projectDir);
     expect(config.preset).toBe('config-preset');
     expect(config.agents?.oracle?.model).toBe('config-model');
@@ -1080,7 +1080,7 @@ describe('environment variable preset override', () => {
       }),
     );
 
-    delete process.env.OH_MY_OPENCODE_SLIM_PRESET;
+    delete process.env.SYLASTRA_AGENT_TREE_PRESET;
     const config = loadPluginConfig(projectDir);
     expect(config.preset).toBe('config-preset');
     expect(config.agents?.oracle?.model).toBe('config-model');
@@ -1101,7 +1101,7 @@ describe('environment variable preset override', () => {
       }),
     );
 
-    process.env.OH_MY_OPENCODE_SLIM_PRESET = 'typo-preset';
+    process.env.SYLASTRA_AGENT_TREE_PRESET = 'typo-preset';
     const consoleWarnSpy = spyOn(console, 'warn');
     const config = loadPluginConfig(projectDir);
     expect(config.preset).toBe('typo-preset');

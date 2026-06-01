@@ -69,7 +69,7 @@ describe('readConfigInvalid', () => {
     originalEnv = { ...process.env };
     // Isolate from real user config and env presets
     delete process.env.OPENCODE_CONFIG_DIR;
-    delete process.env.OH_MY_OPENCODE_SLIM_PRESET;
+    delete process.env.SYLASTRA_AGENT_TREE_PRESET;
     configHome = fs.mkdtempSync(path.join(os.tmpdir(), 'omos-tui-env-'));
     process.env.XDG_CONFIG_HOME = configHome;
   });

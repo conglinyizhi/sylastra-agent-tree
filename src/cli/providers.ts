@@ -3,7 +3,7 @@ import { CUSTOM_SKILLS } from './custom-skills';
 import type { InstallConfig } from './types';
 
 const SCHEMA_URL =
-  'https://unpkg.com/sylastra-agent-tree@latest/sylastra-agent-tree.schema.json';
+  'https://raw.githubusercontent.com/conglinyizhi/sylastra-agent-tree/main/sylastra-agent-tree.schema.json';
 
 export const GENERATED_PRESETS = ['openai', 'opencode-go'] as const;
 export const SINGLE_MODEL_PRESET = 'single-model';

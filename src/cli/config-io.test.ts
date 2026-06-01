@@ -353,7 +353,7 @@ describe('config-io', () => {
 
     const saved = JSON.parse(readFileSync(litePath, 'utf-8'));
     expect(saved.$schema).toBe(
-      'https://unpkg.com/sylastra-agent-tree@latest/sylastra-agent-tree.schema.json',
+      'https://raw.githubusercontent.com/conglinyizhi/sylastra-agent-tree/main/sylastra-agent-tree.schema.json',
     );
     expect(saved.preset).toBe('openai');
     expect(saved.presets.openai).toBeDefined();

@@ -18,16 +18,17 @@ Use issues for:
 - bug reports
 - feature requests
 
-### Telegram
+### GitHub Discussions Or Other Support Channels
 
-Use the Telegram channel for:
+Use a support channel outside the issue tracker for:
 
 - setup questions
 - troubleshooting help
 - general support
 - open-ended usage questions
 
-If an issue is really a support request, reply briefly and redirect the user to Telegram.
+If an issue is really a support request, reply briefly and redirect the user to
+the appropriate support channel.
 
 ## Issue Forms
 
@@ -91,7 +92,7 @@ For each new issue, make a quick first decision:
 ### Support issues
 
 - Reply briefly.
-- Redirect the user to Telegram.
+- Redirect the user to the appropriate support channel.
 - Close if needed.
 
 ## Closing Policy

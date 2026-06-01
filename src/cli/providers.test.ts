@@ -27,7 +27,7 @@ describe('providers', () => {
     });
 
     expect(config.$schema).toBe(
-      'https://unpkg.com/sylastra-agent-tree@latest/sylastra-agent-tree.schema.json',
+      'https://raw.githubusercontent.com/conglinyizhi/sylastra-agent-tree/main/sylastra-agent-tree.schema.json',
     );
     expect(config.preset).toBe('openai');
     expect(config.disabled_agents).toBeUndefined();

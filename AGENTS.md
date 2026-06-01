@@ -4,7 +4,7 @@
 
 ## 项目概述
 
-**sylastra-agent-tree** - OpenCode 的 Agent 编排插件，fork 自 oh-my-opencode-slim。使用 TypeScript、Bun 和 Biome 构建。
+**sylastra-agent-tree** - OpenCode 的 Agent 编排插件。使用 TypeScript、Bun 和 Biome 构建。
 
 ## 命令
 

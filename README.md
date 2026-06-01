@@ -6,10 +6,8 @@ English | [简体中文](README.zh-CN.md)
 ships a built-in orchestrator plus specialist agents for codebase exploration,
 documentation lookup, implementation, review, and UI work.
 
-This project is a fork of
-[oh-my-opencode-slim](https://github.com/alvinunreal/oh-my-opencode-slim) and
-is now released through GitHub Releases only. Local installation and updates
-use a self-contained release artifact workflow.
+This project is released through GitHub Releases only. Local installation and
+updates use a self-contained release artifact workflow.
 
 ## What It Provides
 

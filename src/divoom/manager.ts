@@ -48,7 +48,7 @@ const DEFAULT_DIVOOM_CONFIG: DivoomConfig = {
   posterizeBits: 3,
 };
 
-const DIVOOM_ENABLE_ENV = 'OH_MY_OPENCODE_SLIM_DIVOOM';
+const DIVOOM_ENABLE_ENV = 'SYLASTRA_AGENT_TREE_DIVOOM';
 
 type DivoomManagerOptions = {
   assetDir?: string | null;

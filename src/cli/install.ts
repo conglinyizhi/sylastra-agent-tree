@@ -36,7 +36,7 @@ const SYMBOLS = {
   star: `${YELLOW}★${RESET}`,
 };
 
-const GITHUB_REPO = 'alvinunreal/sylastra-agent-tree';
+const GITHUB_REPO = 'conglinyizhi/sylastra-agent-tree';
 const GITHUB_URL = `https://github.com/${GITHUB_REPO}`;
 
 function printHeader(isUpdate: boolean): void {

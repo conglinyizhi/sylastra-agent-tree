@@ -153,7 +153,7 @@ function checkConfigFile(
 function checkPreset(
   mergedConfig: PluginConfig,
 ): PresetCheckResult | undefined {
-  const envPreset = process.env.OH_MY_OPENCODE_SLIM_PRESET;
+  const envPreset = process.env.SYLASTRA_AGENT_TREE_PRESET;
   const presetName = envPreset || mergedConfig.preset;
 
   if (presetName === undefined) {

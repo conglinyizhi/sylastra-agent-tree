@@ -70,7 +70,7 @@ async function reconcilePreparedUpdate(ctx: PluginInput): Promise<void> {
 
   showToast(
     ctx,
-    'OMO-Slim Update',
+    'sylastra-agent-tree Update',
     `检测到已准备更新 ${updaterState.preparedVersion ?? ''}，正在激活。`,
     'info',
     8000,
@@ -80,7 +80,7 @@ async function reconcilePreparedUpdate(ctx: PluginInput): Promise<void> {
   if (!activated.ok) {
     showToast(
       ctx,
-      'OMO-Slim Update',
+      'sylastra-agent-tree Update',
       `更新激活失败：${activated.reason ?? 'unknown error'}`,
       'error',
       8000,
@@ -93,7 +93,7 @@ async function reconcilePreparedUpdate(ctx: PluginInput): Promise<void> {
     await rollbackPreparedUpdate();
     showToast(
       ctx,
-      'OMO-Slim Update',
+      'sylastra-agent-tree Update',
       `更新健康检查失败，已回滚：${healthy.reason ?? 'unknown error'}`,
       'error',
       8000,
@@ -103,7 +103,7 @@ async function reconcilePreparedUpdate(ctx: PluginInput): Promise<void> {
 
   showToast(
     ctx,
-    'OMO-Slim Update Activated',
+    'sylastra-agent-tree Update Activated',
     `已激活更新 ${updaterState.preparedVersion ?? ''}。`,
     'success',
     8000,
@@ -157,7 +157,7 @@ async function runBackgroundUpdateCheck(
   if (pluginInfo.isPinned) {
     showToast(
       ctx,
-      `OMO-Slim ${latestVersion}`,
+      `sylastra-agent-tree ${latestVersion}`,
       `v${latestVersion} available.\nVersion is pinned. Update your plugin config to apply.`,
       'info',
       8000,
@@ -169,7 +169,7 @@ async function runBackgroundUpdateCheck(
   if (!autoUpdate.enabled || autoUpdate.policy === 'notify') {
     showToast(
       ctx,
-      `OMO-Slim ${latestVersion}`,
+      `sylastra-agent-tree ${latestVersion}`,
       `v${latestVersion} available. 当前为通知模式。`,
       'info',
       8000,
@@ -180,7 +180,7 @@ async function runBackgroundUpdateCheck(
 
   showToast(
     ctx,
-    `OMO-Slim ${latestVersion}`,
+    `sylastra-agent-tree ${latestVersion}`,
     `v${latestVersion} available. 正在准备下次启动激活的 artifact 更新。`,
     'info',
     8000,
@@ -190,7 +190,7 @@ async function runBackgroundUpdateCheck(
   if (!prepared.ok) {
     showToast(
       ctx,
-      `OMO-Slim ${latestVersion}`,
+      `sylastra-agent-tree ${latestVersion}`,
       `v${latestVersion} available，但 updater 准备失败：${prepared.reason ?? 'unknown error'}`,
       'error',
       8000,
@@ -201,7 +201,7 @@ async function runBackgroundUpdateCheck(
 
   showToast(
     ctx,
-    'OMO-Slim Update Prepared',
+    'sylastra-agent-tree Update Prepared',
     `v${currentVersion} → v${latestVersion}\n更新已准备，等待下次启动激活。`,
     'success',
     8000,

@@ -304,7 +304,7 @@ export function loadPluginConfig(
   config = migrateTmuxToMultiplexer(config);
 
   // Override preset from environment variable if set
-  const envPreset = process.env.OH_MY_OPENCODE_SLIM_PRESET;
+  const envPreset = process.env.SYLASTRA_AGENT_TREE_PRESET;
   if (envPreset) {
     config.preset = envPreset;
   }

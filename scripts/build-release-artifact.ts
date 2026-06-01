@@ -366,18 +366,18 @@ function downloadBetterEditToolsBinary(
   target: PlatformTarget,
   outputRoot: string,
 ): DownloadedBetterEditToolsBinary {
-  const legacyBinaryPath = path.join(
+  const bundledBinaryPath = path.join(
     repoRoot,
     target.betterEditToolsArchive.packagedBinaryName,
   );
-  if (existsSync(legacyBinaryPath)) {
+  if (existsSync(bundledBinaryPath)) {
     const targetDir = path.join(outputRoot, target.platform);
     mkdirSync(targetDir, { recursive: true });
     const binaryPath = path.join(
       targetDir,
       target.betterEditToolsArchive.packagedBinaryName,
     );
-    copyFileSync(legacyBinaryPath, binaryPath);
+    copyFileSync(bundledBinaryPath, binaryPath);
     chmodSync(binaryPath, 0o755);
     return {
       platform: target.platform,

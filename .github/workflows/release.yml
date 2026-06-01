@@ -76,7 +76,7 @@ jobs:
           body: |
             ## sylastra-agent-tree ${{ steps.version.outputs.tag }}
 
-            基于 oh-my-opencode-slim 的 Agent 编排插件。
+            OpenCode 的 Agent 编排插件。
 
             ### 内含
             - 自包含的 release artifact

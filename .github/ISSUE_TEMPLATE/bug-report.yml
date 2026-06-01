@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible bug in oh-my-opencode-slim.
+description: Report a reproducible bug in sylastra-agent-tree.
 title: '[Bug]: '
 labels:
   - bug
@@ -40,8 +40,8 @@ body:
   - type: textarea
     id: config
     attributes:
-      label: oh-my-opencode.json
-      description: Paste your oh-my-opencode.json config.
+      label: sylastra-agent-tree.json
+      description: Paste your sylastra-agent-tree.json config.
       render: jsonc
     validations:
       required: false
@@ -55,7 +55,7 @@ body:
   - type: input
     id: plugin-version
     attributes:
-      label: oh-my-opencode-slim version
+      label: sylastra-agent-tree version
       placeholder: 0.0.0
     validations:
       required: false

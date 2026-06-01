@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Questions and support
-    url: https://t.me/boringdystopiadevelopment
-    about: Use Telegram for setup questions, troubleshooting help, and general support.
+    url: https://github.com/conglinyizhi/sylastra-agent-tree/discussions
+    about: Use GitHub Discussions for setup questions, troubleshooting help, and general support.

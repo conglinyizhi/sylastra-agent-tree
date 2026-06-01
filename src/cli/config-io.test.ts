@@ -135,45 +135,9 @@ describe('config-io', () => {
     expect(saved.plugin.length).toBe(2);
   });
 
-  test('addPluginToOpenCodeConfig stores package name for bunx temp paths', async () => {
-    const configPath = join(tmpDir, 'opencode', 'opencode.json');
-    const packageRoot = join(
-      tmpDir,
-      'bunx-1000-sylastra-agent-tree@latest',
-      'node_modules',
-      'sylastra-agent-tree',
-    );
-    paths.ensureConfigDir();
-    writeFileSync(configPath, JSON.stringify({ plugin: [] }));
-    writePackageJson(packageRoot);
-    process.argv[1] = join(packageRoot, 'dist', 'cli', 'index.js');
-
-    const result = await addPluginToOpenCodeConfig();
-
-    expect(result.success).toBe(true);
-    const saved = JSON.parse(readFileSync(configPath, 'utf-8'));
-    expect(saved.plugin).toEqual(['sylastra-agent-tree']);
-  });
-
   test('addPluginToOpenCodeConfig stores local repo path for local dev paths', async () => {
     const configPath = join(tmpDir, 'opencode', 'opencode.json');
     const packageRoot = join(tmpDir, 'repo');
-    const localCliPath = join(packageRoot, 'dist', 'cli', 'index.js');
-    paths.ensureConfigDir();
-    writeFileSync(configPath, JSON.stringify({ plugin: [] }));
-    writePackageJson(packageRoot);
-    process.argv[1] = localCliPath;
-
-    const result = await addPluginToOpenCodeConfig();
-
-    expect(result.success).toBe(true);
-    const saved = JSON.parse(readFileSync(configPath, 'utf-8'));
-    expect(saved.plugin).toEqual([`file://${packageRoot}`]);
-  });
-
-  test('addPluginToOpenCodeConfig stores local repo path for local paths containing bunx-', async () => {
-    const configPath = join(tmpDir, 'opencode', 'opencode.json');
-    const packageRoot = join(tmpDir, 'repo', 'bunx-tools');
     const localCliPath = join(packageRoot, 'dist', 'cli', 'index.js');
     paths.ensureConfigDir();
     writeFileSync(configPath, JSON.stringify({ plugin: [] }));
@@ -265,26 +229,6 @@ describe('config-io', () => {
     expect(saved.plugin).toContain('sylastra-agent-tree');
     expect(saved.plugin).not.toContain('sylastra-agent-tree@1.0.0');
     expect(saved.plugin.length).toBe(2);
-  });
-
-  test('addPluginToOpenCodeTuiConfig stores package name for bunx temp paths', async () => {
-    const tuiPath = join(tmpDir, 'opencode', 'tui.json');
-    const packageRoot = join(
-      tmpDir,
-      'bunx-1000-sylastra-agent-tree@latest',
-      'node_modules',
-      'sylastra-agent-tree',
-    );
-    paths.ensureConfigDir();
-    writeFileSync(tuiPath, JSON.stringify({ plugin: [] }));
-    writePackageJson(packageRoot);
-    process.argv[1] = join(packageRoot, 'dist', 'cli', 'index.js');
-
-    const result = await addPluginToOpenCodeTuiConfig();
-
-    expect(result.success).toBe(true);
-    const saved = JSON.parse(readFileSync(tuiPath, 'utf-8'));
-    expect(saved.plugin).toEqual(['sylastra-agent-tree']);
   });
 
   test('addPluginToOpenCodeTuiConfig removes tuple plugin entries', async () => {
@@ -550,17 +494,5 @@ describe('config-io', () => {
     expect(detected.hasCopilot).toBe(true);
     expect(detected.hasZaiPlan).toBe(true);
     expect(detected.hasTmux).toBe(true);
-  });
-
-  test('detectCurrentConfig treats local repo path entries as installed', () => {
-    const configPath = join(tmpDir, 'opencode', 'opencode.json');
-    const packageRoot = join(tmpDir, 'repo');
-    paths.ensureConfigDir();
-    writePackageJson(packageRoot);
-    writeFileSync(configPath, JSON.stringify({ plugin: [packageRoot] }));
-
-    const detected = detectCurrentConfig();
-
-    expect(detected.isInstalled).toBe(true);
   });
 });

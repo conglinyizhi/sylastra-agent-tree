@@ -10,7 +10,6 @@ import {
   getOpenCodePath,
   getOpenCodeVersion,
   isOpenCodeInstalled,
-  warmOpenCodePluginCache,
   writeLiteConfig,
 } from './config-manager';
 import { CUSTOM_SKILLS, installCustomSkill } from './custom-skills';
@@ -192,20 +191,6 @@ async function runInstall(config: InstallConfig): Promise<number> {
   }
 
   if (!config.skipConfig) {
-    printStep(step++, totalSteps, 'Warming OpenCode plugin cache...');
-    if (config.dryRun) {
-      printInfo('Dry run mode - skipping cache warm-up');
-    } else {
-      const cacheResult = await warmOpenCodePluginCache();
-      if (cacheResult === null) {
-        printInfo('Local development install - cache warm-up not required');
-      } else if (!cacheResult.success) {
-        printInfo(`Skipped cache warm-up: ${cacheResult.error}`);
-      } else {
-        handleStepResult(cacheResult, 'OpenCode cache warmed');
-      }
-    }
-
     printStep(step++, totalSteps, 'Disabling OpenCode default agents...');
     if (config.dryRun) {
       printInfo('Dry run mode - skipping agent disabling');

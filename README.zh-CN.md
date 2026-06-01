@@ -28,6 +28,8 @@ GitHub Releases 发布。安装与更新都围绕自包含 release artifact 进�
 ./install.sh
 ```
 
+`./install.sh` 是普通用户的标准安装入口。
+
 安装器会：
 
 - 使用本地 `file://` 路径注册插件
@@ -35,7 +37,12 @@ GitHub Releases 发布。安装与更新都围绕自包含 release artifact 进�
 - 生成内置预设，或按需生成单模型预设
 - 保持 release 安装行为与打包产物目录结构一致
 
-也可以直接调用产物内置 CLI：
+Go updater 不是首装工具。它负责安装完成后的 release 生命周期管理：
+`prepare`、`activate`、`healthcheck`、`rollback`、`cleanup`。首次接入
+OpenCode、写插件配置、生成 preset、处理 JSONC 与技能安装逻辑，仍然由内置 CLI
+负责，因为这些逻辑本来就和插件自身的配置模型绑定在一起。
+
+仅供高级用法或调试时直接调用：
 
 ```bash
 node dist/cli/index.js install

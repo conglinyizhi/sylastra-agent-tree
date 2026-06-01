@@ -31,6 +31,8 @@ extract it, then run:
 ./install.sh
 ```
 
+`./install.sh` is the supported install entrypoint for normal users.
+
 The installer:
 
 - registers the plugin with a local `file://` path
@@ -38,7 +40,13 @@ The installer:
 - can generate either bundled presets or a single-model preset
 - keeps release installs aligned with the packaged artifact layout
 
-You can also call the bundled CLI directly:
+The packaged Go updater is not the first-install tool. Its job is release
+lifecycle management after installation: prepare, activate, healthcheck,
+rollback, and cleanup. Initial OpenCode integration and plugin-config
+generation still live in the bundled CLI because they share the same preset,
+schema, JSONC, and skill-install logic as the plugin itself.
+
+Advanced or debugging use only:
 
 ```bash
 node dist/cli/index.js install

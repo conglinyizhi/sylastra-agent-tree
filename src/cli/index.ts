@@ -52,8 +52,9 @@ function printHelp(): void {
 sylastra-agent-tree installer
 
 Usage:
-  bunx sylastra-agent-tree install [OPTIONS]
-  bunx sylastra-agent-tree doctor [OPTIONS]
+  ./install.sh
+  node dist/cli/index.js install [OPTIONS]
+  node dist/cli/index.js doctor [OPTIONS]
 
 Options:
   --skills=yes|no        Install bundled skills (default: yes)
@@ -77,12 +78,12 @@ Use --model to create a fully runnable single-model config during install.
 For the full config reference, see docs/configuration.md.
 
 Examples:
-  bunx sylastra-agent-tree install
-  bunx sylastra-agent-tree install --no-tui --skills=yes
-  bunx sylastra-agent-tree install --preset=opencode-go
-  bunx sylastra-agent-tree install --model=openai/gpt-5.5
-  bunx sylastra-agent-tree install --reset
-  bunx sylastra-agent-tree doctor
+  ./install.sh
+  node dist/cli/index.js install --no-tui --skills=yes
+  node dist/cli/index.js install --preset=opencode-go
+  node dist/cli/index.js install --model=openai/gpt-5.5
+  node dist/cli/index.js install --reset
+  node dist/cli/index.js doctor
 `);
 }
 

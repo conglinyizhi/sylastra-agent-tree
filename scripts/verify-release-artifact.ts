@@ -26,12 +26,25 @@ const packagedRequiredFiles = [
   'dist/index.d.ts',
   'dist/cli/index.js',
   'bin/sylastra-updater',
+  `bin/better-edit-tools-${resolveCurrentPlatform()}`,
   'sylastra-agent-tree.schema.json',
   'src/skills/simplify/SKILL.md',
   'src/skills/codemap/SKILL.md',
   'src/skills/clonedeps/SKILL.md',
   'node_modules/zod/package.json',
 ];
+
+function resolveCurrentPlatform(): string {
+  const archMap: Record<string, string> = {
+    x64: 'amd64',
+    arm64: 'arm64',
+  };
+  const mappedArch = archMap[process.arch];
+  if (!mappedArch) {
+    fail(`unsupported current arch for verification: ${process.arch}`);
+  }
+  return `${process.platform}-${mappedArch}`;
+}
 
 function fail(message: string): never {
   throw new Error(message);

@@ -19,6 +19,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      BET_REPO: conglinyizhi/better-edit-tools-mcp
+      BET_VERSION: ${{ inputs.bet-version || 'latest' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,11 +31,13 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: updater/go.mod
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
-
-      - name: Build plugin
-        run: bun run build
 
       - name: Determine version
         id: version
@@ -44,58 +49,24 @@ jobs:
             echo "tag=${PKG_VER}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Create release directory
+      - name: Build release artifact bundles
+        run: bun run build:release
+
+      - name: Verify packaged release artifact
+        run: bun run scripts/verify-release-artifact.ts
+
+      - name: Verify OpenCode host smoke test
+        run: bun run verify:host-smoke
+
+      - name: Collect release files
+        id: files
         run: |
-          VERSION="${{ steps.version.outputs.tag }}"
-          DIR="sylastra-agent-tree-${VERSION}"
-          mkdir -p "${DIR}/dist" "${DIR}/bin"
-
-          # Copy built artifacts
-          cp -r dist/* "${DIR}/dist/"
-          cp package.json README.md LICENSE sylastra-agent-tree.schema.json "${DIR}/"
-          cp scripts/install-release.sh "${DIR}/install.sh"
-          chmod +x "${DIR}/install.sh"
-
-          # Save dir name for later steps
-          echo "dir=${DIR}" >> "$GITHUB_OUTPUT"
-        id: release-dir
-
-      - name: Download better-edit-tools (linux-amd64)
-        run: |
-          DIR="${{ steps.release-dir.outputs.dir }}"
-          BET_VERSION="${{ inputs.bet-version }}"
-          REPO="conglinyizhi/better-edit-tools-mcp"
-
-          download_bet() {
-            local os=$1 arch=$2 suffix=$3
-            local url
-            if [ "${BET_VERSION}" = "latest" ]; then
-              url="https://github.com/${REPO}/releases/latest/download/better-edit-tools-${os}-${arch}.tar.gz"
-            else
-              url="https://github.com/${REPO}/releases/download/${BET_VERSION}/better-edit-tools-${os}-${arch}.tar.gz"
-            fi
-            echo "  ↓ Downloading better-edit-tools-${os}-${arch}..."
-            curl -fsSL "${url}" -o "/tmp/bet-${os}-${arch}.tar.gz"
-            tar xzf "/tmp/bet-${os}-${arch}.tar.gz" -C "/tmp/"
-            mv "/tmp/better-edit-tools" "${DIR}/bin/${suffix}"
-            chmod +x "${DIR}/bin/${suffix}"
-          }
-
-          download_bet linux  amd64  "better-edit-tools-linux-amd64"
-          download_bet linux  arm64  "better-edit-tools-linux-arm64"
-          download_bet darwin amd64  "better-edit-tools-darwin-amd64"
-          download_bet darwin arm64  "better-edit-tools-darwin-arm64"
-
-      - name: Create tarball
-        run: |
-          DIR="${{ steps.release-dir.outputs.dir }}"
-          VERSION="${{ steps.version.outputs.tag }}"
-          ARCHIVE="sylastra-agent-tree-${VERSION}.tar.gz"
-
-          tar czf "${ARCHIVE}" "${DIR}/"
-          echo "archive=${ARCHIVE}" >> "$GITHUB_OUTPUT"
-          du -sh "${ARCHIVE}"
-        id: archive
+          mapfile -t archives < <(find release-bundles -maxdepth 1 -type f -name 'sylastra-agent-tree-*.tar.gz' | sort)
+          {
+            echo 'archives<<EOF'
+            printf '%s\n' "${archives[@]}"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -108,16 +79,23 @@ jobs:
             基于 oh-my-opencode-slim 的 Agent 编排插件。
 
             ### 内含
-            - 预构建的插件代码（跨平台）
-            - better-edit-tools 文件编辑工具（含 linux/darwin amd64+arm64）
+            - 自包含的 release artifact
+            - `sylastra-updater` 自动更新二进制（linux/darwin amd64+arm64）
+            - `better-edit-tools` 文件编辑工具（linux/darwin amd64+arm64）
+
+            ### 平台
+            - 已发布：linux-amd64、linux-arm64、darwin-amd64、darwin-arm64
+            - 预留未启用：windows-amd64、windows-arm64
 
             ### 安装
+            下载与你系统匹配的压缩包，解压后执行：
+
             ```bash
-            tar xzf sylastra-agent-tree-${{ steps.version.outputs.tag }}.tar.gz
-            cd sylastra-agent-tree-${{ steps.version.outputs.tag }}
-            bash install.sh
+            ./install.sh
             ```
           files: |
-            ${{ steps.archive.outputs.archive }}
+            ${{ steps.files.outputs.archives }}
+            release-bundles/manifest.json
+            release-bundles/SHA256SUMS
           draft: false
           prerelease: false

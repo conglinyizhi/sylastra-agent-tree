@@ -6,12 +6,13 @@ import {
   cpSync,
   existsSync,
   mkdirSync,
-  readdirSync,
+  mkdtempSync,
   readFileSync,
   rmSync,
   statSync,
   writeFileSync,
 } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -38,6 +39,27 @@ type BuiltUpdaterBinary = {
   binaryPath: string;
 };
 
+type PlatformTarget = {
+  platform: string;
+  goos: 'linux' | 'darwin' | 'windows';
+  goarch: 'amd64' | 'arm64';
+  releaseEnabled: boolean;
+  updaterEnabled: boolean;
+  betterEditToolsEnabled: boolean;
+  betterEditToolsArchive: {
+    assetName: string;
+    type: 'tar.gz' | 'zip';
+    extractedBinaryName: string;
+    packagedBinaryName: string;
+  };
+};
+
+type DownloadedBetterEditToolsBinary = {
+  platform: string;
+  binaryPath: string;
+  packagedBinaryName: string;
+};
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
 const artifactRoot = path.join(repoRoot, 'release-artifact');
@@ -50,12 +72,104 @@ const runtimeDependencyRoots = [
   'turndown',
   'zod',
 ];
-const supportedUpdaterTargets = [
-  { platform: 'linux-amd64', goos: 'linux', goarch: 'amd64' },
-  { platform: 'linux-arm64', goos: 'linux', goarch: 'arm64' },
-  { platform: 'darwin-amd64', goos: 'darwin', goarch: 'amd64' },
-  { platform: 'darwin-arm64', goos: 'darwin', goarch: 'arm64' },
-] as const;
+const platformTargets: PlatformTarget[] = [
+  {
+    platform: 'linux-amd64',
+    goos: 'linux',
+    goarch: 'amd64',
+    releaseEnabled: true,
+    updaterEnabled: true,
+    betterEditToolsEnabled: true,
+    betterEditToolsArchive: {
+      assetName: 'better-edit-tools-linux-amd64.tar.gz',
+      type: 'tar.gz',
+      extractedBinaryName: 'better-edit-tools',
+      packagedBinaryName: 'better-edit-tools-linux-amd64',
+    },
+  },
+  {
+    platform: 'linux-arm64',
+    goos: 'linux',
+    goarch: 'arm64',
+    releaseEnabled: true,
+    updaterEnabled: true,
+    betterEditToolsEnabled: true,
+    betterEditToolsArchive: {
+      assetName: 'better-edit-tools-linux-arm64.tar.gz',
+      type: 'tar.gz',
+      extractedBinaryName: 'better-edit-tools',
+      packagedBinaryName: 'better-edit-tools-linux-arm64',
+    },
+  },
+  {
+    platform: 'darwin-amd64',
+    goos: 'darwin',
+    goarch: 'amd64',
+    releaseEnabled: true,
+    updaterEnabled: true,
+    betterEditToolsEnabled: true,
+    betterEditToolsArchive: {
+      assetName: 'better-edit-tools-darwin-amd64.tar.gz',
+      type: 'tar.gz',
+      extractedBinaryName: 'better-edit-tools',
+      packagedBinaryName: 'better-edit-tools-darwin-amd64',
+    },
+  },
+  {
+    platform: 'darwin-arm64',
+    goos: 'darwin',
+    goarch: 'arm64',
+    releaseEnabled: true,
+    updaterEnabled: true,
+    betterEditToolsEnabled: true,
+    betterEditToolsArchive: {
+      assetName: 'better-edit-tools-darwin-arm64.tar.gz',
+      type: 'tar.gz',
+      extractedBinaryName: 'better-edit-tools',
+      packagedBinaryName: 'better-edit-tools-darwin-arm64',
+    },
+  },
+  {
+    platform: 'windows-amd64',
+    goos: 'windows',
+    goarch: 'amd64',
+    releaseEnabled: false,
+    updaterEnabled: false,
+    betterEditToolsEnabled: false,
+    betterEditToolsArchive: {
+      assetName: 'better-edit-tools-windows-amd64.zip',
+      type: 'zip',
+      extractedBinaryName: 'better-edit-tools.exe',
+      packagedBinaryName: 'better-edit-tools-windows-amd64.exe',
+    },
+  },
+  {
+    platform: 'windows-arm64',
+    goos: 'windows',
+    goarch: 'arm64',
+    releaseEnabled: false,
+    updaterEnabled: false,
+    betterEditToolsEnabled: false,
+    betterEditToolsArchive: {
+      assetName: 'better-edit-tools-windows-arm64.zip',
+      type: 'zip',
+      extractedBinaryName: 'better-edit-tools.exe',
+      packagedBinaryName: 'better-edit-tools-windows-arm64.exe',
+    },
+  },
+];
+const supportedUpdaterTargets = platformTargets.filter(
+  (target) => target.updaterEnabled,
+);
+const releasedPlatformTargets = platformTargets.filter(
+  (target) => target.releaseEnabled,
+);
+const betterEditToolsTargets = platformTargets.filter(
+  (target) => target.betterEditToolsEnabled,
+);
+const betterEditToolsRepo =
+  process.env.BET_REPO ?? 'conglinyizhi/better-edit-tools-mcp';
+const betterEditToolsVersion = process.env.BET_VERSION ?? 'latest';
 
 function readJson<T>(filePath: string): T {
   return JSON.parse(readFileSync(filePath, 'utf8')) as T;
@@ -223,6 +337,129 @@ function buildUpdaterBinaries(version: string): BuiltUpdaterBinary[] {
   return built;
 }
 
+function runCommand(
+  command: string,
+  args: string[],
+  options: {
+    cwd?: string;
+    env?: NodeJS.ProcessEnv;
+    errorMessage?: string;
+  } = {},
+) {
+  const result = spawnSync(command, args, {
+    cwd: options.cwd ?? repoRoot,
+    encoding: 'utf8',
+    env: options.env ?? process.env,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  if (result.status !== 0) {
+    throw new Error(
+      options.errorMessage ?? (result.stderr || `failed to run ${command}`),
+    );
+  }
+
+  return result;
+}
+
+function downloadBetterEditToolsBinary(
+  target: PlatformTarget,
+  outputRoot: string,
+): DownloadedBetterEditToolsBinary {
+  const legacyBinaryPath = path.join(
+    repoRoot,
+    target.betterEditToolsArchive.packagedBinaryName,
+  );
+  if (existsSync(legacyBinaryPath)) {
+    const targetDir = path.join(outputRoot, target.platform);
+    mkdirSync(targetDir, { recursive: true });
+    const binaryPath = path.join(
+      targetDir,
+      target.betterEditToolsArchive.packagedBinaryName,
+    );
+    copyFileSync(legacyBinaryPath, binaryPath);
+    chmodSync(binaryPath, 0o755);
+    return {
+      platform: target.platform,
+      binaryPath,
+      packagedBinaryName: target.betterEditToolsArchive.packagedBinaryName,
+    };
+  }
+
+  const targetDir = path.join(outputRoot, target.platform);
+  mkdirSync(targetDir, { recursive: true });
+
+  const archiveUrl =
+    betterEditToolsVersion === 'latest'
+      ? `https://github.com/${betterEditToolsRepo}/releases/latest/download/${target.betterEditToolsArchive.assetName}`
+      : `https://github.com/${betterEditToolsRepo}/releases/download/${betterEditToolsVersion}/${target.betterEditToolsArchive.assetName}`;
+  const tempDir = mkdtempSync(
+    path.join(os.tmpdir(), `sylastra-bet-${target.platform}-`),
+  );
+
+  try {
+    const archivePath = path.join(
+      tempDir,
+      target.betterEditToolsArchive.assetName,
+    );
+    console.log(`Downloading ${target.betterEditToolsArchive.assetName}...`);
+    runCommand('curl', ['-fsSL', archiveUrl, '-o', archivePath], {
+      errorMessage: `failed to download ${target.betterEditToolsArchive.assetName} from ${archiveUrl}`,
+    });
+
+    if (target.betterEditToolsArchive.type !== 'tar.gz') {
+      throw new Error(
+        `better-edit-tools archive type ${target.betterEditToolsArchive.type} is reserved for future support on ${target.platform}`,
+      );
+    }
+
+    runCommand('tar', ['-xzf', archivePath, '-C', tempDir], {
+      errorMessage: `failed to extract ${target.betterEditToolsArchive.assetName}`,
+    });
+
+    const extractedBinaryPath = path.join(
+      tempDir,
+      target.betterEditToolsArchive.extractedBinaryName,
+    );
+    if (!existsSync(extractedBinaryPath)) {
+      throw new Error(
+        `extracted better-edit-tools binary not found for ${target.platform}: ${extractedBinaryPath}`,
+      );
+    }
+
+    const binaryPath = path.join(
+      targetDir,
+      target.betterEditToolsArchive.packagedBinaryName,
+    );
+    copyFileSync(extractedBinaryPath, binaryPath);
+    chmodSync(binaryPath, 0o755);
+
+    return {
+      platform: target.platform,
+      binaryPath,
+      packagedBinaryName: target.betterEditToolsArchive.packagedBinaryName,
+    };
+  } finally {
+    rmSync(tempDir, { force: true, recursive: true });
+  }
+}
+
+function downloadBetterEditToolsBinaries(
+  version: string,
+): DownloadedBetterEditToolsBinary[] {
+  const outputRoot = path.join(
+    releaseBundlesRoot,
+    'better-edit-tools-bin',
+    version,
+  );
+  rmSync(outputRoot, { force: true, recursive: true });
+  mkdirSync(outputRoot, { recursive: true });
+
+  return betterEditToolsTargets.map((target) =>
+    downloadBetterEditToolsBinary(target, outputRoot),
+  );
+}
+
 function resolveCurrentPlatform(): string {
   const archMap: Record<string, string> = {
     x64: 'amd64',
@@ -237,20 +474,23 @@ function resolveCurrentPlatform(): string {
   return `${process.platform}-${mappedArch}`;
 }
 
-function copyCurrentPlatformUpdater(binaries: BuiltUpdaterBinary[]) {
-  const currentPlatform = resolveCurrentPlatform();
-  const match = binaries.find((item) => item.platform === currentPlatform);
-  if (!match) {
-    throw new Error(
-      `no updater binary built for current platform ${currentPlatform}`,
-    );
-  }
-
+function stageArtifactPlatformBinaries(
+  updaterBinary: BuiltUpdaterBinary,
+  betterEditToolsBinary: DownloadedBetterEditToolsBinary,
+) {
   const binDir = path.join(artifactRoot, 'bin');
-  mkdirSync(binDir, { recursive: true });
-  const targetPath = path.join(binDir, 'sylastra-updater');
-  copyFileSync(match.binaryPath, targetPath);
-  chmodSync(targetPath, 0o755);
+  ensureCleanDir(binDir);
+
+  const updaterTargetPath = path.join(binDir, 'sylastra-updater');
+  copyFileSync(updaterBinary.binaryPath, updaterTargetPath);
+  chmodSync(updaterTargetPath, 0o755);
+
+  const betterEditToolsTargetPath = path.join(
+    binDir,
+    betterEditToolsBinary.packagedBinaryName,
+  );
+  copyFileSync(betterEditToolsBinary.binaryPath, betterEditToolsTargetPath);
+  chmodSync(betterEditToolsTargetPath, 0o755);
 }
 
 function createTarball(
@@ -355,33 +595,67 @@ function main() {
   }
 
   const builtUpdaterBinaries = buildUpdaterBinaries(sourcePkg.version);
-  copyCurrentPlatformUpdater(builtUpdaterBinaries);
-
-  const binDir = path.join(artifactRoot, 'bin');
-  for (const entry of readdirSync(repoRoot)) {
-    if (!entry.startsWith('better-edit-tools-')) continue;
-    copyFileSync(path.join(repoRoot, entry), path.join(binDir, entry));
+  const downloadedBetterEditToolsBinaries = downloadBetterEditToolsBinaries(
+    sourcePkg.version,
+  );
+  const currentPlatform = resolveCurrentPlatform();
+  const currentUpdaterBinary = builtUpdaterBinaries.find(
+    (item) => item.platform === currentPlatform,
+  );
+  const currentBetterEditToolsBinary = downloadedBetterEditToolsBinaries.find(
+    (item) => item.platform === currentPlatform,
+  );
+  if (!currentUpdaterBinary) {
+    throw new Error(
+      `no updater binary built for current platform ${currentPlatform}`,
+    );
   }
+  if (!currentBetterEditToolsBinary) {
+    throw new Error(
+      `no better-edit-tools binary staged for current platform ${currentPlatform}`,
+    );
+  }
+  stageArtifactPlatformBinaries(
+    currentUpdaterBinary,
+    currentBetterEditToolsBinary,
+  );
 
   console.log(
     `Release artifact assembled at ${path.relative(repoRoot, artifactRoot)}`,
   );
 
-  const archives = builtUpdaterBinaries.map(({ platform, binaryPath }) => {
-    const artifactUpdaterPath = path.join(
-      artifactRoot,
-      'bin',
-      'sylastra-updater',
+  const archives = releasedPlatformTargets.map((target) => {
+    const updaterBinary = builtUpdaterBinaries.find(
+      (item) => item.platform === target.platform,
     );
-    copyFileSync(binaryPath, artifactUpdaterPath);
-    chmodSync(artifactUpdaterPath, 0o755);
-    const { archivePath, sha256 } = createTarball(sourcePkg.version, platform);
+    const betterEditToolsBinary = downloadedBetterEditToolsBinaries.find(
+      (item) => item.platform === target.platform,
+    );
+    if (!updaterBinary) {
+      throw new Error(`missing updater binary for ${target.platform}`);
+    }
+    if (!betterEditToolsBinary) {
+      throw new Error(
+        `missing better-edit-tools binary for ${target.platform}`,
+      );
+    }
+
+    stageArtifactPlatformBinaries(updaterBinary, betterEditToolsBinary);
+    const { archivePath, sha256 } = createTarball(
+      sourcePkg.version,
+      target.platform,
+    );
     return {
-      platform,
+      platform: target.platform,
       archiveName: path.basename(archivePath),
       sha256,
     };
   });
+
+  stageArtifactPlatformBinaries(
+    currentUpdaterBinary,
+    currentBetterEditToolsBinary,
+  );
 
   writeReleaseManifest(sourcePkg.version, archives);
   writeShaSums(archives);

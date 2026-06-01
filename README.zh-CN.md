@@ -7,8 +7,7 @@
 
 本项目 fork 自
 [oh-my-opencode-slim](https://github.com/alvinunreal/oh-my-opencode-slim)，当前只通过
-GitHub Releases 发布。安装与更新都围绕自包含 release artifact 进行，不再依赖
-`bunx`、`npm publish` 或包管理器安装链路。
+GitHub Releases 发布。安装与更新都围绕自包含 release artifact 工作流进行。
 
 ## 项目能力
 

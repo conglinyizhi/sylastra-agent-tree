@@ -3,7 +3,7 @@
 ## 职责
 
 - 提供一个启动钩子，检测 `sylastra-agent-tree` 的插件更新可用性，通过 TUI toast 报告状态，并驱动 artifact updater 的 prepare / activate / healthcheck / rollback 流程。
-- 区分处理本地开发模式和固定插件版本（`file://`、固定标签和 `latest` 通道语义）。
+- 区分处理本地开发模式、固定版本安装和正常 channel 更新语义。
 
 ## 设计
 

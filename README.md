@@ -8,9 +8,8 @@ documentation lookup, implementation, review, and UI work.
 
 This project is a fork of
 [oh-my-opencode-slim](https://github.com/alvinunreal/oh-my-opencode-slim) and
-is now released through GitHub Releases only. Local installation uses a
-self-contained release artifact rather than `bunx`, `npm publish`, or
-package-manager driven updates.
+is now released through GitHub Releases only. Local installation and updates
+use a self-contained release artifact workflow.
 
 ## What It Provides
 

@@ -157,7 +157,7 @@ Presets can also be switched at runtime without restarting using the `/preset` c
 
 ### Auto Update
 
-`autoUpdate` now targets the artifact updater flow rather than `bun install`.
+`autoUpdate` uses the artifact updater flow.
 
 Set `autoUpdate` to `false` if you want update notifications without automatic
 prepare steps.

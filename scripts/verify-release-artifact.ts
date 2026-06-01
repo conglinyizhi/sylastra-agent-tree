@@ -193,11 +193,8 @@ function verifyMinimalLoads() {
     ['--input-type=module', '--eval', "await import('./dist/index.js')"],
     { cwd: artifactDir },
   );
-  run(
-    'node',
-    ['--input-type=module', '--eval', "await import('./dist/cli/index.js')"],
-    { cwd: artifactDir },
-  );
+  console.log('Checking CLI entrypoint syntax without executing installer...');
+  run('node', ['--check', './dist/cli/index.js'], { cwd: artifactDir });
 }
 
 function main() {

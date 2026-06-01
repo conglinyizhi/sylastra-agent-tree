@@ -438,7 +438,7 @@ function stateToEntry(
       id: q.id,
       question: q.question,
       options: q.options,
-      suggested: q.suggested,
+      suggestedIndex: q.suggestedIndex,
     })),
     pendingAnswers: null,
     lastUpdatedAt: Date.now(),

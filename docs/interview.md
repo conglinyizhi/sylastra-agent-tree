@@ -18,7 +18,7 @@ What happens:
 
 1. OpenCode starts the interview in your current session
 2. a localhost page opens in your browser by default
-3. the UI shows the current questions and suggested answers
+3. the UI shows the current questions and recommended options
 4. answers are submitted back into the same session
 5. a markdown spec is updated in your repo
 
@@ -54,7 +54,7 @@ todos, delegation, and verification stay aligned with the clarified spec.
 ## What the browser UI gives you
 
 - focused question flow instead of open-ended chat
-- suggested answers, clearly marked as recommended
+- recommended options, clearly marked in the UI
 - keyboard-driven selection for the active question
 - custom freeform answers when needed
 - visible path to the markdown interview file
@@ -96,6 +96,29 @@ A: Design teams
 Q: Is this web only or mobile too?
 A: Web first
 ```
+
+## Machine-readable state block
+
+The interview agent must emit an `<interview_state>` JSON block. Recommended
+options now use `suggestedIndex` with a 0-based index.
+
+```json
+{
+  "summary": "当前理解的简短概述",
+  "title": "kanban-design-tool",
+  "questions": [
+    {
+      "id": "platform",
+      "question": "首先支持哪个平台？",
+      "options": ["Web", "iOS", "Android"],
+      "suggestedIndex": 0
+    }
+  ]
+}
+```
+
+Legacy `suggested` string values are still accepted when reading old state, but
+new output should only write `suggestedIndex`.
 
 ### How filenames are chosen
 

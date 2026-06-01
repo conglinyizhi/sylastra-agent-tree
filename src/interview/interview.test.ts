@@ -238,7 +238,7 @@ describe('interview service', () => {
         parts: [
           {
             type: 'text',
-            text: 'Here are some questions.\n<interview_state>\n{\n  "summary": "Building a test app",\n  "questions": [\n    {\n      "id": "q-1",\n      "question": "What platform?",\n      "options": ["Web", "Mobile"],\n      "suggested": "Web"\n    }\n  ]\n}\n</interview_state>',
+            text: 'Here are some questions.\n<interview_state>\n{\n  "summary": "Building a test app",\n  "questions": [\n    {\n      "id": "q-1",\n      "question": "What platform?",\n      "options": ["Web", "Mobile"],\n      "suggestedIndex": 0\n    }\n  ]\n}\n</interview_state>',
           },
         ],
       });
@@ -281,7 +281,7 @@ describe('interview service', () => {
           parts: [
             {
               type: 'text',
-              text: 'First question.\n<interview_state>\n{\n  "summary": "Building an app",\n  "questions": [\n    {\n      "id": "q-1",\n      "question": "What is the name?",\n      "options": ["App1", "App2"],\n      "suggested": "App1"\n    }\n  ]\n}\n</interview_state>',
+              text: 'First question.\n<interview_state>\n{\n  "summary": "Building an app",\n  "questions": [\n    {\n      "id": "q-1",\n      "question": "What is the name?",\n      "options": ["App1", "App2"],\n      "suggestedIndex": 0\n    }\n  ]\n}\n</interview_state>',
             },
           ],
         },
@@ -292,7 +292,7 @@ describe('interview service', () => {
           parts: [
             {
               type: 'text',
-              text: 'Second question.\n<interview_state>\n{\n  "summary": "Building App1",\n  "questions": [\n    {\n      "id": "q-2",\n      "question": "What color?",\n      "options": ["Red", "Blue"],\n      "suggested": "Blue"\n    }\n  ]\n}\n</interview_state>',
+              text: 'Second question.\n<interview_state>\n{\n  "summary": "Building App1",\n  "questions": [\n    {\n      "id": "q-2",\n      "question": "What color?",\n      "options": ["Red", "Blue"],\n      "suggestedIndex": 1\n    }\n  ]\n}\n</interview_state>',
             },
           ],
         },
@@ -330,7 +330,7 @@ describe('interview service', () => {
         parts: [
           {
             type: 'text',
-            text: 'Acknowledged.\n<interview_state>\n{\n  "summary": "Building App1",\n  "questions": [\n    {\n      "id": "q-2",\n      "question": "What color?",\n      "options": ["Red", "Blue"],\n      "suggested": "Blue"\n    }\n  ]\n}\n</interview_state>',
+            text: 'Acknowledged.\n<interview_state>\n{\n  "summary": "Building App1",\n  "questions": [\n    {\n      "id": "q-2",\n      "question": "What color?",\n      "options": ["Red", "Blue"],\n      "suggestedIndex": 1\n    }\n  ]\n}\n</interview_state>',
           },
         ],
       });
@@ -392,7 +392,7 @@ describe('interview service', () => {
         parts: [
           {
             type: 'text',
-            text: 'Here are some questions.\n<interview_state>\n{\n  "summary": "Building a test app",\n  "questions": [\n    {\n      "id": "q-1",\n      "question": "What platform?",\n      "options": ["Web", "Mobile"],\n      "suggested": "Web"\n    }\n  ]\n}\n</interview_state>',
+            text: 'Here are some questions.\n<interview_state>\n{\n  "summary": "Building a test app",\n  "questions": [\n    {\n      "id": "q-1",\n      "question": "What platform?",\n      "options": ["Web", "Mobile"],\n      "suggestedIndex": 0\n    }\n  ]\n}\n</interview_state>',
           },
         ],
       });
@@ -461,7 +461,7 @@ describe('interview service', () => {
         parts: [
           {
             type: 'text',
-            text: 'Here are some questions.\n<interview_state>\n{\n  "summary": "Building a test app",\n  "questions": [\n    {\n      "id": "q-1",\n      "question": "What platform?",\n      "options": ["Web", "Mobile"],\n      "suggested": "Web"\n    }\n  ]\n}\n</interview_state>',
+            text: 'Here are some questions.\n<interview_state>\n{\n  "summary": "Building a test app",\n  "questions": [\n    {\n      "id": "q-1",\n      "question": "What platform?",\n      "options": ["Web", "Mobile"],\n      "suggestedIndex": 0\n    }\n  ]\n}\n</interview_state>',
           },
         ],
       });
@@ -482,7 +482,7 @@ describe('interview service', () => {
         service.submitAnswers(requiredInterviewId, [
           { questionId: 'q-1', answer: 'Mobile' },
         ]),
-      ).rejects.toThrow('Interview session is busy');
+      ).rejects.toThrow('面试会话正忙，请等待当前响应完成。');
 
       // Wait for first submission to complete (it will succeed after 200ms delay)
       await firstSubmissionPromise;
@@ -530,7 +530,7 @@ describe('interview service', () => {
         parts: [
           {
             type: 'text',
-            text: 'Here are some questions.\n<interview_state>\n{\n  "summary": "Building a test app",\n  "questions": [\n    {\n      "id": "q-1",\n      "question": "What platform?",\n      "options": ["Web", "Mobile"],\n      "suggested": "Web"\n    }\n  ]\n}\n</interview_state>',
+            text: 'Here are some questions.\n<interview_state>\n{\n  "summary": "Building a test app",\n  "questions": [\n    {\n      "id": "q-1",\n      "question": "What platform?",\n      "options": ["Web", "Mobile"],\n      "suggestedIndex": 0\n    }\n  ]\n}\n</interview_state>',
           },
         ],
       });
@@ -540,7 +540,7 @@ describe('interview service', () => {
         service.submitAnswers(requiredInterviewId, [
           { questionId: 'invalid-id', answer: 'Web' },
         ]),
-      ).rejects.toThrow('Answers do not match the current interview questions');
+      ).rejects.toThrow('回答与当前的面试问题不匹配。');
 
       // Second submission with correct answer should succeed (lock was released)
       await expect(
@@ -601,7 +601,7 @@ describe('interview service', () => {
         service.submitAnswers(requiredInterviewId, [
           { questionId: 'q-1', answer: 'Web' },
         ]),
-      ).rejects.toThrow('There are no active interview questions to answer');
+      ).rejects.toThrow('当前没有需要回答的面试问题。');
 
       // Verify state is not busy after the failed submission
       const state = await service.getInterviewState(requiredInterviewId);

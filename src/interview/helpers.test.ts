@@ -310,7 +310,7 @@ describe('readJsonBody', () => {
       // Give the server a tick to finish processing
       await new Promise((resolve) => setTimeout(resolve, 50));
       expect(caughtError).not.toBeNull();
-      expect(caughtError?.message).toContain('too large');
+      expect(caughtError?.message).toContain('请求体过大');
     } finally {
       server.close();
     }

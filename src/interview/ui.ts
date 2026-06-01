@@ -990,7 +990,7 @@ export function renderInterviewPage(
         button.appendChild(text);
 
         // Visual marking for suggested/recommended answers
-        if (!isCustom && question.suggested === option) {
+        if (!isCustom && question.suggestedIndex === index) {
           const badge = document.createElement('span');
           badge.className = 'recommended-badge';
           badge.textContent = 'Recommended';
@@ -1400,10 +1400,14 @@ export function renderInterviewPage(
           wrapper.className = 'question';
           wrapper.id = 'question-' + question.id;
           
-           if (question.suggested && !state.answers[question.id]) {
-             state.answers[question.id] = question.suggested;
+           if (
+             question.suggestedIndex !== undefined &&
+             question.options[question.suggestedIndex] &&
+             !state.answers[question.id]
+           ) {
+             state.answers[question.id] = question.options[question.suggestedIndex];
              state.customMode[question.id] = false;
-            }
+           }
 
           const title = document.createElement('h3');
           title.textContent = question.question;

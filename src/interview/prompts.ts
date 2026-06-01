@@ -10,9 +10,11 @@ function formatQuestionContext(questions: InterviewQuestion[]): string {
       const options = question.options.length
         ? `选项：${question.options.join(' | ')}`
         : '选项：自由回答';
-      const suggested = question.suggested
-        ? `建议：${question.suggested}`
-        : '建议：无';
+      const suggested =
+        question.suggestedIndex !== undefined &&
+        question.options[question.suggestedIndex] !== undefined
+          ? `建议：${question.options[question.suggestedIndex]}（索引 ${question.suggestedIndex}）`
+          : '建议：无';
       return `${index + 1}. ${question.question}\n${options}\n${suggested}`;
     })
     .join('\n\n');
@@ -35,7 +37,7 @@ export function buildKickoffPrompt(idea: string, maxQuestions: number): string {
     '      "id": "简短-kebab-格式-id-2",',
     '      "question": "问题文本",',
     '      "options": ["选项 1", "选项 2", "选项 3"],',
-    '      "suggested": "最佳建议选项"',
+    '      "suggestedIndex": 0',
     '    }',
     '  ]',
     '}',

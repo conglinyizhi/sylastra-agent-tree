@@ -31,6 +31,25 @@ function normalizeQuestion(
         .slice(0, 4)
     : [];
 
+  let suggestedIndex: number | undefined;
+  if (
+    typeof result.data.suggestedIndex === 'number' &&
+    Number.isInteger(result.data.suggestedIndex) &&
+    result.data.suggestedIndex >= 0 &&
+    result.data.suggestedIndex < options.length
+  ) {
+    suggestedIndex = result.data.suggestedIndex;
+  } else if (
+    typeof result.data.suggested === 'string' &&
+    result.data.suggested.trim().length > 0
+  ) {
+    const normalizedSuggested = result.data.suggested.trim();
+    const mappedIndex = options.indexOf(normalizedSuggested);
+    if (mappedIndex >= 0) {
+      suggestedIndex = mappedIndex;
+    }
+  }
+
   return {
     id:
       typeof result.data.id === 'string' && result.data.id.trim().length > 0
@@ -38,11 +57,7 @@ function normalizeQuestion(
         : `q-${index + 1}`,
     question,
     options,
-    suggested:
-      typeof result.data.suggested === 'string' &&
-      result.data.suggested.trim().length > 0
-        ? result.data.suggested.trim()
-        : undefined,
+    suggestedIndex,
   };
 }
 

@@ -4,7 +4,7 @@ export interface InterviewQuestion {
   id: string;
   question: string;
   options: string[];
-  suggested?: string;
+  suggestedIndex?: number;
 }
 
 export interface InterviewAnswer {
@@ -25,6 +25,7 @@ export const RawQuestionSchema = z.object({
   id: z.string().optional(),
   question: z.string().optional(),
   options: z.array(z.unknown()).optional(),
+  suggestedIndex: z.unknown().optional(),
   suggested: z.unknown().optional(),
 });
 
@@ -112,7 +113,7 @@ export interface InterviewStateEntry {
     id: string;
     question: string;
     options?: string[];
-    suggested?: string;
+    suggestedIndex?: number;
   }>;
   pendingAnswers: Array<{
     questionId: string;

@@ -9,7 +9,7 @@ import {
 describe('parseAssistantState', () => {
   test('parses valid interview state with questions', () => {
     const text =
-      'Here are questions.\n<interview_state>\n{"summary":"Test app","questions":[{"id":"q-1","question":"Platform?","options":["Web","Mobile"],"suggested":"Web"}]}\n</interview_state>';
+      'Here are questions.\n<interview_state>\n{"summary":"Test app","questions":[{"id":"q-1","question":"Platform?","options":["Web","Mobile"],"suggestedIndex":0}]}\n</interview_state>';
     const result = parseAssistantState(text, 2);
 
     expect(result.state).not.toBeNull();
@@ -18,7 +18,15 @@ describe('parseAssistantState', () => {
     expect(result.state?.questions[0].id).toBe('q-1');
     expect(result.state?.questions[0].question).toBe('Platform?');
     expect(result.state?.questions[0].options).toEqual(['Web', 'Mobile']);
-    expect(result.state?.questions[0].suggested).toBe('Web');
+    expect(result.state?.questions[0].suggestedIndex).toBe(0);
+  });
+
+  test('maps legacy suggested text to suggestedIndex', () => {
+    const text =
+      '<interview_state>\n{"summary":"Test app","questions":[{"id":"q-1","question":"Platform?","options":["Web","Mobile"],"suggested":"Mobile"}]}\n</interview_state>';
+    const result = parseAssistantState(text, 2);
+
+    expect(result.state?.questions[0].suggestedIndex).toBe(1);
   });
 
   test('parses state with title field', () => {

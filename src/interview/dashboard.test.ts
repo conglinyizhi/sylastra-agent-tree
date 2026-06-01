@@ -546,7 +546,7 @@ describe('dashboard server', () => {
               id: 'q-1',
               question: 'What?',
               options: ['A', 'B'],
-              suggested: 'A',
+              suggestedIndex: 0,
             },
           ],
           pendingAnswers: null,

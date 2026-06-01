@@ -34,7 +34,7 @@ The installer:
 
 - registers the plugin with a local `file://` path
 - writes `~/.config/opencode/sylastra-agent-tree.json` unless you skip config
-- can generate either bundled presets or a single-model preset
+- can generate bundled presets, a single-model preset, or a tri-model preset
 - keeps release installs aligned with the packaged artifact layout
 
 The packaged Go updater is not the first-install tool. Its job is release
@@ -54,6 +54,7 @@ Useful options:
 ```bash
 node dist/cli/index.js install --preset=opencode-go
 node dist/cli/index.js install --model=openai/gpt-5.5
+node dist/cli/index.js install --fast-model=deepseek/deepseek-v4-flash --strong-model=deepseek/deepseek-v4-pro --vision-model=xiaomi/mimo-v2-omni
 node dist/cli/index.js install --skip-config
 node dist/cli/index.js install --skip-plugin-register
 node dist/cli/index.js install --reset
@@ -61,6 +62,8 @@ node dist/cli/index.js install --reset
 
 `--preset` and `--model` are mutually exclusive. `--model` generates and
 activates a `single-model` preset for all default agents.
+Using any of `--fast-model`, `--strong-model`, or `--vision-model` generates a
+fixed `tri-model` preset for cheap, strong, and vision-capable roles.
 
 Full install details are in [docs/installation.md](docs/installation.md).
 

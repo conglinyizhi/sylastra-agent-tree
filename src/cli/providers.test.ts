@@ -5,6 +5,7 @@ import {
   generateLiteConfig,
   MODEL_MAPPINGS,
   SINGLE_MODEL_PRESET,
+  TRI_MODEL_PRESET,
 } from './providers';
 
 describe('providers', () => {
@@ -104,6 +105,43 @@ describe('providers', () => {
     expect(agents.oracle.model).toBe('openai/gpt-5.5');
     expect(agents.observer.model).toBe('openai/gpt-5.5');
     expect(agents.council.model).toBe('openai/gpt-5.5');
+  });
+
+  test('generateLiteConfig can generate a tri-model preset', () => {
+    const config = generateLiteConfig({
+      hasTmux: false,
+      installCustomSkills: false,
+      fastModel: 'deepseek/deepseek-v4-flash',
+      strongModel: 'deepseek/deepseek-v4-pro',
+      visionModel: 'xiaomi/mimo-v2-omni',
+      reset: false,
+    });
+
+    expect(config.preset).toBe(TRI_MODEL_PRESET);
+    const agents = (config.presets as any)[TRI_MODEL_PRESET];
+    expect(agents.orchestrator.model).toBe('deepseek/deepseek-v4-pro');
+    expect(agents.oracle.model).toBe('deepseek/deepseek-v4-pro');
+    expect(agents.council.model).toBe('deepseek/deepseek-v4-pro');
+    expect(agents.librarian.model).toBe('deepseek/deepseek-v4-flash');
+    expect(agents.explorer.model).toBe('deepseek/deepseek-v4-flash');
+    expect(agents.fixer.model).toBe('deepseek/deepseek-v4-flash');
+    expect(agents.designer.model).toBe('xiaomi/mimo-v2-omni');
+    expect(agents.observer.model).toBe('xiaomi/mimo-v2-omni');
+  });
+
+  test('generateLiteConfig tri-model preset falls back across missing model classes', () => {
+    const config = generateLiteConfig({
+      hasTmux: false,
+      installCustomSkills: false,
+      strongModel: 'deepseek/deepseek-v4-pro',
+      reset: false,
+    });
+
+    expect(config.preset).toBe(TRI_MODEL_PRESET);
+    const agents = (config.presets as any)[TRI_MODEL_PRESET];
+    expect(agents.orchestrator.model).toBe('deepseek/deepseek-v4-pro');
+    expect(agents.librarian.model).toBe('deepseek/deepseek-v4-pro');
+    expect(agents.designer.model).toBe('deepseek/deepseek-v4-pro');
   });
 
   test('generateLiteConfig rejects unsupported preset', () => {

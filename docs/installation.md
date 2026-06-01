@@ -37,13 +37,16 @@ The installer supports the following options:
 | `--skills=yes|no` | Install bundled skills (default: yes) |
 | `--preset=<name>` | Active generated config preset: `openai` or `opencode-go` (default: `openai`) |
 | `--model=<id>` | Generate and activate a `single-model` preset for all agents |
+| `--fast-model=<id>` | Cheap/high-frequency model for `explorer`, `librarian`, and `fixer` |
+| `--strong-model=<id>` | Strong model for `orchestrator`, `oracle`, and `council` |
+| `--vision-model=<id>` | Vision-capable model for `designer` and `observer` |
 | `--skip-config` | Install/register plugin without writing `sylastra-agent-tree.json` |
 | `--skip-plugin-register` | Generate plugin config only, without writing OpenCode `plugin` array |
 | `--no-tui` | Non-interactive mode |
 | `--dry-run` | Simulate install without writing files |
 | `--reset` | Force overwrite of existing configuration |
 
-`--preset` and `--model` are mutually exclusive.
+`--preset`, `--model`, and the tri-model flags are mutually exclusive.
 
 ### Non-Destructive Behavior
 
@@ -77,6 +80,23 @@ node dist/cli/index.js install --model=openai/gpt-5.5
 ```
 
 That creates and activates a `single-model` preset covering all default agents, including `observer` and `council` when present.
+
+If you want separate models for cheap tasks, strong reasoning, and vision work during install, run:
+
+```bash
+node dist/cli/index.js install \
+  --fast-model=deepseek/deepseek-v4-flash \
+  --strong-model=deepseek/deepseek-v4-pro \
+  --vision-model=xiaomi/mimo-v2-omni
+```
+
+That creates and activates a `tri-model` preset with this default routing:
+
+- `strong-model`: `orchestrator`, `oracle`, `council`
+- `fast-model`: `librarian`, `explorer`, `fixer`
+- `vision-model`: `designer`, `observer`
+
+If you provide only one or two of the tri-model flags, the installer fills any missing class from the provided values.
 
 Then:
 
@@ -161,6 +181,9 @@ node dist/cli/index.js install --preset=opencode-go
 
 # Generate a single-model preset for all agents
 node dist/cli/index.js install --model=openai/gpt-5.5
+
+# Generate a tri-model preset for cheap / strong / vision workloads
+node dist/cli/index.js install --fast-model=deepseek/deepseek-v4-flash --strong-model=deepseek/deepseek-v4-pro --vision-model=xiaomi/mimo-v2-omni
 
 # Non-interactive without skills
 node dist/cli/index.js install --no-tui --skills=no

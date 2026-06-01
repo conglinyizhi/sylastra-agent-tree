@@ -5,6 +5,9 @@ export interface InstallArgs {
   skills?: BooleanArg;
   preset?: string;
   model?: string;
+  fastModel?: string;
+  strongModel?: string;
+  visionModel?: string;
   dryRun?: boolean;
   reset?: boolean;
   skipConfig?: boolean;
@@ -23,6 +26,9 @@ export interface InstallConfig {
   installCustomSkills: boolean;
   preset?: string;
   model?: string;
+  fastModel?: string;
+  strongModel?: string;
+  visionModel?: string;
   promptForStar?: boolean;
   dryRun?: boolean;
   reset: boolean;

@@ -7,6 +7,7 @@ const SCHEMA_URL =
 
 export const GENERATED_PRESETS = ['openai', 'opencode-go'] as const;
 export const SINGLE_MODEL_PRESET = 'single-model';
+export const TRI_MODEL_PRESET = 'tri-model';
 
 // Model mappings by provider/preset.
 export const MODEL_MAPPINGS = {
@@ -67,6 +68,14 @@ type AgentModelConfig = {
 
 type AgentPresetMapping = Record<string, AgentModelConfig>;
 
+function hasTriModelInputs(installConfig: InstallConfig): boolean {
+  return Boolean(
+    installConfig.fastModel ||
+      installConfig.strongModel ||
+      installConfig.visionModel,
+  );
+}
+
 export function isPresetName(value: string): value is PresetName {
   return Object.hasOwn(MODEL_MAPPINGS, value);
 }
@@ -90,8 +99,14 @@ export function generateLiteConfig(
 ): Record<string, unknown> {
   const preset = installConfig.model
     ? SINGLE_MODEL_PRESET
-    : (installConfig.preset ?? 'openai');
-  if (!installConfig.model && !isGeneratedPresetName(preset)) {
+    : hasTriModelInputs(installConfig)
+      ? TRI_MODEL_PRESET
+      : (installConfig.preset ?? 'openai');
+  if (
+    !installConfig.model &&
+    !hasTriModelInputs(installConfig) &&
+    !isGeneratedPresetName(preset)
+  ) {
     throw new Error(
       `Unsupported preset "${preset}". Available generated presets: ${getGeneratedPresetNames().join(', ')}`,
     );
@@ -162,12 +177,69 @@ export function generateLiteConfig(
     return presetMapping;
   };
 
+  const buildTriModelPreset = (
+    fastModel?: string,
+    strongModel?: string,
+    visionModel?: string,
+  ) => {
+    const resolvedStrongModel = strongModel ?? fastModel ?? visionModel;
+    const resolvedFastModel = fastModel ?? strongModel ?? visionModel;
+    const resolvedVisionModel = visionModel ?? strongModel ?? fastModel;
+
+    if (!resolvedStrongModel || !resolvedFastModel || !resolvedVisionModel) {
+      throw new Error(
+        'At least one of --fast-model, --strong-model, or --vision-model is required to build tri-model preset',
+      );
+    }
+
+    return {
+      orchestrator: createAgentConfig('orchestrator', {
+        model: resolvedStrongModel,
+        variant: 'high',
+      }),
+      oracle: createAgentConfig('oracle', {
+        model: resolvedStrongModel,
+        variant: 'high',
+      }),
+      council: createAgentConfig('council', {
+        model: resolvedStrongModel,
+        variant: 'high',
+      }),
+      librarian: createAgentConfig('librarian', {
+        model: resolvedFastModel,
+        variant: 'low',
+      }),
+      explorer: createAgentConfig('explorer', {
+        model: resolvedFastModel,
+        variant: 'low',
+      }),
+      fixer: createAgentConfig('fixer', {
+        model: resolvedFastModel,
+        variant: 'low',
+      }),
+      designer: createAgentConfig('designer', {
+        model: resolvedVisionModel,
+        variant: 'medium',
+      }),
+      observer: createAgentConfig('observer', {
+        model: resolvedVisionModel,
+      }),
+    } satisfies AgentPresetMapping;
+  };
+
   const presets = config.presets as Record<string, unknown>;
   for (const presetName of GENERATED_PRESETS) {
     presets[presetName] = buildPreset(presetName);
   }
   if (installConfig.model) {
     presets[SINGLE_MODEL_PRESET] = buildSingleModelPreset(installConfig.model);
+  }
+  if (hasTriModelInputs(installConfig)) {
+    presets[TRI_MODEL_PRESET] = buildTriModelPreset(
+      installConfig.fastModel,
+      installConfig.strongModel,
+      installConfig.visionModel,
+    );
   }
 
   if (installConfig.hasTmux) {

@@ -20,8 +20,61 @@
       "type": "boolean"
     },
     "autoUpdate": {
-      "description": "Disable automatic installation of plugin updates when false. Defaults to true.",
-      "type": "boolean"
+      "description": "自动更新配置。可设为 false 关闭自动准备，也可设为对象以控制 channel、policy 和 manifest。",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "policy": {
+              "type": "string",
+              "enum": [
+                "notify",
+                "prepare"
+              ]
+            },
+            "channel": {
+              "type": "string",
+              "enum": [
+                "stable",
+                "beta"
+              ]
+            },
+            "cohort": {
+              "type": "string",
+              "minLength": 1
+            },
+            "manifestUrl": {
+              "type": "string",
+              "format": "uri"
+            },
+            "allowPrerelease": {
+              "type": "boolean"
+            },
+            "healthcheck": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "rollback": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "manualPlan": {
       "type": "object",
@@ -372,7 +425,7 @@
       }
     },
     "disabled_agents": {
-      "description": "Agent names to disable completely. Disabled agents are not instantiated and cannot be delegated to. Orchestrator and council internal agents (councillor) cannot be disabled. By default, 'observer' is disabled. Remove it from this list and configure a vision-capable model to enable.",
+      "description": "完全禁用的代理名称。被禁用的代理不会被实例化，也无法被委托。编排器和委员会内部代理（councillor）不可禁用。默认情况下，'observer' 被禁用。将其移出此列表并配置视觉模型以启用。",
       "type": "array",
       "items": {
         "type": "string"
@@ -471,7 +524,7 @@
         },
         "autoOpenBrowser": {
           "default": true,
-          "description": "Automatically open the interview UI in your default browser during interactive runs. Disabled automatically in tests and CI.",
+          "description": "在交互式运行期间自动在默认浏览器中打开面试 UI。在测试和 CI 中自动禁用。",
           "type": "boolean"
         },
         "port": {
@@ -573,26 +626,26 @@
       "properties": {
         "maxContinuations": {
           "default": 5,
-          "description": "Maximum consecutive auto-continuations before stopping to ask user",
+          "description": "停止询问用户前的最大连续自动继续次数",
           "type": "integer",
           "minimum": 1,
           "maximum": 50
         },
         "cooldownMs": {
           "default": 3000,
-          "description": "Delay in ms before auto-continuing (gives user time to abort)",
+          "description": "自动继续前的延迟（毫秒），给用户中止的时间",
           "type": "integer",
           "minimum": 0,
           "maximum": 30000
         },
         "autoEnable": {
           "default": false,
-          "description": "Automatically enable auto-continue when the orchestrator session has enough todos",
+          "description": "当编排器会话有足够待办事项时自动启用自动继续",
           "type": "boolean"
         },
         "autoEnableThreshold": {
           "default": 4,
-          "description": "Number of todos that triggers auto-enable (only used when autoEnable is true)",
+          "description": "触发自动启用的待办事项数（仅 autoEnable 为 true 时生效）",
           "type": "integer",
           "minimum": 1,
           "maximum": 50
@@ -603,7 +656,7 @@
       "type": "object",
       "properties": {
         "timeoutMs": {
-          "description": "Subtask worker timeout in ms. 0 disables the timeout. Defaults to 300000 (5 minutes).",
+          "description": "子任务工作器超时时间（毫秒）。0 表示禁用超时。默认为 300000（5 分钟）。",
           "type": "integer",
           "minimum": 0,
           "maximum": 86400000
@@ -684,12 +737,12 @@
         },
         "retry_on_empty": {
           "default": true,
-          "description": "When true (default), empty provider responses are treated as failures, triggering fallback/retry. Set to false to treat them as successes.",
+          "description": "当为 true（默认）时，空的提供者响应被视为失败，触发回退/重试。设置为 false 则视为成功。",
           "type": "boolean"
         }
       }
     },
-    "composer": {
+    "council": {
       "type": "object",
       "properties": {
         "presets": {
@@ -722,7 +775,7 @@
         },
         "councillor_execution_mode": {
           "default": "parallel",
-          "description": "Execution mode for councillors. \"serial\" runs them one at a time (required for single-model systems). \"parallel\" runs them concurrently (default, faster for multi-model systems).",
+          "description": "councillor 的执行模式。\"serial\" 逐个运行（单模型系统必需）。\"parallel\" 并发运行（默认，多模型系统更快）。",
           "type": "string",
           "enum": [
             "parallel",
@@ -731,19 +784,81 @@
         },
         "councillor_retries": {
           "default": 3,
-          "description": "Number of retry attempts for councillors that return empty responses (e.g. due to provider rate limiting). Default: 3 retries.",
+          "description": "councillor 返回空响应时的重试次数（例如因提供者速率限制）。默认值：3 次重试。",
           "type": "integer",
           "minimum": 0,
           "maximum": 5
         },
         "master": {
-          "description": "DEPRECATED — ignored. Council agent synthesizes directly."
+          "description": "已弃用 — 忽略。Council agent 直接进行综合。"
         },
         "master_timeout": {
-          "description": "DEPRECATED — ignored. Use \"timeout\" instead."
+          "description": "已弃用 — 忽略。请使用 \"timeout\" 代替。"
         },
         "master_fallback": {
-          "description": "DEPRECATED — ignored. No separate master session."
+          "description": "已弃用 — 忽略。不再有独立的 master 会话。"
+        }
+      },
+      "required": [
+        "presets"
+      ]
+    },
+    "composer": {
+      "description": "已弃用。请改用 \"council\" 配置块。",
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          }
+        },
+        "timeout": {
+          "default": 180000,
+          "type": "number",
+          "minimum": 0
+        },
+        "default_preset": {
+          "default": "default",
+          "type": "string"
+        },
+        "councillor_execution_mode": {
+          "default": "parallel",
+          "description": "councillor 的执行模式。\"serial\" 逐个运行（单模型系统必需）。\"parallel\" 并发运行（默认，多模型系统更快）。",
+          "type": "string",
+          "enum": [
+            "parallel",
+            "serial"
+          ]
+        },
+        "councillor_retries": {
+          "default": 3,
+          "description": "councillor 返回空响应时的重试次数（例如因提供者速率限制）。默认值：3 次重试。",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "master": {
+          "description": "已弃用 — 忽略。Council agent 直接进行综合。"
+        },
+        "master_timeout": {
+          "description": "已弃用 — 忽略。请使用 \"timeout\" 代替。"
+        },
+        "master_fallback": {
+          "description": "已弃用 — 忽略。不再有独立的 master 会话。"
         }
       },
       "required": [

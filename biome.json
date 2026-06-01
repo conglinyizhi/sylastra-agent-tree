@@ -1,7 +1,12 @@
 {
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "files": {
-    "includes": ["**", "!sylastra-agent-tree.schema.json"]
+    "includes": [
+      "**",
+      "!sylastra-agent-tree.schema.json",
+      "!release-artifact",
+      "!release-bundles"
+    ]
   },
   "vcs": {
     "enabled": true,

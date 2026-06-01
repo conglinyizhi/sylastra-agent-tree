@@ -82,6 +82,8 @@ wheels/
 .installed.cfg
 *.egg
 captures/
+release-artifact/
+release-bundles/
 
 # BEGIN oh-my-opencode-slim clonedeps
 .slim/clonedeps/repos/

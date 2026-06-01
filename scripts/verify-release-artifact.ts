@@ -1,20 +1,13 @@
 import { spawnSync } from 'node:child_process';
-import {
-  copyFileSync,
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
 const distDir = path.join(repoRoot, 'dist');
+const artifactDir = path.join(repoRoot, 'release-artifact');
+const bundlesDir = path.join(repoRoot, 'release-bundles');
 
 const suspiciousPathPatterns = [
   /\/Users\/[^\s'"`]+(?:node_modules|sylastra-agent-tree)[^\s'"`]*/,
@@ -24,24 +17,20 @@ const suspiciousImportPatterns = [/from\s+["']vscode-jsonrpc\/node["']/];
 
 const packagedRequiredFiles = [
   'package.json',
+  'VERSION',
+  'artifact-manifest.json',
   'README.md',
+  'README.zh-CN.md',
   'LICENSE',
   'dist/index.js',
   'dist/index.d.ts',
   'dist/cli/index.js',
-  'dist/divoom/council.gif',
-  'dist/divoom/designer.gif',
-  'dist/divoom/explorer.gif',
-  'dist/divoom/fixer.gif',
-  'dist/divoom/input.gif',
-  'dist/divoom/intro.gif',
-  'dist/divoom/librarian.gif',
-  'dist/divoom/oracle.gif',
-  'dist/divoom/orchestrator.gif',
+  'bin/sylastra-updater',
   'sylastra-agent-tree.schema.json',
   'src/skills/simplify/SKILL.md',
   'src/skills/codemap/SKILL.md',
   'src/skills/clonedeps/SKILL.md',
+  'node_modules/zod/package.json',
 ];
 
 function fail(message: string): never {
@@ -63,20 +52,6 @@ function run(command: string, args: string[], options: { cwd?: string } = {}) {
   }
 
   return result.stdout.trim();
-}
-
-function parsePackJson(output: string) {
-  const start = output.indexOf('[');
-  const end = output.lastIndexOf(']');
-
-  if (start === -1 || end === -1 || end < start) {
-    fail(`Could not locate npm pack JSON output:\n${output}`);
-  }
-
-  return JSON.parse(output.slice(start, end + 1)) as Array<{
-    filename?: string;
-    files?: Array<{ path: string }>;
-  }>;
 }
 
 function walkFiles(dir: string): string[] {
@@ -116,96 +91,108 @@ function verifyDistHasNoLeakedPaths() {
   }
 }
 
-function packArtifact() {
-  console.log('Packing npm artifact...');
-  const output = run('npm', ['pack', '--json', '--ignore-scripts'], {
-    cwd: repoRoot,
-  });
-  const parsed = parsePackJson(output);
-  const tarball = parsed[0]?.filename;
-
-  if (!tarball) {
-    fail(`npm pack did not return a tarball filename:\n${output}`);
-  }
-
-  const packagedFiles = new Set(
-    (parsed[0]?.files ?? []).map((file) => file.path),
-  );
+function verifyArtifactLayout() {
+  console.log('Checking release artifact layout...');
   for (const requiredFile of packagedRequiredFiles) {
-    if (!packagedFiles.has(requiredFile)) {
-      fail(`npm pack artifact is missing required file: ${requiredFile}`);
+    if (!existsSync(path.join(artifactDir, requiredFile))) {
+      fail(`release artifact is missing required file: ${requiredFile}`);
     }
-  }
-
-  return path.join(repoRoot, tarball);
-}
-
-function verifyFreshInstall(tarballPath: string) {
-  const tempRoot = mkdtempSync(path.join(tmpdir(), 'omos-release-'));
-
-  try {
-    console.log('Installing packed artifact into clean temp project...');
-    const installDir = path.join(tempRoot, 'install');
-    const tarballTarget = path.join(tempRoot, path.basename(tarballPath));
-
-    copyFileSync(tarballPath, tarballTarget);
-    mkdirSync(installDir, { recursive: true });
-    writeFileSync(
-      path.join(installDir, 'package.json'),
-      JSON.stringify(
-        { name: 'verify-release-artifact', private: true },
-        null,
-        2,
-      ),
-    );
-    run('bun', ['add', '--ignore-scripts', tarballTarget], {
-      cwd: installDir,
-    });
-
-    const installedEntry = path.join(
-      installDir,
-      'node_modules',
-      'sylastra-agent-tree',
-      'dist',
-      'index.js',
-    );
-    const installedEntryContent = readFileSync(installedEntry, 'utf8');
-    for (const pattern of suspiciousPathPatterns) {
-      const match = installedEntryContent.match(pattern);
-      if (match) {
-        fail(
-          `Installed package still contains machine-specific path: ${match[0]}`,
-        );
-      }
-    }
-
-    const smokeScript = [
-      "import pkg from 'sylastra-agent-tree';",
-      "if (typeof pkg !== 'function') throw new Error('default export is not a function');",
-      "console.log('package loads');",
-      'process.exit(0);',
-    ].join('\n');
-    console.log('Importing installed package entrypoint...');
-    run('node', ['--input-type=module', '--eval', smokeScript], {
-      cwd: installDir,
-    });
-  } finally {
-    rmSync(tempRoot, { recursive: true, force: true });
   }
 }
 
-function cleanupTarball(tarballPath: string) {
-  rmSync(tarballPath, { force: true });
+function verifyArtifactMetadata() {
+  const packageJson = JSON.parse(
+    readFileSync(path.join(artifactDir, 'package.json'), 'utf8'),
+  ) as { version?: string; scripts?: Record<string, string> };
+  const version = readFileSync(
+    path.join(artifactDir, 'VERSION'),
+    'utf8',
+  ).trim();
+  const manifest = JSON.parse(
+    readFileSync(path.join(artifactDir, 'artifact-manifest.json'), 'utf8'),
+  ) as { version?: string };
+
+  if (packageJson.version !== version) {
+    fail(
+      `VERSION mismatch: package.json=${packageJson.version} VERSION=${version}`,
+    );
+  }
+  if (manifest.version !== version) {
+    fail(
+      `artifact-manifest mismatch: manifest=${manifest.version} VERSION=${version}`,
+    );
+  }
+  if (packageJson.scripts) {
+    fail('release artifact package.json must not include scripts');
+  }
+}
+
+function verifyReleaseBundle() {
+  const manifestPath = path.join(bundlesDir, 'manifest.json');
+  if (!existsSync(manifestPath)) {
+    fail('release bundle manifest.json is missing');
+  }
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+    stable?: {
+      version?: string;
+      artifacts?: Record<
+        string,
+        {
+          url?: string;
+          sha256?: string;
+        }
+      >;
+    };
+  };
+  const artifacts = manifest.stable?.artifacts ?? {};
+  const expectedPlatforms = [
+    'linux-amd64',
+    'linux-arm64',
+    'darwin-amd64',
+    'darwin-arm64',
+  ];
+  for (const platform of expectedPlatforms) {
+    const artifact = artifacts[platform];
+    if (!artifact?.url?.startsWith('file://')) {
+      fail(
+        `release bundle manifest ${platform} url must use file:// for local verification`,
+      );
+    }
+    const archivePath = artifact.url.replace('file://', '');
+    if (!existsSync(archivePath)) {
+      fail(`release archive missing for ${platform}: ${archivePath}`);
+    }
+    if (!artifact.sha256 || artifact.sha256.length !== 64) {
+      fail(`release archive sha256 missing or malformed for ${platform}`);
+    }
+  }
+
+  const sumsPath = path.join(bundlesDir, 'SHA256SUMS');
+  if (!existsSync(sumsPath)) {
+    fail('release SHA256SUMS is missing');
+  }
+}
+
+function verifyMinimalLoads() {
+  console.log('Importing release artifact entrypoints...');
+  run(
+    'node',
+    ['--input-type=module', '--eval', "await import('./dist/index.js')"],
+    { cwd: artifactDir },
+  );
+  run(
+    'node',
+    ['--input-type=module', '--eval', "await import('./dist/cli/index.js')"],
+    { cwd: artifactDir },
+  );
 }
 
 function main() {
   verifyDistHasNoLeakedPaths();
-  const tarballPath = packArtifact();
-  try {
-    verifyFreshInstall(tarballPath);
-  } finally {
-    cleanupTarball(tarballPath);
-  }
+  verifyArtifactLayout();
+  verifyArtifactMetadata();
+  verifyReleaseBundle();
+  verifyMinimalLoads();
   console.log('Release artifact verification passed.');
 }
 

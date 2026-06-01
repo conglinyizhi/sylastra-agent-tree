@@ -106,6 +106,36 @@ PRs use a minimal prompt:
 
 > What changed, and why was it needed?
 
+## Release Artifact
+
+Release output is no longer treated as a plain npm-style source snapshot.
+
+Maintainer flow for release packaging:
+
+1. `bun run build:release`
+2. `bun run verify:release`
+3. Build platform updater binaries
+4. Publish the assembled artifact payload and manifest
+
+Current artifact assembly produces a `release-artifact/` directory with:
+
+- minimized release `package.json`
+- `VERSION`
+- `artifact-manifest.json`
+- bundled runtime dependencies in `node_modules/`
+- `dist/`, `src/skills/`, docs, and schema
+
+The updater project lives under `updater/` and exposes:
+
+- `prepare`
+- `activate`
+- `healthcheck`
+- `rollback`
+- `cleanup`
+
+The TypeScript update checker now drives prepare-on-background-check plus
+startup activation, healthcheck, and rollback reconciliation.
+
 The goal is clarity without process overhead.
 
 ## Future Changes

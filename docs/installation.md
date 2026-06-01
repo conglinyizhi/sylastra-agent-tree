@@ -15,16 +15,17 @@ Complete installation instructions for sylastra-agent-tree.
 
 ### Quick Install
 
-Run the interactive installer:
+Download the latest release artifact from GitHub Releases, extract it, then run:
 
 ```bash
-bunx sylastra-agent-tree@latest install
+./install.sh
 ```
 
-Or use non-interactive mode:
+If you want to call the bundled CLI installer directly from the extracted
+release artifact, use:
 
 ```bash
-bunx sylastra-agent-tree@latest install --no-tui --skills=yes
+node dist/cli/index.js install
 ```
 
 ### Configuration Options
@@ -52,22 +53,27 @@ By default, the installer is non-destructive. If an `sylastra-agent-tree.json` c
 [i] Configuration already exists at ~/.config/opencode/sylastra-agent-tree.json. Use --reset to overwrite.
 ```
 
-To force overwrite of your existing configuration, use the `--reset` flag:
+To force overwrite of your existing configuration, use the `--reset` flag with
+the bundled CLI installer:
 
 ```bash
-bunx sylastra-agent-tree@latest install --reset
+node dist/cli/index.js install --reset
 ```
 
 **Note:** When using `--reset`, the installer creates a `.bak` backup file before overwriting, so your previous configuration is preserved.
 
 ### After Installation
 
-The installer generates both OpenAI and OpenCode Go presets, with OpenAI active by default (using `gpt-5.5` and `gpt-5.4-mini` models). To make OpenCode Go active during install, run `bunx sylastra-agent-tree@latest install --preset=opencode-go`.
-
-If you want a first-run config that is immediately consistent across all agents, install with:
+The installer generates both OpenAI and OpenCode Go presets, with OpenAI active by default (using `gpt-5.5` and `gpt-5.4-mini` models). To make OpenCode Go active during install, run:
 
 ```bash
-bunx sylastra-agent-tree@latest install --model=openai/gpt-5.5
+node dist/cli/index.js install --preset=opencode-go
+```
+
+If you want a first-run config that is immediately consistent across all agents, run:
+
+```bash
+node dist/cli/index.js install --model=openai/gpt-5.5
 ```
 
 That creates and activates a `single-model` preset covering all default agents, including `observer` and `council` when present.
@@ -120,7 +126,7 @@ Paste this into Claude Code, AmpCode, Cursor, or any coding agent:
 
 ```
 Install and configure by following the instructions here:
-https://raw.githubusercontent.com/alvinunreal/sylastra-agent-tree/refs/heads/master/README.md
+https://raw.githubusercontent.com/conglinyizhi/sylastra-agent-tree/refs/heads/main/README.md
 ```
 
 ---
@@ -142,34 +148,31 @@ If not installed, direct the user to https://opencode.ai/docs first.
 The installer generates OpenAI and OpenCode Go presets, with OpenAI active by default:
 
 ```bash
-bunx sylastra-agent-tree@latest install --no-tui --skills=yes
+node dist/cli/index.js install --no-tui --skills=yes
 ```
 
 **Examples:**
 ```bash
-# Interactive install
-bunx sylastra-agent-tree@latest install
-
-# Non-interactive with bundled skills
-bunx sylastra-agent-tree@latest install --no-tui --skills=yes
+# Run from the extracted release artifact directory
+./install.sh
 
 # Make the generated OpenCode Go preset active
-bunx sylastra-agent-tree@latest install --preset=opencode-go
+node dist/cli/index.js install --preset=opencode-go
 
 # Generate a single-model preset for all agents
-bunx sylastra-agent-tree@latest install --model=openai/gpt-5.5
+node dist/cli/index.js install --model=openai/gpt-5.5
 
 # Non-interactive without skills
-bunx sylastra-agent-tree@latest install --no-tui --skills=no
+node dist/cli/index.js install --no-tui --skills=no
 
 # Install plugin but keep existing sylastra-agent-tree config untouched
-bunx sylastra-agent-tree@latest install --skip-config
+node dist/cli/index.js install --skip-config
 
 # Generate plugin config without modifying OpenCode plugin array
-bunx sylastra-agent-tree@latest install --skip-plugin-register
+node dist/cli/index.js install --skip-plugin-register
 
 # Force overwrite existing configuration
-bunx sylastra-agent-tree@latest install --reset
+node dist/cli/index.js install --reset
 ```
 
 The installer automatically:
@@ -212,7 +215,7 @@ Verify all agents respond successfully.
 
 Check the expected config format:
 ```bash
-bunx sylastra-agent-tree@latest install --help
+node dist/cli/index.js install --help
 ```
 
 Then manually create the config files at:
@@ -226,7 +229,7 @@ If the installer reports that the configuration already exists, you have two opt
 
 2. **Reset configuration**: Use `--reset` to overwrite:
    ```bash
-   bunx sylastra-agent-tree@latest install --reset
+   node dist/cli/index.js install --reset
    ```
    A `.bak` backup file will be created automatically.
 
@@ -239,7 +242,7 @@ If the installer reports that the configuration already exists, you have two opt
 
 2. From your project root, verify your config file exists and is valid:
    ```bash
-   bunx sylastra-agent-tree@latest doctor
+   node dist/cli/index.js doctor
    ```
 
 3. Check that your provider is configured in `~/.config/opencode/opencode.json`

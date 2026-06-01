@@ -45,6 +45,28 @@ Install and configure sylastra-agent-tree: https://raw.githubusercontent.com/con
 bun run build
 ```
 
+### 安装插件
+
+本项目未来将只通过 GitHub Releases 分发，而不是通过 `bunx` 安装。
+
+推荐安装流程：
+
+1. 从 GitHub Releases 下载最新 release artifact。
+2. 在本地解压。
+3. 在解压目录中运行自带安装脚本：
+
+```bash
+./install.sh
+```
+
+release 安装器会：
+
+- 使用本地 `file://` 路径格式注册插件
+- 通过内置 CLI 安装器生成可直接运行的配置
+- 保持常规安装逻辑与 release artifact 布局一致
+
+完整 release 安装说明请参阅 [安装指南](docs/installation.md)。
+
 ### V2 后台编排 Beta 版
 
 V2 将编排者（Orchestrator）从默认的执行工作器转变为调度器：
@@ -57,7 +79,7 @@ OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=1 opencode
 
 ### 入门指南
 
-安装程序会同时生成 OpenAI 和 OpenCode Go 的预设（Preset），默认启用 OpenAI 预设。OpenAI 使用 `openai/gpt-5.5` 作为具备高级判断力智能体的模型，并使用 `openai/gpt-5.4-mini` 作为响应更快速、针对具体任务智能体的模型。若要在安装过程中激活 OpenCode Go 预设，请运行 `bunx oh-my-opencode-slim@latest install --preset=opencode-go` 或在安装后修改 `~/.config/opencode/sylastra-agent-tree.json` 文件中的默认预设名称。
+安装程序会同时生成 OpenAI 和 OpenCode Go 的预设（Preset），默认启用 OpenAI 预设。OpenAI 使用 `openai/gpt-5.5` 作为具备高级判断力智能体的模型，并使用 `openai/gpt-5.4-mini` 作为响应更快速、针对具体任务智能体的模型。若要在安装过程中激活 OpenCode Go 预设，请在解压后的 release 目录中运行安装器并传入 `--preset=opencode-go`，或在安装后修改 `~/.config/opencode/sylastra-agent-tree.json` 文件中的默认预设名称。
 
 然后：
 
@@ -134,6 +156,17 @@ ping all agents
 </div>
 
 如果任何智能体未能响应，请检查您的服务商认证状态和配置文件。
+
+### 自动更新检查
+
+插件内置了基于 artifact 的自动更新检查能力。
+
+- 启动时会检查是否存在新的 release artifact 版本。
+- 默认模式下，会在后台准备更新，并在下一次启动时激活。
+- 如果激活后的健康检查失败，更新器会自动回滚。
+- 如果您只想收到提醒而不自动准备更新，可在配置中设置 `"autoUpdate": false`。
+
+更高级的更新配置项，例如 `channel`、`policy` 和 `manifestUrl`，请参阅 [配置指南](docs/configuration.md)。
 
 ---
 

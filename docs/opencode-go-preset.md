@@ -14,7 +14,7 @@ agent and configures it with `opencode-go/kimi-k2.6` for visual analysis.
 ## Install with OpenCode Go Active
 
 ```bash
-bunx sylastra-agent-tree@latest install --preset=opencode-go
+node dist/cli/index.js install --preset=opencode-go
 ```
 
 Then authenticate and refresh models:

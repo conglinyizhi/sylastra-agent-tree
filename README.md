@@ -47,6 +47,29 @@ Install and configure sylastra-agent-tree: https://raw.githubusercontent.com/con
 bun run build
 ```
 
+### Install The Plugin
+
+This project is intended to be distributed via GitHub Releases rather than
+`bunx`.
+
+Recommended install flow:
+
+1. Download the latest release artifact from GitHub Releases.
+2. Extract it locally.
+3. Run the bundled installer from the extracted directory:
+
+```bash
+./install.sh
+```
+
+The release installer:
+
+- registers the plugin using a local `file://` path
+- can generate a ready-to-run config through the bundled CLI installer
+- keeps normal install behavior aligned with the release artifact layout
+
+For the full release-based install flow, see [Installation Guide](docs/installation.md).
+
 ### V2 Background-Orchestration Beta
 
 V2 changes the orchestrator from the default execution worker into a scheduler:
@@ -62,7 +85,7 @@ OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=1 opencode
 
 ### Getting Started
 
-The installer generates both OpenAI and OpenCode Go presets, with OpenAI active by default. OpenAI uses `openai/gpt-5.5` for the higher-judgment agents and `openai/gpt-5.4-mini` for the faster scoped agents. To make OpenCode Go active during install, run `bunx oh-my-opencode-slim@latest install --preset=opencode-go` or change the default preset name in `~/.config/opencode/sylastra-agent-tree.json` after installation.
+The installer generates both OpenAI and OpenCode Go presets, with OpenAI active by default. OpenAI uses `openai/gpt-5.5` for the higher-judgment agents and `openai/gpt-5.4-mini` for the faster scoped agents. To make OpenCode Go active during install, run the bundled installer with `--preset=opencode-go` from the extracted release directory, or change the default preset name in `~/.config/opencode/sylastra-agent-tree.json` after installation.
 
 Then:
 
@@ -141,6 +164,17 @@ ping all agents
 </div>
 
 If any agent fails to respond, check your provider authentication and config file.
+
+### Automatic Update Checks
+
+The plugin includes artifact-based automatic update checks.
+
+- On startup, it checks whether a newer release artifact is available.
+- In default mode, it prepares the update in the background and activates it on the next startup.
+- If activation healthchecks fail, the updater rolls back automatically.
+- If you prefer notification-only behavior, set `"autoUpdate": false` in your config.
+
+Advanced update options such as `channel`, `policy`, and `manifestUrl` are documented in [Configuration](docs/configuration.md).
 
 ---
 

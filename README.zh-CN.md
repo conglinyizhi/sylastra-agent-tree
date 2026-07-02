@@ -1,5 +1,9 @@
 # sylastra-agent-tree
 
+> **⚠️ 已归档** — 本项目不再维护。
+> 开发已转向 [pi-coding-agent](https://github.com/conglinyizhi/pi-coding-agent)，
+> 不再支持 OpenCode 相关插件。
+
 [English](README.md) | 简体中文
 
 `sylastra-agent-tree` 是一个面向 OpenCode 的多智能体编排插件。它内置了

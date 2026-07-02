@@ -1,5 +1,9 @@
 # sylastra-agent-tree
 
+> **⚠️ ARCHIVED** — This project is no longer maintained.
+> Development has moved to [pi-coding-agent](https://github.com/conglinyizhi/pi-coding-agent).
+> OpenCode-related plugins are no longer supported.
+
 English | [简体中文](README.zh-CN.md)
 
 `sylastra-agent-tree` is an OpenCode plugin for multi-agent orchestration. It
